@@ -1,0 +1,17 @@
+[
+  {
+    "id": "1",
+    "name": "Super Admin",
+    "description": "Overall system super admin"
+  },
+  {
+    "id": "2",
+    "name": "Admin",
+    "description": "System Admins"
+  },
+  {
+    "id": "3",
+    "name": "Organisation Manager",
+    "description": "Manage a certain organisation"
+  }
+]

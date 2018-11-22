@@ -1,0 +1,12 @@
+[
+  {
+    "id": "1",
+    "name": "Manage Users",
+    "description": "CRUD Users"
+  },
+  {
+    "id": "2",
+    "name": "View Dashboard",
+    "description": "View Dashboard analytics"
+  }
+]
