@@ -26,7 +26,7 @@ class CreateBusinessesTable extends Migration
             $table->string('instagram')->nullable();
             $table->timestamps();
 
-            $table->foreign('service_provider_id')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('service_provider_id', 'businesses_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
 
         });
     }

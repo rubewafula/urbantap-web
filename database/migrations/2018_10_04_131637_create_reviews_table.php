@@ -15,14 +15,21 @@ class CreateReviewsTable extends Migration
     {
         Schema::create('reviews', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('reviewer_id');
+            $table->unsignedInteger('user_id');
             $table->unsignedInteger('service_provider_id');
-            $table->integer('stars');
-            $table->text('review');
+            $table->unsignedInteger('provider_service_id');
+            $table->integer('rating');
+            $table->string('review', 400);
+            $table->integer('status_id');
+            $table->timestamp('deleted_at');
+
             $table->timestamps();
 
-            $table->foreign('reviewer_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('service_provider_id')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('user_id','reviews_users_fk')->references('id')->on('users')->onDelete('cascade');
+            $table->foreign('service_provider_id', 'reviews_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('provider_service_id', 'reviews_provider_services_fk')->references('id')->on('provider_services')->onDelete('cascade');
+
+            $table->foreign('status_id', 'reviews_statuses_fk')->references('id')->on('statuses');
 
         });
     }
