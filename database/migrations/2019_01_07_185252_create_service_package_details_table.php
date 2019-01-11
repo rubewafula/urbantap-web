@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
 
-class CreatePortfoliosTable extends Migration
+class CreateServicePackageDetailsTable extends Migration
 {
     /**
      * Run the migrations.
@@ -13,9 +13,9 @@ class CreatePortfoliosTable extends Migration
      */
     public function up()
     {
-        Schema::create('portfolios', function (Blueprint $table) {
+        Schema::create('service_package_details', function (Blueprint $table) {
             $table->increments('id');
-            $table->unsignedInteger('service_provider_id');
+            $table->integer('service_detail_id');
             /**
             JSON Portifolio image field - requires mysql 5.6 ++
             {
@@ -25,13 +25,12 @@ class CreatePortfoliosTable extends Migration
             }
             **/
             $table->json('media_data')->nullable();
-            $table->string('description')->nullable();
             $table->integer('status_id');
-            $table->timestamp('deleted_at');
+            $table->timestamp('deleted_at')->nullable();
             $table->timestamps();
 
-            $table->foreign('service_provider_id', 'portfolios_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
-            $table->foreign('status_id', 'portfolios_statuses_fk2')->references('id')->on('statuses');
+            $table->foreign('service_detail_id', 'service_package_details_service_packages_fk')->references('id')->on('service_packages');
+            $table->foreign('status_id', 'service_package_details_statuses_fk')->references('id')->on('statuses');
 
         });
     }
@@ -43,6 +42,6 @@ class CreatePortfoliosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('portfolios');
+        Schema::dropIfExists('service_package_details');
     }
 }

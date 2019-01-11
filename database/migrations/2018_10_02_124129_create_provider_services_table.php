@@ -17,11 +17,15 @@ class CreateProviderServicesTable extends Migration
             $table->increments('id');
             $table->unsignedInteger('service_provider_id');
             $table->unsignedInteger('service_id');
-            $table->text('description')->nullable();
-            $table->string('cost');
-            $table->string('duration');
-            $table->foreign('service_id')->references('id')->on('services')->onDelete('cascade');
-            $table->foreign('service_provider_id')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->string('description', 400)->nullable();
+            $table->double('cost', 10,2);
+            $table->integer('duration_hours')->nullable();
+            $table->integer('duration_minutes')->nullable();
+            $table->string('status_id');
+
+            $table->foreign('service_id','provider_services_services_fk')->references('id')->on('services')->onDelete('cascade');
+            $table->foreign('service_provider_id', 'provider_services_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('status_id', 'provider_service_statuses_fk')->references('id')->on('statuses');
             $table->timestamps();
         });
     }
