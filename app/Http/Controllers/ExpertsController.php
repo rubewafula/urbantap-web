@@ -144,9 +144,9 @@ class ExpertsController extends Controller
             Session::flash("error", "Invalid service provider. Please contact admin!");
         }
 
-
         return redirect()->back();
     }
+    
 
     function del_service($_id)
     {
@@ -219,7 +219,6 @@ class ExpertsController extends Controller
             Session::flash("error", "Invalid service provider. Please contact admin!");
         }
 
-
         return redirect()->back();
     }
 
@@ -237,6 +236,7 @@ class ExpertsController extends Controller
         return redirect()->back();
     }
 
+
     function upload_gallery(Request $request)
     {
 
@@ -249,7 +249,6 @@ class ExpertsController extends Controller
             'filesToUpload.*.mimes' => 'Only jpg/ jpeg files are allowed',
 //            'filesToUpload.*.max' => 'Sorry! Maximum allowed size for a file is 5MB',
         ]);
-
 
         DB::transaction(function () use ($request) {
 
