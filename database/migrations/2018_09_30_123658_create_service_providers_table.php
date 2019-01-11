@@ -16,7 +16,11 @@ class CreateServiceProvidersTable extends Migration
         Schema::create('service_providers', function (Blueprint $table) {
             $table->increments('id');
             $table->smallInteger('type')->default(1);
+            $table->integer('status_id');
             $table->string('service_provider_name');
+
+            $table->foreign('status_id', 'service_providers_statuses_fk')->references('id')->on('statuses');
+            
             $table->timestamps();
         });
     }

@@ -16,12 +16,12 @@ class CreateOperatingHoursTable extends Migration
         Schema::create('operating_hours', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('service_provider_id');
-            $table->string('day');
+            $table->string('day')->nullable();
             $table->time('time_from');
             $table->time('time_to');
             $table->timestamps();
 
-            $table->foreign('service_provider_id')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('service_provider_id', 'opening_hours_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
 
         });
     }

@@ -16,10 +16,13 @@ class CreateServiceProviderImagesTable extends Migration
         Schema::create('service_provider_images', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('service_provider_id');
-            $table->text('image');
+            $table->string('image_url', 200);
+            $table->string('description')->nullable();
+            $table->integer('status_id')->nullable();
             $table->timestamps();
 
-            $table->foreign('service_provider_id')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('service_provider_id', 'service_provider_images_service_providers_fk')->references('id')->on('service_providers')->onDelete('cascade');
+            $table->foreign('status_id')->references('id')->on('statuses');
 
         });
     }
