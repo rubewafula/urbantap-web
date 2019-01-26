@@ -27,17 +27,32 @@ class ServicePackagesController extends Controller{
      */
  
 
-    public function All()
+    public function All(Request $request)
     {
-    	  $results = DB::select( 
-    	  	DB::raw("SELECT sp.id, c.id as category_id, c.category_name, sp.package_name, sp.description, sp.created_at, sp.updated_at FROM service_packages sp inner join categories c on c.id = sp.category_id where sp.status_id not in (" . DBStatus::RECORD_DELETED . ") limit 100") 
-    	  );
-    	  //dd(HTTPCodes);
-    	   Log::info('Extracted service service_packages results : '.var_export($results, 1));
-    	  if(empty($results)){
-    	  		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
-    	  }
-    	  return Response::json($results, HTTPCodes::HTTP_OK);
+        $validator = Validator::make($request->all(),[
+            'category' => 'integer|exists:categories,id',
+        ]);
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+        $filter = '';
+        if(!empty($request->get('category'))){
+            $filter = " and category_id = '" .$request->get('category') . "' ";
+        }
+
+        $results = DB::select( 
+        	DB::raw("SELECT sp.id, c.id as category_id, c.category_name, sp.package_name, sp.description, sp.created_at, sp.updated_at FROM service_packages sp inner join categories c on c.id = sp.category_id where sp.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100") 
+        );
+        //dd(HTTPCodes);
+        Log::info('Extracted service service_packages results : '.var_export($results, 1));
+        if(empty($results)){
+        		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
 
