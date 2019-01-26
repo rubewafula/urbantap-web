@@ -120,3 +120,12 @@ Route::group([
     Route::delete('del', 'ServiceCategoryController@delete');
 });
 
+Route::group([
+    'prefix' => 'service-packages'
+], function() {
+    Route::get('all', 'ServicePackagesController@all');
+    Route::post('create', 'ServicePackagesController@create');
+    Route::put('update', 'ServicePackagesController@update');
+    Route::delete('del', 'ServicePackagesController@delete');
+});
+
