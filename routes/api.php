@@ -107,3 +107,11 @@ Route::group([
     Route::post('appointments', 'ApiController@get_appointments');
     Route::post('appointments/book', 'ApiController@book_appointment');
 });
+
+Route::group([
+    'prefix' => 'mpesa'
+], function () {
+
+    Route::post('c2b/confirm', 'PaymentsController@receive_mpesa');
+
+});
