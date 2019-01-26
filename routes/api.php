@@ -107,3 +107,16 @@ Route::group([
     Route::post('appointments', 'ApiController@get_appointments');
     Route::post('appointments/book', 'ApiController@book_appointment');
 });
+
+
+/** crude before service request can be done **/
+
+Route::group([
+    'prefix' => 'categories'
+], function() {
+    Route::get('all', 'ServiceCategoryController@all');
+    Route::post('create', 'ServiceCategoryController@create');
+    Route::put('update', 'ServiceCategoryController@update');
+    Route::delete('del', 'ServiceCategoryController@delete');
+});
+

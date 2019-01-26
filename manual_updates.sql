@@ -1,0 +1,1 @@
+alter table categories add status_id int(10) after category_name not null default 0;
