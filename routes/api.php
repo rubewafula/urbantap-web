@@ -114,7 +114,8 @@ Route::group([
 Route::group([
     'prefix' => 'categories'
 ], function() {
-    Route::get('all', 'ServiceCategoryController@all');
+    Route::get('all', 'ServiceCategoryController@get');
+    Route::get('get/{id}', 'ServiceCategoryController@get');
     Route::post('create', 'ServiceCategoryController@create');
     Route::put('update', 'ServiceCategoryController@update');
     Route::delete('del', 'ServiceCategoryController@delete');
@@ -123,9 +124,22 @@ Route::group([
 Route::group([
     'prefix' => 'service-packages'
 ], function() {
-    Route::get('all', 'ServicePackagesController@all');
+    Route::get('all', 'ServicePackagesController@get');
+    Route::get('get/{category_id}', 'ServicePackagesController@get');
     Route::post('create', 'ServicePackagesController@create');
     Route::put('update', 'ServicePackagesController@update');
     Route::delete('del', 'ServicePackagesController@delete');
+
+});
+
+Route::group([
+    'prefix' => 'services' 
+], function() {
+    Route::get('all', 'ServicesController@get');
+    Route::get('get/{category_id}', 'ServicesController@get');
+    Route::post('create', 'ServicesController@create');
+    Route::put('update', 'ServicesController@update');
+    Route::delete('del', 'ServicesController@delete');
+
 });
 

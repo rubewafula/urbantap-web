@@ -24,17 +24,32 @@ class ServiceCategoryController extends Controller{
      *
      * @return JSON 
      */
-    public function All()
+    public function get($id=null)
     {
-    	  $results = DB::select( 
-    	  	DB::raw("SELECT category_name, created_at, updated_at FROM categories where status_id not in (" . DBStatus::RECORD_DELETED . ") limit 100") 
-    	  );
-    	  //dd(HTTPCodes);
-    	   Log::info('Extracted service categroy results : '.var_export($results, 1));
-    	  if(empty($results)){
-    	  		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
-    	  }
-    	  return Response::json($results, HTTPCodes::HTTP_OK);
+        $validator = Validator::make(['id'=>$id],[
+            'id' => 'integer|exists:categories,id|nullable',
+        ]);
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+        $filter = '';
+        if(!is_null($id)){
+            $filter = " and id = '" .$id . "' ";
+        }
+
+        $results = DB::select( 
+        	DB::raw("SELECT category_name, created_at, updated_at FROM categories where status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . "limit 100") 
+        );
+        //dd(HTTPCodes);
+        Log::info('Extracted service categroy results : '.var_export($results, 1));
+        if(empty($results)){
+        		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
 

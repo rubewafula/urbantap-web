@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Validator;
 class ServicePackagesController extends Controller{
 
 	/**
-     * Display the specified category.
+     * Display the specified service packages.
      * curl -i -XGET -H "content-type:application/json" 
      * http://127.0.0.1:8000/api/service-packages/all
      *
@@ -27,10 +27,11 @@ class ServicePackagesController extends Controller{
      */
  
 
-    public function All(Request $request)
+    public function get($category_id=null)
     {
-        $validator = Validator::make($request->all(),[
-            'category' => 'integer|exists:categories,id',
+        
+        $validator = Validator::make(['category_id'=>$category_id],[
+            'category_id' => 'integer|exists:categories,id|nullable',
         ]);
         if ($validator->fails()) {
             $out = [
@@ -40,8 +41,8 @@ class ServicePackagesController extends Controller{
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         $filter = '';
-        if(!empty($request->get('category'))){
-            $filter = " and category_id = '" .$request->get('category') . "' ";
+        if(!is_null($category_id)){
+            $filter = " and category_id = '" .$category_id . "' ";
         }
 
         $results = DB::select( 
@@ -187,10 +188,5 @@ class ServicePackagesController extends Controller{
     		return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
     	}
     }
-
-
-
-
-
 
 }
