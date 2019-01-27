@@ -243,6 +243,11 @@ class ServicePackageDetailsController extends Controller{
         $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('description'));
         $type = $this->getType($ext);
 
+        if($type == 'unknown'){
+            Log::info("Aborting file upload unknown file type "+ $type);
+            return false;
+        }
+
         $fullPath = 'public/' . $type . '/' .$name . '.' . $ext;
 
         if (Storage::putFileAs('public/' . $type . '/', $file, $name . '.' . $ext)) {

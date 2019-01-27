@@ -110,6 +110,17 @@ Route::group([
 
 
 /** crude before service request can be done **/
+Route::group([
+    'prefix' => 'status-categories' 
+], function() {
+    Route::get('all', 'StatusCategoriesController@get');
+    Route::get('get/{id}', 'StatusCategoriesController@get');
+    Route::post('create', 'StatusCategoriesController@create');
+    Route::put('update', 'StatusCategoriesController@update');
+    Route::delete('del', 'StatusCategoriesController@delete');
+
+});
+
 
 Route::group([
     'prefix' => 'categories'
