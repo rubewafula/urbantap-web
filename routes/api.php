@@ -133,6 +133,18 @@ Route::group([
 });
 
 Route::group([
+    'prefix' => 'service-package-details'
+], function() {
+    Route::get('all', 'ServicePackageDetailsController@get');
+    Route::get('get/{package_id}', 'ServicePackageDetailsController@get');
+    Route::post('create', 'ServicePackageDetailsController@create');
+    Route::put('update', 'ServicePackageDetailsController@update');
+    Route::post('update', 'ServicePackageDetailsController@update');
+    Route::delete('del', 'ServicePackageDetailsController@delete');
+
+});
+
+Route::group([
     'prefix' => 'services' 
 ], function() {
     Route::get('all', 'ServicesController@get');
