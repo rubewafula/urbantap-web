@@ -27,8 +27,12 @@ class AuthController extends Controller
             'email' => $request->email,
             'phone_no' => $request->phone_no,
             'password' => bcrypt($request->password),
+            'verification_code'=> $this->generate_verification(),
+            'verification_sends'=>1
         ]);
         $user->save();
+
+
 
 
         //$user->notify(new SignupActivate($user));
@@ -36,6 +40,80 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Registration successful. Please login to continue'
         ], 201);
+    }
+
+
+        public  function  resend_verification($phone_no)
+          {
+          
+              if(User::where('phone',$phone_no)->exists())
+              {
+
+                 $user = User::where('phone',$phone_no)->first();
+                 if($user->verification_sends ==3)
+                 {
+                             return response()->json([
+            'message' => 'Please  try  again  later'
+        ], 200);
+                 }else{
+
+                    if($user->verification_code  !== NULL)
+                    {
+                        //  Resend verification code
+
+
+                    }else{
+
+                        // Send  a new verification  code 
+                        $user->verification_code= $this->generate_verification();
+                        $user->save();
+
+
+
+                    }
+
+
+                 }
+
+
+
+
+
+              }else{
+
+                    return response()->json([
+            'message' => 'We do not  have  an account  that  corresponds  to that number'
+        ], 200);
+              }
+        
+
+
+          }
+
+
+    public  function  verify_phone($phone)
+    {
+
+
+
+
+    }
+
+
+    public  function  generate_verification()
+    {
+      $number =  rand(1000,9999);
+
+        if(User::where('verification_code',$number)->exists())
+        {
+            while (User::where('verification_code',$number)->exists() == TRUE) {
+                $number= rand(1000,9999);
+            } 
+          return  $number;
+        }else{
+         return  $number;
+        }
+
     }
 
     public function login(Request $request)
