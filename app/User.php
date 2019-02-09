@@ -38,4 +38,11 @@ class User extends Authenticatable
     {
         return $this->belongsTo('App\UserGroup', 'user_group');
     }
+
+    public function  roles()
+    {
+
+        return  $this->belongsToMany('App\User');
+    }
+
 }

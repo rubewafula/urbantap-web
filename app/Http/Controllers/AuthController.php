@@ -2,40 +2,80 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Utilities\HTTPCodes;
+use App\Utilities\DBStatus;
+use Illuminate\Support\Facades\Validator;
+
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 use App\User;
 use App\Notifications\SignupActivate;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;    
+use  App\Rules\UserTelephone;
+use  App\Outbox;
+
 
 class AuthController extends Controller
 {
     public function signup(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
+        $validator = Validator::make($request->all(),[
+            'first_name' => 'required|string',
+            'last_name' => 'required|string',
             'email' => 'required|string|email|unique:users',
-            'phone_no' => 'required',
-            'password' => 'required|string|confirmed'
-        ],[
-            'email.unique' => 'This email is already registered, please log in to continue'
+            'phone_no' => 'required|min:9',
+            'password' => 'required|string|confirmed|min:5',
+            'role_id'=>'required',
+            'phone_no'=> new UserTelephone
         ]);
 
+         if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
 
-        $user = new User([
+        if($request->role_id !== 8 || $request->role_id !== 9)
+        {
+
+            return Response::json(['message'=>' The  Role of the  user  is not  allowed',HTTPCodes::HTTP_BAD_REQUEST]);
+        }
+
+         $phone= '254'.substr($request->phone_no,-9);
+
+  
+          $user = new User([
             'name' => $request->name,
             'email' => $request->email,
-            'phone_no' => $request->phone_no,
+            'phone_no' => $phone,
             'password' => bcrypt($request->password),
-            'verification_code'=> $this->generate_verification(),
-            'verification_sends'=>1
+            'phone_verification_code'=> $this->generate_verification(),
+             'confirmation_token'=> $this->generate_verification(),
+            'verification_sends'=>1,
+            'status_id'=>DBStatus::USER_NEW
+
         ]);
         $user->save();
 
+        $user->roles()->attach($request->role_id);
 
+        //  Send  SMS  to verify  phone  number 
 
+      Outbox::Create([
+        'user_id'=>$user->id,
+        'msisdn'=>$phone,
+        'message'=>$user->verification_code,
+        'status_id'=>DBStatus::SMS_NEW
+      ]);
 
-        //$user->notify(new SignupActivate($user));
+        //  Send  Email to verify  Email 
+
+          $user->notify(new SignupActivate($user));
 
         return response()->json([
             'message' => 'Registration successful. Please login to continue'
@@ -43,8 +83,22 @@ class AuthController extends Controller
     }
 
 
-        public  function  resend_verification($phone_no)
+        public  function  resend_verification(Request  $request)
           {
+
+                    $validator = Validator::make($request->all(),[
+            'phone_no' => 'required|min:9',
+        ]);
+
+         if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+             $phone= '254'.substr($request->phone_no,-9);
           
               if(User::where('phone',$phone_no)->exists())
               {
@@ -53,36 +107,54 @@ class AuthController extends Controller
                  if($user->verification_sends ==3)
                  {
                              return response()->json([
-            'message' => 'Please  try  again  later'
+            'message' => 'Please  try  again  later',
+            'success' => false,
+
         ], 200);
                  }else{
 
                     if($user->verification_code  !== NULL)
                     {
                         //  Resend verification code
+                        Outbox::Create([
+                        'user_id'=>$user->id,
+                        'msisdn'=>$phone,
+                        'message'=>$user->verification_code,
+                        'status_id'=>DBStatus::SMS_NEW
+                        ]);
 
+                           return response()->json([
+            'message' => ' Successful',
+            'success' => true,
+
+        ], 200);
 
                     }else{
-
                         // Send  a new verification  code 
                         $user->verification_code= $this->generate_verification();
                         $user->save();
 
+                              Outbox::Create([
+                        'user_id'=>$user->id,
+                        'msisdn'=>$phone,
+                        'message'=>$user->verification_code,
+                        'status_id'=>DBStatus::SMS_NEW
+                        ]);
 
+        return response()->json([
+            'message' => ' Successful',
+            'success' => true,
 
+        ], 200);
                     }
 
-
                  }
-
-
-
-
 
               }else{
 
                     return response()->json([
-            'message' => 'We do not  have  an account  that  corresponds  to that number'
+            'message' => 'We do not  have  an account  that  corresponds  to that number',
+            'success'=>false
         ], 200);
               }
         
@@ -91,10 +163,10 @@ class AuthController extends Controller
           }
 
 
-    public  function  verify_phone($phone)
+    public  function  verify_phone(Request  $request)
     {
-
-
+    
+   
 
 
     }

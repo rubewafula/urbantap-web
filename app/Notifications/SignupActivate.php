@@ -16,9 +16,12 @@ class SignupActivate extends Notification implements ShouldQueue
      *
      * @return void
      */
-    public function __construct()
+
+    public  $user;
+    public function __construct($user)
     {
         //
+        $this->user=  $user;
     }
 
     /**
@@ -42,8 +45,11 @@ class SignupActivate extends Notification implements ShouldQueue
     {
 
         return (new MailMessage)
-            ->subject('Welcome to Smart Soko')
-            ->line('Thank you for signing up at SmartSoko! Explore the app to find your favorite services.')
+            ->subject('Welcome to  UrbanTap')
+            ->greeting(' Dear '.$this->user->first_name)
+             ->line('Thank you for signing up at UrbanTap. We really  hopethat  you  will  enjoy our  services . Please Confirm your  account  on  the  link below')
+            ->action('Confirm', url('auth/confirm/'.$this->user->confirmation_token.''))
+
             ->line('Welcome to SmartSoko !');
     }
 

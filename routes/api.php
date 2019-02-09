@@ -37,6 +37,11 @@ Route::group([
 ], function () {
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
+    Route::post('resend_verification','AuthController@resend_verification');
+
+    
+       
+
 
     Route::group([
         'middleware' => 'auth:api'
