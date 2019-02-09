@@ -16,8 +16,12 @@ class User extends Authenticatable
      *
      * @var array
      */
+    protected  $table='users';
+
+    protected  $primaryKey ='id';
+
     protected $fillable = [
-        'name', 'email', 'phone_no', 'password','user_group'
+        'first_name','last_name', 'email', 'phone_no', 'password','verification_code','verification_sent','phone_verified','email_verified','status_id','confirmation_token'
     ];
 
     /**
@@ -28,6 +32,11 @@ class User extends Authenticatable
     protected $hidden = [
         'password', 'remember_token',
     ];
+
+    public  function status()
+    {
+        return  $this->BelongsTo('App\Status');
+    }
 
     public function role()
     {
@@ -41,8 +50,7 @@ class User extends Authenticatable
 
     public function  roles()
     {
-
-        return  $this->belongsToMany('App\User');
+        return  $this->BelongsToMany('App\Role');
     }
 
 }

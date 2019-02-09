@@ -12,7 +12,7 @@ class Outbox extends Model
 
     protected  $primarykey='id';
 
-    public $fillable=['user_id','msisdn','network','link_id','status_id'];
+    public $fillable=['user_id','msisdn','network','link_id','status_id','message'];
 
 
     public  function  user(){

@@ -38,10 +38,8 @@ Route::group([
     Route::post('login', 'AuthController@login');
     Route::post('signup', 'AuthController@signup');
     Route::post('resend_verification','AuthController@resend_verification');
-
+    Route::post('verify_code','AuthController@verify_code');
     
-       
-
 
     Route::group([
         'middleware' => 'auth:api'
