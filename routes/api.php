@@ -178,3 +178,53 @@ Route::group([
 
 });
 
+Route::group([
+ 'prefix' => 'service-providers'
+], function(){
+    Route::get('all', 'ServiceProvidersController@get');
+    Route::get('get/{id}', 'ServiceProvidersController@get');
+    Route::get('create', 'ServiceProvidersController@create');
+    Route::get('update', 'ServiceProvidersController@update');
+    Route::get('del','ServiceProvidersController@delete');
+});
+
+Route::group([
+'prefix' => 'bookings'
+], function(){
+   Route::get('all', 'BookingsController@get');
+   Route::get('get/{id}', 'BookingsController@get');
+   Route::get('create', 'BookingsController@create');
+   Route::get('update', 'BookingsController@update');
+   Route::get('del','BookingsController@delete');
+
+});
+
+Route::group([
+'prefix' => 'appointments'
+], function(){
+   Route::get('all', 'AppointmentsController@get');
+   Route::get('get/{id}', 'AppointmentsController@get');
+   Route::get('create', 'AppointmentsController@create');
+   Route::get('update', 'AppointmentsController@update');
+   Route::get('del','AppointmentsController@delete');
+
+});
+
+
+Route::get('balances/all','BalancesController@get_all');
+Route::post('balances/create','BalancesController@store');
+
+
+Route::group([
+'prefix' => 'categories'
+], function(){
+   Route::get('all', 'CategoriesController@get');
+   Route::get('get/{id}', 'CategoriesController@get');
+   Route::get('create', 'CategoriesController@create');
+   Route::get('update', 'CategoriesController@update');
+   Route::get('del','CategoriesController@delete');
+
+});
+
+
+
