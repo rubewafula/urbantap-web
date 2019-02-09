@@ -19,6 +19,4 @@ alter table experts drop overall_likes;
 alter table service_providers add overall_dislikes varchar(45) null after overall_likes;
 alter table experts drop overall_dislikes;
 alter table experts add user_id varchar(45) null after id;
-
-
-
+alter table provider_services add rating float(10,2)  default 0.01 after duration;
