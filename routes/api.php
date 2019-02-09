@@ -183,10 +183,23 @@ Route::group([
 ], function(){
     Route::get('all', 'ServiceProvidersController@get');
     Route::get('get/{id}', 'ServiceProvidersController@get');
-    Route::get('create', 'ServiceProvidersController@create');
-    Route::get('update', 'ServiceProvidersController@update');
-    Route::get('del','ServiceProvidersController@delete');
+    Route::post('create', 'ServiceProvidersController@create');
+    Route::put('update', 'ServiceProvidersController@update');
+    Route::delete('del','ServiceProvidersController@delete');
 });
+
+
+Route::group([
+ 'prefix' => 'user-personal-details'
+], function(){
+    Route::get('all', 'UserPersonalDetailsController@get');
+    Route::get('get/{id}', 'UserPersonalDetailsController@get');
+    Route::post('create', 'UserPersonalDetailsController@create');
+    Route::post('update', 'UserPersonalDetailsController@update');
+    Route::delete('del','UserPersonalDetailsController@delete');
+});
+
+
 
 Route::group([
 'prefix' => 'bookings'

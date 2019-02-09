@@ -1,4 +1,4 @@
-alter table categories add status_id int(10) after category_name not null default 0;
+alter table categories add status_id int(10) not null default 0 after category_name;
 alter table service_packages change service_id category_id int(11) not null ;
 alter table service_package_details change service_detail_id service_package_id int(10) not null;
 alter table service_package_details add description varchar(255) not null after service_package_id;
@@ -12,7 +12,7 @@ alter table service_providers add work_lng varchar(45) null after work_lat;
 alter table experts drop work_lng;
 alter table service_providers add status_id varchar(45) null after work_lng;
 alter table experts drop status_id;
-alter table service_providers add overall_rating after status_id;
+alter table service_providers add overall_rating float(10,2) default 0.0 after status_id;
 alter table experts drop overall_rating;
 alter table service_providers add overall_likes varchar(45) null after overall_rating;
 alter table experts drop overall_likes;
@@ -20,3 +20,21 @@ alter table service_providers add overall_dislikes varchar(45) null after overal
 alter table experts drop overall_dislikes;
 alter table experts add user_id varchar(45) null after id;
 alter table provider_services add rating float(10,2)  default 0.01 after duration;
+
+--- Redo this shiet IT IS NOT WORKING
+alter table service_providers add overall_likes int(11) default 0 after overall_rating ;
+alter table service_providers add overall_dislikes int(11) default 0 after overall_rating ;
+alter table experts drop business_description;
+rename table experts to user_personal_details;
+alter table user_personal_details modify user_id int(11) not null;
+alter table service_providers add user_id int(10) not null after id;
+alter table service_providers modify user_id int(10) unsigned not null after id;
+alter table user_personal_details modify user_id int(10) unsigned not null after id;
+alter table user_personal_details add constraint `user_user_personal_details_fk-1`  foreign key (user_id) references users(id) ;
+alter table service_providers add constraint `user_service_providers_fk-1`  foreign key (user_id) references users(id) ;
+alter table user_personal_details drop foreign key experts_service_providers_fk;
+alter table user_personal_details drop key experts_service_providers_fk;
+alter table user_personal_details drop service_provider_id;
+alter table user_personal_details modify passport_photo varchar(200) null;
+ alter table user_personal_details modify passport_photo json null comment 'sample {"media_url":"...", "media_type":"[video|audio|image]", "size":"xMB"}';
+
