@@ -20,6 +20,120 @@ use Illuminate\Support\Facades\Validator;
 
 class ServiceProvidersController extends Controller{
 
+    /**
+     * Display the specified service providers.
+     * curl -i -XGET -H "content-type:application/json" 
+     * http://127.0.0.1:8000/api/service-providers/details/[user_id]
+     *
+     * @param  \App\Category $category
+     *
+     * @return JSON 
+     */
+ 
+    public function details($user_id=null, Request $request)
+    {
+        $req= $request->all();
+        $page = 1; 
+        $limit =null;
+        //die(print_r($req, 1));
+        
+        $validator = Validator::make(['id'=>$user_id],
+            ['user_id'=>'integer|exists:service_providers']
+        );
+        if($validator ->fails()){
+            $out =[
+                'sucess'=> false, 
+               'message'=> $validator->messages()
+
+            ];
+
+            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $filter= '';
+        if(!is_null($user_id)){
+            $filter = " and sp.user_id = '" .$user_id . "' ";
+        }
+
+        $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
+            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
+            . " d.home_location work_phone_no "
+            . " FROM service_providers sp inner join user_personal_details  d "
+            . " using(user_id) where 1=1 " . $filter ;
+
+
+
+        $results = RawPaginate::paginate($rawQuery);
+
+       
+        $service_provider_id =  $results['result'][0]->id;
+
+        $sql_provider_services = "select ps.id, ps.service_provider_id, ps.service_id, "
+            . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
+            . " ps.updated_at from provider_services ps "
+            . " where ps.service_provider_id = '" . $service_provider_id . "' ";
+
+        $services = RawPaginate::paginate($sql_provider_services);
+
+        $working_hours_sql = "select day, time_from, time_to from operating_hours "
+            . " where service_provider_id='" . $service_provider_id . "'";
+
+        $working_hours = RawPaginate::paginate($working_hours_sql);
+
+        if(!empty($working_hours)){
+            $results['operating_hours'] = $working_hours['result'];
+        }
+
+        $portfolios_sql = "SELECT p.media_data, p.description  FROM  portfolios p "
+            . " where service_provider_id = '" . $service_provider_id. "'" ;
+
+        $portfolios = RawPaginate::paginate($portfolios_sql);
+
+        //die(print_r($portfolios, 1));
+
+        if(!empty($portfolios)){
+            $results['portfolios'] = $portfolios['result'];
+        }
+
+
+        $full_services = [];
+        foreach($services['result'] as $key=>$service){
+            $service_provider_id = $service->service_provider_id;
+            $provider_service_id =  $service->id;
+
+            $reviews_sql = "SELECT r.provider_service_id, r.rating, r.review, "
+                . " r.status_id, u.name as reviewer, u.email, s.service_name"
+                . " FROM  reviews r  inner join users u on u.id=r.user_id "
+                . " inner join provider_services ps on ps.id = r.provider_service_id "
+                . " inner join services s on s.id = ps.service_id where "
+                . " r.service_provider_id = '" . $service_provider_id . "' "
+                . " and r.provider_service_id = '" . $provider_service_id . "' ";
+
+            $reviews = RawPaginate::paginate($reviews_sql);
+            //die(print_r($reviews, 1));
+            if(!empty($reviews)){
+                 $service->reviews =  $reviews['result'];
+            }
+
+            //append reviews to each service
+            $full_services[] = $service;
+        }
+
+        $results['services'] = $full_services;
+
+
+        //dd(HTTPCodes);
+        Log::info('Extracted service service_providers results : '.var_export($results, 1));
+        if(empty($results)){
+            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
+
+    }
+
+
 	 /**
      * Display the specified service providers.
      * curl -i -XGET -H "content-type:application/json" 
@@ -116,7 +230,6 @@ class ServiceProvidersController extends Controller{
                 . " :service_provider_name, :business_description, :work_location, "
                 . " :work_lat, :work_lng, " . DBStatus::RECORD_PENDING . ", now(), "
                 . " now())  ", 
-
                     [
                         'service_provider_name'=> $request->get('service_provider_name'),
                         'user_id'=>$request->get('user_id'),

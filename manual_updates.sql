@@ -36,5 +36,20 @@ alter table user_personal_details drop foreign key experts_service_providers_fk;
 alter table user_personal_details drop key experts_service_providers_fk;
 alter table user_personal_details drop service_provider_id;
 alter table user_personal_details modify passport_photo varchar(200) null;
- alter table user_personal_details modify passport_photo json null comment 'sample {"media_url":"...", "media_type":"[video|audio|image]", "size":"xMB"}';
+alter table user_personal_details modify passport_photo json null comment 'sample {"media_url":"...", "media_type":"[video|audio|image]", "size":"xMB"}';
+alter table reviews change provicer_service_id provider_service_id int(10) not null ;
+alter table reviews add constraint review_user_id_fk_1 foreign key (user_id) references users(id);
+alter table reviews add constraint review_service_provider_id_fk_1 foreign key (service_provider_id) references service_providers(id);
+alter table reviews modify provider_service_id int(10) unsigned not null ;
+alter table reviews add constraint review_provider_services_id_fk_1 foreign key (provider_service_id) references provider_services(id);
+ alter table portfolios add constraint portfolios_service_provider_id_fk_1 foreign key (service_provider_id) references service_providers(id);
+alter table provider_services modify cost float(10, 2) not null;
+alter table provider_services modify duration int(10) not null comment 'Duration in minutes';
+alter table provider_services modify description varchar(600) not null;
+alter table provider_services add constraint provicder_services_service_id_fk_k foreign key(service_id) references services(id);
+alter table provider_services add constraint provicder_services_service_provider_id_fk_k foreign key(service_provider_id) references service_providers(id);
+alter table operating_hours add constraint operating_hours_service_provider_id_fk1 foreign key(service_provider_id) references service_providers(id);
+alter table provider_services add status_id int(10) null default 1;
+alter table operating_hours add status_id int(10) null default 1;
+
 

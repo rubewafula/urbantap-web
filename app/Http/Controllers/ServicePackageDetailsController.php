@@ -182,7 +182,7 @@ class ServicePackageDetailsController extends Controller{
     public function delete(Request $request)
     {
     	
-    	$validator = Validator::make($request->all(),[
+    $validator = Validator::make($request->all(),[
 		    'id' => 'required|exists:service_package_details,id'
 		]);
 

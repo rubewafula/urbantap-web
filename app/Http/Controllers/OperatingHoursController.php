@@ -11,14 +11,14 @@ use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Validator;
 use App\Utilities\RawPaginate;
 
-class ProviderServicesController extends Controller
+class OperatingHoursController extends Controller
 {
 
     /**
      * Display the provider service details 
      * Default to highly rated services.
      * curl -i -XGET -H "content-type:application/json" 
-     * http://127.0.0.1:8000/api/provider-services/get/{id}
+     * http://127.0.0.1:8000/api/service-providers/operating-hours/get/{id}
      *
      * @param  \App\Category $category
      *
@@ -40,37 +40,34 @@ class ProviderServicesController extends Controller
         }
         $filter = '';
         if(!is_null($id)){
-            $filter = " and ps.service_provider_id = '" .$id . "' ";
+            $filter = " and op.service_provider_id = '" .$id . "' ";
         }
          
 
-        $query = "select s.id as service_id, s.service_name, ps.description, "
-            . " c.category_name, ps.cost, ps.duration, ps.rating from provider_services "
-            . " ps inner join services s on s.id=ps.service_id inner join categories "
-            . "c on c.id =s.category_id where 1=1 ". $filter;
+        $query = "select day, time_from, time_to from operating_hours op "
+            . " where 1=1 ". $filter;
 
-        $provider_services = RawPaginate::paginate($query);
+        $operating_hours = RawPaginate::paginate($query);
 
 
         Log::info('Query : ' . $query);
 
        
         //dd(HTTPCodes);
-        Log::info('Extracted statuses results : ' . var_export($provider_services, 1));
+        Log::info('Extracted operating hours results : ' . var_export($operating_hours, 1));
 
-        if(empty($provider_services)){
-            return Response::json($provider_services[0], HTTPCodes::HTTP_NO_CONTENT );
+        if(empty($operating_hours)){
+            return Response::json($operating_hours[0], HTTPCodes::HTTP_NO_CONTENT );
         }
-        return Response::json($provider_services, HTTPCodes::HTTP_OK);
+        return Response::json($operating_hours, HTTPCodes::HTTP_OK);
 
     }
 
 
     /**
      * curl -i -XPOST -H "content-type:application/json" 
-     * --data '{"service_provider_id":2,"service_id":1,
-     * "description":"Cut wam service 23","cost":1000,"duration":45}' 
-     * 'http://127.0.0.1:8000/api/provider-service/create'
+     * --data '{"service_provider_id":3,"time_from":"09:00","day":"Tuesday", "time_to":"15:00"} 
+     * 'http://127.0.0.1:8000/api/service-providers/operating-hours/create'
      *  @param  Illuminate\Http\Request $request
      *  @return JSON
      *
@@ -80,10 +77,9 @@ class ProviderServicesController extends Controller
 
         $validator = Validator::make($request->all(),[
             'service_provider_id' => 'required|exists:service_providers,id',
-            'service_id' => 'required|exists:services,id',
-            'description' => 'required|string',
-            'cost' =>'integer',
-            'duration' =>'integer',
+            'day' => 'required',
+            'time_from' => 'required|string',
+            'time_to' =>'required|string'
         ]);
 
         if ($validator->fails()) {
@@ -94,16 +90,15 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }else{
 
-            DB::insert("insert into provider_services (service_provider_id,"
-                . " service_id, description, cost, duration, created_at, updated_at)"
-                . " values (:service_provider_id, :service_id, :description, "
-                . " :cost, :duration, now(),  now())  ", 
+            DB::insert("insert into operating_hours (service_provider_id,"
+                . " day, time_from, time_to, created_at, updated_at)"
+                . " values (:service_provider_id, :day, :time_from, "
+                . " :time_to, now(),  now())  ", 
                     [
                         'service_provider_id'=> $request->get('service_provider_id'),
-                        'service_id'=>$request->get('service_id'),
-                        'description'=>$request->get('description'),
-                        'cost'=>$request->get('cost'),
-                        'duration'=>$request->get('duration')
+                        'day'=>$request->get('day'),
+                        'time_from'=>$request->get('time_from'),
+                        'time_to'=>$request->get('time_to')
                     ]
                 );
 
@@ -118,10 +113,9 @@ class ProviderServicesController extends Controller
     }
 
     /**
-     * curl -i -XPOST -H "content-type:application/json" 
-     * --data '{"service_provider_id":2,"service_id":1,
-     * "description":"Cut wam service 23","cost":1000,"duration":45}' 
-     * 'http://127.0.0.1:8000/api/provider-service/update'
+     * curl -i -XPUT -H "content-type:application/json" 
+     * --data '{"id":3,"time_from":"09:00","day":"Tuesday", "time_to":"15:00"}'
+     * 'http://127.0.0.1:8000/api/service-providers/operating-hours/update'
      *  @param  Illuminate\Http\Request $request
      *  @return JSON
      *
@@ -130,10 +124,9 @@ class ProviderServicesController extends Controller
     {
 
         $validator = Validator::make($request->all(),[
-            'id' => 'required|exists:provider_services,id',
-            'description' => 'string|nullable',
-            'cost' =>'integer|nullable',
-            'duration' =>'integer|nullable',
+            'id' => 'required|exists:operating_hours,id',
+            'time_from' => 'string|nullable',
+            'time_to' =>'string|nullable',
         ]);
 
         if ($validator->fails()) {
@@ -144,24 +137,22 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }else{
             $update = [];
-            if(!empty($request->get('description')) ){
-                $update['description']  =$request->get('description') ;
+            if(!empty($request->get('time_from')) ){
+                $update['time_from']  =$request->get('time_from') ;
             }
-            if(!empty($request->get('cost')) ){
-                $update['cost']  =$request->get('cost') ;
+            if(!empty($request->get('time_to')) ){
+                $update['time_to']  =$request->get('time_to') ;
             }
-            if(!empty($request->get('duration')) ){
-                $update['duration']  =$request->get('duration') ;
-            }
+            
 
-            DB::table('provider_services')
+            DB::table('operating_hours')
                 ->where('id', $request->get('id'))
                 ->update($update);
 
             $out = [
                 'success' => true,
                 'user_id'=>$request->get('id'),
-                'message' => 'Provider service updated OK'
+                'message' => 'Operation hours updated OK'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
@@ -169,9 +160,9 @@ class ProviderServicesController extends Controller
     }
 
     /**
-     * curl -i -XPOST -H "content-type:application/json" 
+     * curl -i -XDELETE -H "content-type:application/json" 
      * --data '{"id":1}' 
-     * 'http://127.0.0.1:8000/api/provider-service/delete'
+     * 'http://127.0.0.1:8000/api/service-providers/operating-hours/delete'
      *  @param  Illuminate\Http\Request $request
      *  @return JSON
      *
@@ -180,7 +171,7 @@ class ProviderServicesController extends Controller
     {
 
         $validator = Validator::make($request->all(),[
-            'id' => 'required|exists:provider_services,id'
+            'id' => 'required|exists:operating_hours,id'
         ]);
 
         if ($validator->fails()) {
@@ -191,14 +182,14 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }else{
            
-            DB::table('provider_services')
+            DB::table('operating_hours')
                 ->where('id', $request->get('id'))
                 ->update(['status_id' => DBStatus::RECORD_DELETED]);
 
             $out = [
                 'success' => true,
                 'user_id'=>$request->get('id'),
-                'message' => 'Provider service deleted OK'
+                'message' => 'Operating hour deleted OK'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);

@@ -179,10 +179,21 @@ Route::group([
 });
 
 Route::group([
+ 'prefix' => 'provider-services'
+], function(){
+    Route::get('all', 'ProviderServicesController@get');
+    Route::get('get/{id}', 'ProviderServicesController@get');
+    Route::post('create', 'ProviderServicesController@create');
+    Route::put('update', 'ProviderServicesController@update');
+    Route::delete('del','ProviderServicesController@delete');
+});
+
+Route::group([
  'prefix' => 'service-providers'
 ], function(){
     Route::get('all', 'ServiceProvidersController@get');
     Route::get('get/{id}', 'ServiceProvidersController@get');
+    Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
     Route::put('update', 'ServiceProvidersController@update');
     Route::delete('del','ServiceProvidersController@delete');
@@ -199,6 +210,35 @@ Route::group([
     Route::delete('del','UserPersonalDetailsController@delete');
 });
 
+Route::group([
+ 'prefix' => 'service-providers/portfolios'
+], function(){
+    Route::get('all', 'ServiceProviderPortfoliosController@get');
+    Route::get('get/{id}', 'ServiceProviderPortfoliosController@get');
+    Route::post('create', 'ServiceProviderPortfoliosController@create');
+    Route::delete('del','ServiceProviderPortfoliosController@delete');
+});
+
+
+Route::group([
+ 'prefix' => 'service-providers/operating-hours'
+], function(){
+    Route::get('all', 'OperatingHoursController@get');
+    Route::get('get/{id}', 'OperatingHoursController@get');
+    Route::post('create', 'OperatingHoursController@create');
+    Route::put('update', 'OperatingHoursController@update');
+    Route::delete('del','OperatingHoursController@delete');
+});
+
+
+Route::group([
+ 'prefix' => 'service-providers/reviews'
+], function(){
+    Route::get('all', 'ServiceProviderReviewsController@get');
+    Route::get('get/{id}', 'ServiceProviderReviewsController@get');
+    Route::post('create', 'ServiceProviderReviewsController@create');
+    Route::delete('del','ServiceProviderReviewsController@delete');
+});
 
 
 Route::group([
