@@ -11,7 +11,11 @@
 |
 */
 Auth::routes();
+ Route::get('loadwaf','WafController@waf');
+
 Route::get('/logout', 'Auth\LoginController@logout');
+
+Route::get('verification','AuthController@generate_verification');
 
 Route::group(['middleware' => ['auth']], function () {
     Route::get('/','HomeController@index');

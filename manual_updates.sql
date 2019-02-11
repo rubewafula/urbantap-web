@@ -53,3 +53,6 @@ alter table provider_services add status_id int(10) null default 1;
 alter table operating_hours add status_id int(10) null default 1;
 
 
+-- Titus edits
+ALTER  TABLE  outboxes MODIFY `msisdn` VARCHAR(12);
+
