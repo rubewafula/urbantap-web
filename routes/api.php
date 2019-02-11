@@ -245,10 +245,11 @@ Route::group([
 'prefix' => 'bookings'
 ], function(){
    Route::get('all', 'BookingsController@get');
-   Route::get('get/{id}', 'BookingsController@get');
-   Route::get('create', 'BookingsController@create');
-   Route::get('update', 'BookingsController@update');
-   Route::get('del','BookingsController@delete');
+   Route::get('service-providers/all/{id}', 'BookingsController@get');
+   Route::get('users/all/{id}', 'BookingsController@getUserBookings');
+   Route::post('create', 'BookingsController@create');
+   Route::put('update', 'BookingsController@update');
+   Route::delete('delete','BookingsController@delete');
 
 });
 

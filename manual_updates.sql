@@ -51,5 +51,9 @@ alter table provider_services add constraint provicder_services_service_provider
 alter table operating_hours add constraint operating_hours_service_provider_id_fk1 foreign key(service_provider_id) references service_providers(id);
 alter table provider_services add status_id int(10) null default 1;
 alter table operating_hours add status_id int(10) null default 1;
+alter table bookings add constraint booking_user_id_fk1 foreign key(user_id) references users(id);
+alter table bookings add constraint booking_service_provider_id_fk1 foreign key(service_provider_id) references service_providers(id);
+alter table bookings add constraint booking_provider_service_id_fk1 foreign key(provider_service_id) references provider_services(id);
+alter table bookings modify booking_duration int(10) not null;
 
 
