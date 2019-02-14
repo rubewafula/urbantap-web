@@ -31,12 +31,11 @@ class BookingsController extends Controller{
     {
         $validator = Validator::make(['provider_service_id'=>$provider_service_id],
             ['provider_service_id'=>'integer|exists:provider_service,id|nullable']);
+
         if($validator ->fails()){
             $out =[
-
                 'success'=> false, 
                 'message'=> $validator->messages()
-
             ];
         }
 

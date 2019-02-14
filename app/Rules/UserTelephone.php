@@ -27,7 +27,11 @@ class UserTelephone implements Rule
     public function passes($attribute, $value)
     {
         //
-          $phone= '254'.substr($value,-9);
+          preg_match("/^(?:\+?254|0)?(7\d{8})/", "254726986944", $matches);
+          if(empty($matches)){
+              return FALSE;
+          }
+          $phone = '254' . $matches[1];
 
           if(User::where('phone_no',$phone)->exists())
           {

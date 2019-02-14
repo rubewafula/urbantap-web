@@ -50,9 +50,9 @@ class AuthController extends Controller
 
             return Response::json([ 'success' => FALSE,'message'=>' The  Role of the  user  is not  allowed',HTTPCodes::HTTP_BAD_REQUEST]);
         } 
-
-
-         $phone= '254'.substr($request->phone_no,-9);
+        
+         preg_match("/^(?:\+?254|0)?(7\d{8})/", "254726986944", $matches);
+         $phone= '254' . $matches[1];
   
           $user = User::Create([
             'first_name' => $request->first_name,
