@@ -57,3 +57,6 @@ alter table bookings add constraint booking_provider_service_id_fk1 foreign key(
 alter table bookings modify booking_duration int(10) not null;
 
 
+-- Titus edits
+ALTER  TABLE  outboxes MODIFY `msisdn` VARCHAR(12);
+
