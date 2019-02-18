@@ -15,8 +15,16 @@ use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Utilities\RawPaginate;
 
 class BookingsController extends Controller{
+
+
+     public function getUserBookings($user_id = null)
+    {
+        return $this->get($service_provider_id=null, $user_id = $user_id);
+    }
+
 
     /**
      * Display the specified service providers.
@@ -27,32 +35,50 @@ class BookingsController extends Controller{
      *
      * @return JSON 
      */
-    public function get($provider_service_id=null)
+    public function get($service_provider_id = null, $user_id=null)
     {
-        $validator = Validator::make(['provider_service_id'=>$provider_service_id],
-            ['provider_service_id'=>'integer|exists:provider_service,id|nullable']);
-        if($validator ->fails()){
-            $out =[
-
-                'success'=> false, 
-                'message'=> $validator->messages()
-
+        $validator = Validator::make(['service_provider_id'=>$service_provider_id,
+            'user_id' => $user_id],
+            ['service_provider_id'=>'integer|exists:service_providers,id|nullable',
+            'user_id' =>'integer|exists:users,id|nullable' ]
+        );
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
             ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
         $filter= '';
-        if(!is_null($provider_service_id)){
-            $filter = " and provider_service_id = '" .$provider_service_id . "' ";
-        }
-
-        $results = DB::select( 
-            DB::raw("select b.service_provider_id, b.user_id, b.booking_time, "
-                . " b.booking_duration, b.expiry_time, s.status_code, s.description "
-                . " from bookings b inner join statuses s on b.status_id = s.id " 
-                . $filter . " limit 100") 
-            );
-
+        //$from_date = $request->get('from_date');
         
+
+        if(!is_null($service_provider_id)){
+            $filter = " and b.service_provider_id = '" .$service_provider_id . "' ";
+        }
+        if(!is_null($user_id)){
+            $filter = " and b.user_id = '" .$user_id . "' ";
+        }
+        // if(!is_null($from_date)){
+        //     $filter = " and date(b.booking_time) = '" .$from_date . "' ";
+        // }
+         
+        $query = "select b.service_provider_id, b.user_id, u.name as client,"
+            . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
+            . " b.booking_duration, b.expiry_time, s.status_code, "
+            . " s.description as status_description, ps.description as "
+            . " provider_service_description, ps.cost, ps.duration "
+            . " from bookings b inner join statuses s on " 
+            . " b.status_id = s.id inner join service_providers sp "
+            . " on sp.id=b.service_provider_id "
+            . " inner join provider_services ps on "
+            . " ps.id = b.provider_service_id inner join services ss "
+            . " on ss.id=ps.service_id inner join users u on "
+            . " u.id = b.user_id " . $filter;
+
+
+        $results = RawPaginate::paginate($query);
 
         //dd(HTTPCodes);
         Log::info('Extracted service bookings results : '.var_export($results, 1));
@@ -73,18 +99,21 @@ class BookingsController extends Controller{
      *
      ***/
 
-    public function create(Request $request)
+    public function create()
     {
 
-        $validator = Validator::make($request->all(),[
-            'provider_service_id' => 'required|exists:categories,id',
-            'service_provider_id' => 'required|unique:categories_id',
-            'user_id' => 'required|unique:categories_id',
-            'booking_time' => 'required|unique:booking_time',
-            'booking_duration' => 'required|unique:booking_duration',
-            'expiry_time' => 'required|unique:expiry_time',
-            'status_id' => 'required|unique:status_id',
-            'description' => 'string',
+        $req = file_get_contents('php://input');
+$request = json_decode($req, true);
+
+        $validator = Validator::make($request,[
+            'provider_service_id' => 'required:bookings,id',
+            'service_provider_id' => 'required|unique:bookings,id',
+            'user_id' => 'required|unique:bookings,id',
+            'booking_time' => 'required:bookings',
+            'booking_duration' => 'required:bookings',
+            'expiry_time' => 'required:bookings',
+            'status_id' => 'required:bookings',
+          //  'description' => 'string',
         ]);
 
         if ($validator->fails()) {
@@ -92,20 +121,18 @@ class BookingsController extends Controller{
                 'success' => false,
                 'message' => $validator->messages()
             ];
+            
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-        }else{
+        } else {
 
-            DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id,booking_time, booking_duration, expiry_time, status_id,"
-                ."created_at, updated_at, deleted_at) "
-                . " values (:provider_service_id,:service_provider_id,: user_id,:booking_time, : booking_duration, : expiry_time, : status_id, "
-                . " :status_id, now(), now(), now())", [
-                    'provider_service_id'=>$request->get('provider_service_id'),
-                    'service_provider_id'=>$request->get('service_provider_id'),
-                    'user_id'=> $request->get('user_id'),
-                    'booking_time'=>$request->get('booking_time'),
-                    'expiry_time'=>$request->get('expiry_time'),
-                    'status_id'=>DBStatus::RECORD_PENDING,
-                    'description'=>$request->get('description')
+            DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now())", [
+                    'provider_service_id'=>$request['provider_service_id'],
+                    'service_provider_id'=>$request['service_provider_id'],
+                    'user_id'=> $request['user_id'],
+                    'booking_time'=>$request['booking_time'],
+                    'booking_duration'=>$request['booking_duration'],
+                    'expiry_time'=>$request['expiry_time'],
+                    'status_id'=>DBStatus::RECORD_PENDING
                 ]
             );
 
@@ -136,13 +163,13 @@ class BookingsController extends Controller{
             'provider_service_id' => 'required|integer',
             'service_provider_id' => 'required|integer',
             'user_id' => 'required|integer',
-            'booking_time' => 'required|exists:booking_time,type|max:255',
-            'new_booking_time' => 'unique:booking_time,type|max:255',
-            'booking_duration' => 'required|exists:booking_duration,type|max:255',
-            'new_booking_duration' => 'unique:booking_duration,type|max:255',
-            'expiry_time' => 'required|exists:expiry_time,type|max:255',
-            'expiry_time' => 'unique:expiry_time,type|max:255',
-            'new_expiry_time' => 'required|exists:service_providers,type|max:255',
+            'booking_time' => 'required|exists:bookings|max:255',
+            'new_booking_time' => 'unique:bookings|max:255',
+            'booking_duration' => 'required|exists:bookings|max:255',
+            'new_booking_duration' => 'unique:bookings|max:255',
+            'expiry_time' => 'required|exists:bookings|max:255',
+            'expiry_time' => 'unique:bookings|max:255',
+            'new_expiry_time' => 'required|exists:bookings|max:255',
 
         ]);
 

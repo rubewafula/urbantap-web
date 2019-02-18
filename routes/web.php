@@ -18,7 +18,7 @@ Route::get('/logout', 'Auth\LoginController@logout');
 Route::get('verification','AuthController@generate_verification');
 
 Route::group(['middleware' => ['auth']], function () {
-    Route::get('/','HomeController@index');
+    //Route::get('/','HomeController@index');
 
     Route::get('/services', 'ServicesController@services');
     Route::post('/services/new','ServicesController@new_service');
