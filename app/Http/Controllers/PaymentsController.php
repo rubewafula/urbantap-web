@@ -1,7 +1,5 @@
 <?php
 
-//TO DO: separate the MPESA Utilities, MPESA Transaction Producer and MPESA Transaction Consumer
-
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
@@ -77,24 +75,32 @@ class PaymentsController extends Controller
 
     public function receive_mpesa(){
 
-        Log::info(" Callback URL for MPESA called");
+        Log::info("Callback URL for MPESA called");
 
         $postData = file_get_contents('php://input');
 
-        Log::info($postData);
-
-        $rabbitMQConnection = new RabbitMQConnection();
-        $channel = $connection->channel();
-
-        //TO DO: publish to the queue
+        Log::info("Got post data from Safaricom ".$postData);
 
         if( $postData != null){
 
+            $rabbitMQConnection = new RabbitMQConnection();
+            $connection = $rabbitMQConnection->getConnection();
+            $channel = $connection->channel();
+
+            $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
+           
+            $msg = new AMQPMessage($postData);
+            $channel->basic_publish($msg, '', env("MPESA_DEPOSITS_QUEUE"));
+
+            Log::info("Message published to the queue successfully");
+
             echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
+
+            $channel->close();
+            $connection->close();
         }
 
     }
-
 
     public function mpesa_payment(){
 
@@ -103,7 +109,7 @@ class PaymentsController extends Controller
 
         Log::info(" Callback URL for MPESA called");
 
-        //TO DO: change this to read from the queue / separate the producer and the consumer
+        //TO DO: change this to read from the queue
 
         $postData = file_get_contents('php://input');
 
@@ -200,7 +206,5 @@ class PaymentsController extends Controller
         echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
 
     }
-
-
 
 }
