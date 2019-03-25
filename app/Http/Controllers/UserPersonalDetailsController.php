@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;	
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
-use App\Utilities\RawPaginate;
+use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
@@ -69,7 +69,7 @@ class UserPersonalDetailsController extends Controller{
             . " FROM  user_personal_details  d inner join users u on u.id = d.user_id "
             . " where 1=1  " . $filter ;
 
-        $results = RawPaginate::paginate($rawQuery, $page=$page, $limit=$limit);
+        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
         //dd(HTTPCodes);
         Log::info('Extracted user personal details : '.var_export($results, 1));

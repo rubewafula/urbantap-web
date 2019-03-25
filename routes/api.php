@@ -195,6 +195,7 @@ Route::group([
  'prefix' => 'service-providers'
 ], function(){
     Route::get('all', 'ServiceProvidersController@get');
+     Route::get('popular', 'ServiceProvidersController@popular');
     Route::get('get/{id}', 'ServiceProvidersController@get');
     Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
@@ -248,10 +249,17 @@ Route::group([
 'prefix' => 'bookings'
 ], function(){
    Route::get('all', 'BookingsController@get');
-   Route::get('get/{id}', 'BookingsController@get');
-   Route::get('create', 'BookingsController@create');
-   Route::get('update', 'BookingsController@update');
-   Route::get('del','BookingsController@delete');
+   Route::get('service-providers/all/{id}', 'BookingsController@get');
+   Route::get('users/all/{id}', 'BookingsController@getUserBookings');
+   Route::get('details/{id}', 'BookingsController@getBookingDetails');
+   Route::get('user/booking-with-details/{id}', 
+        'BookingsController@getUserBookingWithDetails');
+   Route::get('provider/booking-with-details/{id}', 
+        'BookingsController@getProviderBookingWithDetails');
+
+   Route::post('create', 'BookingsController@create');
+   Route::put('update', 'BookingsController@updateBooking');
+   Route::delete('delete','BookingsController@delete');
 
 });
 
@@ -281,6 +289,15 @@ Route::group([
    Route::get('del','CategoriesController@delete');
 
 });
+
+Route::group([
+'prefix' => 'home'
+], function(){
+   Route::get('get', 'HomePageController@get');
+
+});
+
+
 
 
 

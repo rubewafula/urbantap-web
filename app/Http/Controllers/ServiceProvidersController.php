@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;	
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
-use App\Utilities\RawPaginate;
+use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 
 
@@ -63,10 +63,7 @@ class ServiceProvidersController extends Controller{
             . " FROM service_providers sp inner join user_personal_details  d "
             . " using(user_id) where 1=1 " . $filter ;
 
-
-
-        $results = RawPaginate::paginate($rawQuery);
-
+        $results = RawQuery::paginate($rawQuery);
        
         $service_provider_id =  $results['result'][0]->id;
 
@@ -75,12 +72,12 @@ class ServiceProvidersController extends Controller{
             . " ps.updated_at from provider_services ps "
             . " where ps.service_provider_id = '" . $service_provider_id . "' ";
 
-        $services = RawPaginate::paginate($sql_provider_services);
+        $services = RawQuery::paginate($sql_provider_services);
 
         $working_hours_sql = "select day, time_from, time_to from operating_hours "
             . " where service_provider_id='" . $service_provider_id . "'";
 
-        $working_hours = RawPaginate::paginate($working_hours_sql);
+        $working_hours = RawQuery::paginate($working_hours_sql);
 
         if(!empty($working_hours)){
             $results['operating_hours'] = $working_hours['result'];
@@ -89,7 +86,7 @@ class ServiceProvidersController extends Controller{
         $portfolios_sql = "SELECT p.media_data, p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
-        $portfolios = RawPaginate::paginate($portfolios_sql);
+        $portfolios = RawQuery::paginate($portfolios_sql);
 
         //die(print_r($portfolios, 1));
 
@@ -111,7 +108,7 @@ class ServiceProvidersController extends Controller{
                 . " r.service_provider_id = '" . $service_provider_id . "' "
                 . " and r.provider_service_id = '" . $provider_service_id . "' ";
 
-            $reviews = RawPaginate::paginate($reviews_sql);
+            $reviews = RawQuery::paginate($reviews_sql);
             //die(print_r($reviews, 1));
             if(!empty($reviews)){
                  $service->reviews =  $reviews['result'];
@@ -120,9 +117,8 @@ class ServiceProvidersController extends Controller{
             //append reviews to each service
             $full_services[] = $service;
         }
-
+        
         $results['services'] = $full_services;
-
 
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : '.var_export($results, 1));
@@ -184,7 +180,7 @@ class ServiceProvidersController extends Controller{
             . " using(user_id) where sp.status_id "
             . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
 
-        $results = RawPaginate::paginate($rawQuery, $page=$page, $limit=$limit);
+        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : '.var_export($results, 1));
@@ -194,6 +190,40 @@ class ServiceProvidersController extends Controller{
         return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
+
+
+    /**
+     * Display the popular service providers.
+     * curl -i -XGET -H "content-type:application/json" 
+     * http://127.0.0.1:8000/api/service-providers/popular
+     *
+     * @param  \App\Category $category
+     *
+     * @return JSON 
+     */
+ 
+    public function popular()
+    {
+       
+        $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name, "
+            . " sp.business_description, sp.work_location,  sp.overall_rating, "
+            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo,  "
+            . " d.home_location, work_phone_no  FROM service_providers sp inner "
+            . " join user_personal_details  d using(user_id) where sp.status_id =1 "
+            . " order by overall_rating desc, overall_likes desc limit 20 ";
+
+        $results = RawQuery::query($rawQuery);
+
+        //dd(HTTPCodes);
+        Log::info('Extracted popular service service_providers results : '.var_export($results, 1));
+        if(empty($results)){
+            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
+
+    }
+
 
     /**
      * curl -i -XPOST -H "content-type:application/json" 

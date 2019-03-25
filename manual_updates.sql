@@ -51,7 +51,30 @@ alter table provider_services add constraint provicder_services_service_provider
 alter table operating_hours add constraint operating_hours_service_provider_id_fk1 foreign key(service_provider_id) references service_providers(id);
 alter table provider_services add status_id int(10) null default 1;
 alter table operating_hours add status_id int(10) null default 1;
+alter table bookings add constraint booking_user_id_fk1 foreign key(user_id) references users(id);
+alter table bookings add constraint booking_service_provider_id_fk1 foreign key(service_provider_id) references service_providers(id);
+alter table bookings add constraint booking_provider_service_id_fk1 foreign key(provider_service_id) references provider_services(id);
+alter table bookings modify booking_duration int(10) not null;
+-- Valientine 14th Feb, 2019
+alter table booking_trails modify booking_id int(10) unsigned not null;
+alter table booking_trails add constraint booking_trails_bookings_id_fk1 foreign key(booking_id) references bookings(id);
+alter table booking_trails modify description varchar(200) not null;
 
+alter table bookings drop foreign key booking_users_fk;
+alter table bookings drop foreign key bookings_provider_services_fk;
+alter table bookings drop foreign key bookings_service_providers_fk;
+alter table bookings add booking_type enum('USER LOCATION', 'PROVIDER LOCATION') not null after status_id;
+alter table bookings add location json null comment '{"name":"lukume","lat":32.080,"lng":56.93}';
+alter table operating_hours change `day` service_day varchar(15) not null;
+alter table booking_trails add originator varchar(45)  not null after description
+alter table services add service_meta json null after service_name;
+create table top_services like services;
+alter table services add service_icon varchar(200) null after service_meta;
+alter table top_services drop service_name; alter table top_services drop service_meta; alter table top_services drop service_icon; alter table top_services drop deleted_at;
+alter table top_services change category_id service_id int(10) unsigned not null;
+alter table top_services add foreign key(service_id) references services(id);
+alter table services add priority int(10) default 0 after service_meta;
+alter table service_providers add index(created_at);
 
 -- Titus edits
 ALTER  TABLE  outboxes MODIFY `msisdn` VARCHAR(12);

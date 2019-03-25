@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Validator;
-use App\Utilities\RawPaginate;
+use App\Utilities\RawQuery;
 
 class ProviderServicesController extends Controller
 {
@@ -49,7 +49,7 @@ class ProviderServicesController extends Controller
             . " ps inner join services s on s.id=ps.service_id inner join categories "
             . "c on c.id =s.category_id where 1=1 ". $filter;
 
-        $provider_services = RawPaginate::paginate($query);
+        $provider_services = RawQuery::paginate($query);
 
 
         Log::info('Query : ' . $query);
