@@ -7,6 +7,8 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
 use Illuminate\Support\Facades\Schema;
 
+use Illuminate\Support\Facades\Schema; //Import Schema
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -22,7 +24,7 @@ class AppServiceProvider extends ServiceProvider
         Passport::routes();
         Schema::defaultStringLength(191);
 
-
+         Schema::defaultStringLength(191);
     }
 
     /**

@@ -3,19 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Appointment;
-use App\Business;
-use App\Http\Resources\BusinessResource;
+use App\Expert;
+use App\Http\Resources\ExpertResource;
 use App\OperatingHours;
 use App\Portfolio;
 use App\ProviderServices;
 use App\ServiceProvider;
 use App\ServiceProviderImages;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
-class BusinessController extends Controller
+class ExpertsController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -24,84 +23,77 @@ class BusinessController extends Controller
      */
     public function index()
     {
-        return BusinessResource::collection(
-            Business::paginate(25));
-
+        return ExpertResource::collection(Expert::paginate(25));
     }
 
 
     /**
      * Display the specified resource.
      *
-     * @param Business $business
-     * @return BusinessResource
-     * @internal param int $id
+     * @param  int  $id
+     * @return ExpertResource
      */
-    public function show(Business $business)
+    public function show(Expert $expert)
     {
-        return new BusinessResource($business);
+        return new ExpertResource($expert);
 
     }
 
-    public function businesses()
+
+    public function experts()
     {
-        $businesses = Business::orderBy('id', 'desc')->paginate(10);
-        return view('business.businesses', ['businesses' => $businesses]);
+        $experts = Expert::orderBy('id', 'desc')->paginate(10);
+        return view('experts.experts', ['experts' => $experts]);
 
     }
 
-    function new_business(Request $request)
+    function new_expert(Request $request)
     {
         $this->validate($request, [
-            'business_name' => 'required',
-            'location' => 'required',
-            'phone_no' => 'required',
+            'id_number' => 'required',
+            'home_location' => 'required',
+            'work_location' => 'required',
+            'work_phone_no' => 'required',
+            'business_description' => 'required',
         ]);
 
-        if (is_null(Business::where('service_provider_id', 
-            $request->service_provider)->first())){
-
+        if (is_null(Expert::where('service_provider_id', $request->service_provider)->first())){
             DB::transaction(function() use ($request) {
-                $business = new Business();
-                $business->service_provider_id = $request->service_provider;
-                $business->business_name = $request->business_name;
-                $business->location = $request->location;
-                $business->phone_no = $request->phone_no;
-                $business->facebook = $request->facebook_link;
-                $business->instagram = $request->instagram_link;
-                $business->description = $request->description;
-                $business->lat = $request->lat;
-                $business->lng = $request->lng;
-                $business->saveOrFail();
-                Session::flash("success", "Business created Successfully!");
+                $expert = new Expert();
+                $expert->service_provider_id = $request->service_provider;
+                $expert->id_number = $request->id_number;
+                $expert->business_description = $request->business_description;
+                $expert->home_location = $request->home_location;
+                $expert->work_phone_no = $request->work_phone_no;
+                $expert->work_location = $request->work_location;
+                $expert->work_lat = $request->lat;
+                $expert->work_lng = $request->lng;
+                $expert->saveOrFail();
+                Session::flash("success", "Expert created Successfully!");
             });
 
         }else{
 
-            Session::flash("error", "Service provider is already registered to 
-                another business!");
+            Session::flash("error", "Service provider is already registered to another expert!");
         }
 
 
-        return redirect('/businesses');
+        return redirect('/experts');
     }
 
-    function business($_id)
+    function expert($_id)
     {
-        $business = Business::find($_id);
-        if (is_null($business)){
+        $expert = Expert::find($_id);
+        if (is_null($expert)){
             abort(404);
         }else{
-            $services = ProviderServices::where('service_provider_id', 
-                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
-            $appointments = Appointment::where('service_provider_id',
-             $business->serviceProvider->id)->orderBy('id', 'desc')->paginate(20);
-            $operatingHours = OperatingHours::where('service_provider_id', 
-                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
-            $images = ServiceProviderImages::where('service_provider_id', 
-                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
-            return view('business.business')
-                ->with('business', $business)
+            $services = ProviderServices::where('service_provider_id', $expert->serviceProvider->id)->orderBy('id', 'desc')->get();
+            $appointments = Appointment::where('service_provider_id', $expert->serviceProvider->id)->orderBy('id', 'desc')->paginate(20);
+            $operatingHours = OperatingHours::where('service_provider_id', $expert->serviceProvider->id)->orderBy('id', 'desc')->get();
+            $images = ServiceProviderImages::where('service_provider_id', $expert->serviceProvider->id)->orderBy('id', 'desc')->get();
+
+            return view('experts.expert')
+                ->with('expert', $expert)
                 ->with('services', $services)
                 ->with('appointments', $appointments)
                 ->with('images', $images)
@@ -109,7 +101,7 @@ class BusinessController extends Controller
         }
     }
 
-    function update_business(Request $request)
+    function update_expert(Request $request)
     {
         $provider = ServiceProvider::find($request->provider_id);
         if (is_null($provider)){
@@ -152,9 +144,9 @@ class BusinessController extends Controller
             Session::flash("error", "Invalid service provider. Please contact admin!");
         }
 
-
         return redirect()->back();
     }
+    
 
     function del_service($_id)
     {
@@ -227,7 +219,6 @@ class BusinessController extends Controller
             Session::flash("error", "Invalid service provider. Please contact admin!");
         }
 
-
         return redirect()->back();
     }
 
@@ -245,6 +236,7 @@ class BusinessController extends Controller
         return redirect()->back();
     }
 
+
     function upload_gallery(Request $request)
     {
 
@@ -257,7 +249,6 @@ class BusinessController extends Controller
             'filesToUpload.*.mimes' => 'Only jpg/ jpeg files are allowed',
 //            'filesToUpload.*.max' => 'Sorry! Maximum allowed size for a file is 5MB',
         ]);
-
 
         DB::transaction(function () use ($request) {
 

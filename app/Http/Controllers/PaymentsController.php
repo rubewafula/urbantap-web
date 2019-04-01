@@ -1,0 +1,222 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Db;
+use Illuminate\Support\Facades\Hash;
+
+use PhpAmqpLib\Message\AMQPMessage;
+
+use App\Utilities\RabbitMQConnection;
+use App\MpesaTransaction;
+use App\Transaction;
+
+class PaymentsController extends Controller
+{
+
+    private $rabbitMQConnection;
+    private $connection;
+    private $channel;
+
+    
+    public function mpesa_register_url(){
+
+        Log::info(" Calling MPESA Register Confirm");
+
+        $url = 'https://api.safaricom.co.ke/mpesa/c2b/v1/registerurl';
+
+        $curl_post_data = array(
+
+          'ShortCode' => env("SHORT_CODE"),
+          'ResponseType' => 'Completed',
+          'ConfirmationURL' => env("CONFIRMATION_URL"),
+          'ValidationURL' => env("VALIDATION_URL")
+        );
+
+        $data_string = json_encode($curl_post_data);
+
+        $curl = curl_init();
+
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json',
+         'Authorization:Bearer clr9eF6kx17kcC7A6E1kZHItUyfC')); //setting custom header
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+
+        Log::info("Got response from the curl MPESA");
+
+        $curl_response = curl_exec($curl);
+
+        $json_response = json_decode($curl_response);
+
+        Log::info($json_response);
+
+        return $json_response;
+    }
+
+
+    public static function mpesa_generate_token(){
+
+        Log::info("Calling token generation Safaricom API");
+
+        $url = env("TOKEN_URL");
+
+        $consumer_key = env("CONSUMER_KEY");
+        $consumer_secret = env("CONSUMER_SECRET");
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        $credentials = base64_encode($consumer_key.':'.$consumer_secret);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Basic '.$credentials)); //setting a custom header
+        curl_setopt($curl, CURLOPT_HEADER, true);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        $curl_response = curl_exec($curl);
+
+        Log::info($curl_response);
+
+        return json_decode($curl_response, true);
+    }
+
+
+    public function receive_mpesa(){
+
+        Log::info("Callback URL for MPESA called");
+
+        $postData = file_get_contents('php://input');
+
+        Log::info("Got post data from Safaricom ".$postData);
+
+        if( $postData != null){
+
+            $rabbitMQConnection = new RabbitMQConnection();
+            $connection = $rabbitMQConnection->getConnection();
+            $channel = $connection->channel();
+
+            $dataInJSON = json_encode($postData);
+
+            //Log::info("JSON Encoded ready for the queue ".$dataInJSON);
+
+            // Log::info("Connection ".$connection);
+
+            // $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
+           
+            $msg = new AMQPMessage($postData);
+            $publishResult = $channel->basic_publish($msg, '', env("RABBIT_MPESA_QUEUE"));
+
+            echo("Publishing Result ".$publishResult);
+
+            Log::info("Message published to the queue successfully");
+
+            echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
+
+            $channel->close();
+            $connection->close();
+        }
+
+    }
+
+    public function mpesa_payment(){
+
+        $user_id = "";
+        $running_balance = 0;
+
+        Log::info("Callback URL from Inbox Consumer called");
+
+        //TO DO: change this to read from the queue
+
+        $postData = file_get_contents('php://input');
+
+        Log::info($postData);
+
+        if( $postData != null){
+
+            $decoded = json_decode($postData);
+
+            $transaction_type = $decoded->TransactionType;
+            $transaction_id = $decoded->TransID;
+            $transaction_time = $decoded->TransTime;
+            $transaction_amount = $decoded->TransAmount;
+            $business_code = $decoded->BusinessShortCode;
+            $bill_ref_no = $decoded->BillRefNumber;
+            $invoice_number = $decoded->InvoiceNumber;
+            $org_account_balance = $decoded->OrgAccountBalance;
+            $third_party_trans_id = $decoded->ThirdPartyTransID;
+            $msisdn = $decoded->MSISDN;
+            $first_name = $decoded->FirstName;
+            $middle_name = $decoded->MiddleName;
+            $last_name = $decoded->LastName;
+
+            $name = $first_name. " ".$middle_name." ".$last_name;
+
+            $MPESATransactionLog = new MpesaTransaction();
+
+            $MPESATransactionLog->message = $transaction_type;
+            $MPESATransactionLog->transaction_ref = $transaction_id;
+            $MPESATransactionLog->transaction_time = $transaction_time;
+            $MPESATransactionLog->amount = $transaction_amount;
+            $MPESATransactionLog->paybill_no = $business_code;
+            $MPESATransactionLog->mpesa_code = $transaction_id;
+            $MPESATransactionLog->bill_ref_no = $bill_ref_no;
+            $MPESATransactionLog->account_no = $invoice_number;
+            $MPESATransactionLog->msisdn = $msisdn;
+            $MPESATransactionLog->names = $name;
+            $MPESATransactionLog->status_id = 0;
+
+            $MPESATransactionLog->save();
+
+            $user = Db::select(Db::raw("select * from users where phone_no='".$msisdn."'"));
+
+            if(count($user) > 0){
+
+                $user_id = $user[0]->id;
+                $running_balance_rs = Db::select(Db::raw("select * from user_balance where 
+                    user_id='".$user_id."'"));
+
+                if(count($running_balance_rs) > 0){
+
+                    $running_balance = $running_balance_rs[0]->balance;
+                }
+
+            }else{
+
+                $user_id = DB::table('users')->insertGetId(
+                    array("name"=>$name, "user_group"=>4,"phone_no"=>$msisdn,
+                  "email"=>$msisdn."@urbantap.com","password"=>Hash::make($msisdn))
+                );
+            }
+
+            $balance = $running_balance+$transaction_amount;
+
+            $transaction = new Transaction();
+
+            $transaction->user_id=$user_id;
+            $transaction->transaction_type="CREDIT";
+            $transaction->reference=$transaction_id;
+            $transaction->amount=$transaction_amount;
+            $transaction->running_balance=$balance;
+            $transaction->status_id=0;
+
+            $transaction->save();
+
+            if(count($user) > 0){
+
+                DB::update('update user_balance set balance = ?, transaction_id = ? where 
+                    user_id = ?', [$balance, $transaction->id, $user_id]);
+            }else{
+
+                DB::insert('insert into user_balance (user_id, balance, transaction_id, 
+                    created) values (?, ?, ?, now())', [$user_id, $transaction_amount,
+                     $transaction->id]);
+            }
+
+            $MPESATransactionLog->status_id=1;
+            $MPESATransactionLog->save();
+            $transaction->status_id=1;
+            $transaction->save();
+        }
+        echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
+    }
+
+}

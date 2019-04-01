@@ -13,6 +13,7 @@ class Business extends Model
     public function serviceProvider() {
         return $this->belongsTo('App\ServiceProvider');
     }
+    
     public function details() {
         $data['business_name'] = $this->business_name;
         $data['service_provider_name'] = $this->serviceProvider->service_provider_name;
