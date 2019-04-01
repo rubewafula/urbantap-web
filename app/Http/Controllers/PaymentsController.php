@@ -9,9 +9,16 @@ use Illuminate\Support\Facades\Hash;
 use PhpAmqpLib\Message\AMQPMessage;
 
 use App\Utilities\RabbitMQConnection;
+use App\MpesaTransaction;
+use App\Transaction;
 
 class PaymentsController extends Controller
 {
+
+    private $rabbitMQConnection;
+    private $connection;
+    private $channel;
+
     
     public function mpesa_register_url(){
 
@@ -87,10 +94,18 @@ class PaymentsController extends Controller
             $connection = $rabbitMQConnection->getConnection();
             $channel = $connection->channel();
 
-            $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
+            $dataInJSON = json_encode($postData);
+
+            //Log::info("JSON Encoded ready for the queue ".$dataInJSON);
+
+            // Log::info("Connection ".$connection);
+
+            // $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
            
             $msg = new AMQPMessage($postData);
-            $channel->basic_publish($msg, '', env("MPESA_DEPOSITS_QUEUE"));
+            $publishResult = $channel->basic_publish($msg, '', env("RABBIT_MPESA_QUEUE"));
+
+            echo("Publishing Result ".$publishResult);
 
             Log::info("Message published to the queue successfully");
 
@@ -107,7 +122,7 @@ class PaymentsController extends Controller
         $user_id = "";
         $running_balance = 0;
 
-        Log::info(" Callback URL for MPESA called");
+        Log::info("Callback URL from Inbox Consumer called");
 
         //TO DO: change this to read from the queue
 
@@ -135,13 +150,14 @@ class PaymentsController extends Controller
 
             $name = $first_name. " ".$middle_name." ".$last_name;
 
-            $MPESATransactionLog = new MPESATransaction();
+            $MPESATransactionLog = new MpesaTransaction();
 
             $MPESATransactionLog->message = $transaction_type;
             $MPESATransactionLog->transaction_ref = $transaction_id;
             $MPESATransactionLog->transaction_time = $transaction_time;
-            $MPESATransactionLog->transaction_amount = $transaction_amount;
+            $MPESATransactionLog->amount = $transaction_amount;
             $MPESATransactionLog->paybill_no = $business_code;
+            $MPESATransactionLog->mpesa_code = $transaction_id;
             $MPESATransactionLog->bill_ref_no = $bill_ref_no;
             $MPESATransactionLog->account_no = $invoice_number;
             $MPESATransactionLog->msisdn = $msisdn;
@@ -150,14 +166,13 @@ class PaymentsController extends Controller
 
             $MPESATransactionLog->save();
 
-            $user = Db::select(Db::raw("select * from users where msisdn=:msisdn",
-                ["msisdn" => $msisdn]))->get();
+            $user = Db::select(Db::raw("select * from users where phone_no='".$msisdn."'"));
 
             if(count($user) > 0){
 
                 $user_id = $user[0]->id;
                 $running_balance_rs = Db::select(Db::raw("select * from user_balance where 
-                    user_id=:user_id", ["user_id" => $user_id]))->get();
+                    user_id='".$user_id."'"));
 
                 if(count($running_balance_rs) > 0){
 
@@ -185,11 +200,10 @@ class PaymentsController extends Controller
 
             $transaction->save();
 
-            if(count($user)){
+            if(count($user) > 0){
 
                 DB::update('update user_balance set balance = ?, transaction_id = ? where 
-                    user_id = ?', [$running_balance + $transaction_amount,
-                     $transaction->id, $user_id]);
+                    user_id = ?', [$balance, $transaction->id, $user_id]);
             }else{
 
                 DB::insert('insert into user_balance (user_id, balance, transaction_id, 
@@ -202,9 +216,7 @@ class PaymentsController extends Controller
             $transaction->status_id=1;
             $transaction->save();
         }
-
         echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
-
     }
 
 }
