@@ -111,8 +111,6 @@ Route::group([
     Route::post('appointments/book', 'ApiController@book_appointment');
 });
 
-<<<<<<< HEAD
-
 /** crude before service request can be done **/
 Route::group([
     'prefix' => 'status-categories' 
@@ -301,13 +299,3 @@ Route::group([
 
 
 
-
-=======
-Route::group([
-    'prefix' => 'mpesa'
-], function () {
-
-    Route::post('c2b/confirm', 'PaymentsController@receive_mpesa');
-
-});
->>>>>>> 036fff2e2852efd446f01d9ce8420abf0c6bfc75

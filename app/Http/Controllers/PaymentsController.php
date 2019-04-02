@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Db;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 use PhpAmqpLib\Message\AMQPMessage;
@@ -166,12 +166,12 @@ class PaymentsController extends Controller
 
             $MPESATransactionLog->save();
 
-            $user = Db::select(Db::raw("select * from users where phone_no='".$msisdn."'"));
+            $user = DB::select(DB::raw("select * from users where phone_no='".$msisdn."'"));
 
             if(count($user) > 0){
 
                 $user_id = $user[0]->id;
-                $running_balance_rs = Db::select(Db::raw("select * from user_balance where 
+                $running_balance_rs = DB::select(DB::raw("select * from user_balance where 
                     user_id='".$user_id."'"));
 
                 if(count($running_balance_rs) > 0){
