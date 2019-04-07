@@ -5,12 +5,21 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Http\Request; 
 
 use PhpAmqpLib\Message\AMQPMessage;
 
 use App\Utilities\RabbitMQConnection;
 use App\MpesaTransaction;
 use App\Transaction;
+use App\User;
+use App\ServiceProvider;
+use App\Booking;
+use App\Status;
+use App\Utilities\DBStatus;
+use App\Utilities\HTTPCodes;
+use App\Utilities\SMS;
 
 class PaymentsController extends Controller
 {
@@ -76,7 +85,9 @@ class PaymentsController extends Controller
 
         Log::info($curl_response);
 
-        return json_decode($curl_response, true);
+        $decodedJSON = json_decode($curl_response, true);
+
+        return $decodedJSON["access_token"];
     }
 
 
@@ -95,10 +106,6 @@ class PaymentsController extends Controller
             $channel = $connection->channel();
 
             $dataInJSON = json_encode($postData);
-
-            //Log::info("JSON Encoded ready for the queue ".$dataInJSON);
-
-            // Log::info("Connection ".$connection);
 
             // $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
            
@@ -123,8 +130,6 @@ class PaymentsController extends Controller
         $running_balance = 0;
 
         Log::info("Callback URL from Inbox Consumer called");
-
-        //TO DO: change this to read from the queue
 
         $postData = file_get_contents('php://input');
 
@@ -215,8 +220,151 @@ class PaymentsController extends Controller
             $MPESATransactionLog->save();
             $transaction->status_id=1;
             $transaction->save();
+
+            $booking_amount = 0;
+            $booking_reference = "";
+            $balance = 0;
+            $booking_time = "";
+
+            $bookingRs = DB::select(DB::raw("select * from bookings where 
+                    id='".$invoice_number."'"));
+
+            if(count($bookingRs) > 0){
+
+                $booking_amount = $bookingRs[0]->amount;
+                $balance = $booking_amount - $transaction_amount;
+                $booking_time = $bookingRs[0]->booking_time; 
+
+                $serviceProvider = ServiceProvider::find($bookingRs[0]->service_provider_id);
+
+                Log::info("Service Provider ID is ".$bookingRs[0]->service_provider_id);
+                Log::info("User ID  for the Provider is ".$serviceProvider->user_id);
+
+                $providerMsisdn = User::find($serviceProvider->user_id)->phone_no;
+            }else{
+
+                Log::info("Booking called back by MPESA Number $invoice_number NOT FOUND");
+
+                $out = [
+                    'status' => 421,
+                    'success' => false,
+                    'message' => 'Booking Not Found'
+                ];
+
+                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+            }
+
+            DB::insert('insert into payments (reference, date_received, booking_id, 
+                    payment_method, paid_by_name, paid_by_msisdn, amount, 
+                    received_payment, balance, status_id, created_at) values 
+                    (?, now(), ?, ?,?,?,?,?,?,?, now())', [$transaction_id, $invoice_number,
+                     "MPESA", $name, $msisdn, $booking_amount, $transaction_amount,
+                      $balance, DBStatus::BOOKING_PAID]);
+
+            DB::insert('insert into booking_trails (booking_id, status_id, description, 
+                originator, created_at) values (?,?,?,?,now())',
+                [$invoice_number, DBStatus::BOOKING_PAID, "MPESA TRANSACTION", "MPESA"]);
+
+            DB::update('update bookings set status_id = ?, updated_at = now() where 
+                    id = ?', [DBStatus::BOOKING_PAID, $invoice_number]);
+
+            $customerMessage = "";
+            $serviceProviderMessage = "";
+
+            $smsReference = $invoice_number;
+            $customerMsisdn = $msisdn;
+
+            $halfAmount = ceil($booking_amount/2);
+
+            $sms = new SMS();
+
+            if($balance <= $halfAmount){
+
+                $customerMessage = "Dear $name, you have successfully paid $transaction_amount for your booking, reference $invoice_number. Your slot has been reserved for $booking_time. Thank you.";
+
+                $serviceProviderMessage = "Dear Provider, Booking reference number, $invoice_number has been reserved. Please note the booking time is $booking_time for this request.";
+
+                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
+                $sms->sendSMSMessage($providerMsisdn, $serviceProviderMessage, $smsReference);
+
+            }else {
+
+                $amountToBooking =  $halfAmount - $transaction_amount;
+                $customerMessage = "Dear $name, you have successfully paid $transaction_amount for your booking, reference $invoice_number. Please pay at least $amountToBooking to reserve your booking. Thank you.";
+
+                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
+            }
+
+            $out = [
+                'status' => 200,
+                'success' => true,
+                'message' => 'MPESA Payment Received Successfully'
+            ];
+
+            return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+
         }
-        echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
+
+    }
+
+    public function booking_status(Request $request){
+
+        $booking_id =  $request->get('booking_id');
+
+        Log::info("Querying Data for Booking with Reference ".$booking_id);
+
+        $booking = Booking::find($booking_id);
+        $booking_status = "";
+        $out = [];
+
+        if($booking != null){
+
+            $booking_status = $booking->status->description;
+            $out = ["status" => 200, "message" => $booking_status];
+
+        }else{
+
+            $out = ["status" => 404, "message" => "Booking Not Found"];
+        }
+
+        return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+    }
+
+
+    public function stkPush(Request $request){
+
+        Log::info("STK Call Done");
+
+        $url = env("SAF_STK_URL");
+        $token = PaymentsController::mpesa_generate_token();
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer '.$token)); //setting custom header
+
+        $curl_post_data = array(
+
+          'BusinessShortCode' => env("SHORT_CODE"),
+          'Password' => env("SHORT_CODE"),
+          'Timestamp' => date('YmdHis'),
+          'TransactionType' => 'CustomerPayBillOnline',
+          'Amount"' => $request->get('amount'),
+          'PartyA' => $request->get('msisdn'),
+          'PartyB' => env("SHORT_CODE"),
+          'PhoneNumber' => $request->get('msisdn'),
+          'CallBackURL' => env("STK_CALLBACK"),
+          'AccountReference' => $request->get('reference'),
+          'TransactionDesc' => 'Booking Payment'
+        );
+
+        $data_string = json_encode($curl_post_data);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+
+        $curl_response = curl_exec($curl);
+        Log::info("Got STK Response Data ".$curl_response);
     }
 
 }

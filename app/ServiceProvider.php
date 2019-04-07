@@ -6,6 +6,9 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceProvider extends Model
 {
+
+    protected $table = "service_providers";
+
     public function displayImages() {
         return $this->hasMany('App\ServiceProviderImages');
     }
@@ -21,6 +24,11 @@ class ServiceProvider extends Model
     public function type()
     {
         return $this->type == 1 ? "Expert" : "Business";
+    }
+
+    public function user()
+    {
+        return $this->BelongsTo('App\User');
     }
 
     public function toArray() {

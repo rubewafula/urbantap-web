@@ -42,7 +42,6 @@ class ProviderServicesController extends Controller
         if(!is_null($id)){
             $filter = " and ps.service_provider_id = '" .$id . "' ";
         }
-         
 
         $query = "select s.id as service_id, s.service_name, ps.description, "
             . " c.category_name, ps.cost, ps.duration, ps.rating from provider_services "
@@ -51,10 +50,8 @@ class ProviderServicesController extends Controller
 
         $provider_services = RawQuery::paginate($query);
 
-
         Log::info('Query : ' . $query);
 
-       
         //dd(HTTPCodes);
         Log::info('Extracted statuses results : ' . var_export($provider_services, 1));
 
@@ -204,10 +201,5 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
         }
     }
-
-
-   
-
-    
 
 }
