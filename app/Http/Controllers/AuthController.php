@@ -67,6 +67,7 @@ class AuthController extends Controller
 
         ]);
 
+        $user->save();
 
         //$user->save();
 
@@ -271,25 +272,24 @@ class AuthController extends Controller
 //        $credentials['active'] = 1;
 //        $credentials['deleted_at'] = null;
 
-            if(!Auth::attempt($credentials))
-                return response()->json([
-                    'message' => 'Invalid credentials, please check your email and password'
-                ], 401);
-            $user = $request->user();
-            $tokenResult = $user->createToken('Personal Access Token');
-            $token = $tokenResult->token;
+        if(!Auth::attempt($credentials))
+            return response()->json([
+                'message' => 'Invalid credentials, please check your email and password'
+            ], 401);
+        $user = $request->user();
+        $tokenResult = $user->createToken('Personal Access Token');
+        $token = $tokenResult->token;
 //        if ($request->remember_me)
 //            $token->expires_at = Carbon::now()->addWeeks(1);
-            $token->save();
-            return response()->json([
-                'access_token' => $tokenResult->accessToken,
-                'token_type' => 'Bearer',
-                'expires_at' => Carbon::parse(
-                    $tokenResult->token->expires_at
-                )->toDateTimeString(),
-                'user' => $request->user()
-            ]);
-
+        $token->save();
+        return response()->json([
+            'access_token' => $tokenResult->accessToken,
+            'token_type' => 'Bearer',
+            'expires_at' => Carbon::parse(
+                $tokenResult->token->expires_at
+            )->toDateTimeString(),
+            'user' => $request->user()
+        ]);
     }
 
     public function logout(Request $request)
@@ -304,7 +304,5 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
-
-
 
 }

@@ -111,7 +111,6 @@ Route::group([
     Route::post('appointments/book', 'ApiController@book_appointment');
 });
 
-
 /** crude before service request can be done **/
 Route::group([
     'prefix' => 'status-categories' 
@@ -296,7 +295,6 @@ Route::group([
    Route::get('get', 'HomePageController@get');
 
 });
-
 
 
 
