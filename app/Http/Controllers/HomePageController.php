@@ -32,7 +32,7 @@ class HomePageController extends Controller
         $service_query = "select service_name , service_meta from services ";
         $top_service_query = "select service_name , service_meta, service_icon from "
             . " top_services ts inner join services s on ts.service_id = s.id "
-            . " order by ts.priority desc ";
+            . " order by ts.priority desc limit 10";
 
         $top_booking_id_q = "select id as customer_count from bookings order by 1 desc limit 1";
         $top_service_provider_id_q = "select id  as service_provider_count from service_providers order by 1 desc limit 1";
@@ -45,11 +45,35 @@ class HomePageController extends Controller
             . " sp.service_provider_name,  sp.business_description, sp.work_location, "
 	    . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
 	    . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
-	    . " d.home_location, work_phone_no  FROM provider_services ps inner join "
+	    . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+        . " if(d.passport_photo is null, 'avatar-bg-1.png', "
+        . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
+        . " if(sp.cover_photo is null, 'img-03.jpg', "
+        . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+        . " FROM provider_services ps inner join "
 	    . " service_providers sp on sp.id = ps.service_provider_id inner  join "
 	    . " user_personal_details  d using(user_id) inner join services s on "
-	    . " s.id = ps.service_id where sp.status_id =1  order by overall_rating desc, "
+	    . " s.id = ps.service_id where sp.status_id =1  order by sp.created_at desc, "
 	    . " overall_likes desc limit 20";
+
+        $featured_providers = "SELECT sp.id, s.service_name, sp.type, "
+            . " (select count(*) from reviews where service_provider_id = sp.id "
+            . " and provider_service_id=ps.id) as reviews, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, "
+            . " date_format(sp.created_at, '%b, %Y') as since, "
+            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
+            . " if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " FROM provider_services ps inner join "
+            . " service_providers sp on sp.id = ps.service_provider_id inner  join "
+            . " user_personal_details  d using(user_id) inner join services s on "
+            . " s.id = ps.service_id where sp.status_id =1  order by overall_rating desc, "
+            . " overall_likes desc limit 2";
+
 
       
 
@@ -61,7 +85,8 @@ class HomePageController extends Controller
                 $top_service_provider_id_q,
                 $top_review_id_q, 
                 $weekly_providers_q,
-                $popular_providers
+                $popular_providers,
+                $featured_providers
              ]);
        
         $out = ['services' =>$results[0], 
@@ -70,7 +95,9 @@ class HomePageController extends Controller
                 'service_provider_count' => $results[3][0]->service_provider_count,
                 'rating_count' => $results[4][0]->rating_count, 
                 'weekly_providers_count' => $results[5][0]->weekly_providers_count,
-                'popular_providers' => $results[6] ];
+                'popular_providers' => $results[6],
+                'featured_providers' => $results[7]
+            ];
         
         return Response::json($out, HTTPCodes::HTTP_OK);
 
