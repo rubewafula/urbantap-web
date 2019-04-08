@@ -180,6 +180,7 @@ class ServiceProvidersController extends Controller{
             . " using(user_id) where sp.status_id "
             . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
 
+        //die($rawQuery);
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
         //dd(HTTPCodes);

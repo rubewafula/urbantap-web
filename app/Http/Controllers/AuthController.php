@@ -84,7 +84,7 @@ class AuthController extends Controller
 
         //  Send  Email to verify  Email 
 
-          $user->notify(new SignupActivate($user));
+          #$user->notify(new SignupActivate($user));
 
            $out = [
                 'success' => TRUE,

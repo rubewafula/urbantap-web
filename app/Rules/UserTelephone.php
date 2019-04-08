@@ -27,7 +27,7 @@ class UserTelephone implements Rule
     public function passes($attribute, $value)
     {
         //
-          preg_match("/^(?:\+?254|0)?(7\d{8})/", "254726986944", $matches);
+          preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $matches);
           if(empty($matches)){
               return FALSE;
           }

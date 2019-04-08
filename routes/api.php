@@ -279,17 +279,6 @@ Route::post('balances/create','BalancesController@store');
 
 
 Route::group([
-'prefix' => 'categories'
-], function(){
-   Route::get('all', 'CategoriesController@get');
-   Route::get('get/{id}', 'CategoriesController@get');
-   Route::get('create', 'CategoriesController@create');
-   Route::get('update', 'CategoriesController@update');
-   Route::get('del','CategoriesController@delete');
-
-});
-
-Route::group([
 'prefix' => 'home'
 ], function(){
    Route::get('get', 'HomePageController@get');
