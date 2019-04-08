@@ -145,6 +145,8 @@ class ServiceProvidersController extends Controller{
         $req= $request->all();
         $page = 1; 
         $limit =null;
+        $sort = null;
+        $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
         //die(print_r($req, 1));
         if(array_key_exists('page', $req)){
              $page = is_numeric($request['page']) ? $request['page'] : 1;
@@ -152,9 +154,14 @@ class ServiceProvidersController extends Controller{
         if(array_key_exists('limit', $req)){
              $limit = is_numeric($request['limit']) ? $request['limit'] : null;
         }
+
+        if(array_key_exists('sort', $req)){
+             $sort = $request['sort'];
+        }
        
-    	$validator = Validator::make(['id'=>$user_id],
-    		['user_id'=>'integer|exists:users,id|nullable']
+    	$validator = Validator::make(['id'=>$user_id, 'sort'=>$sort],
+    		['user_id'=>'integer|exists:users,id|nullable', 
+             'sort' => 'in:since,overall_likes, overall_ratings,total_requests|nullable']
         );
     	if($validator ->fails()){
     		$out =[
@@ -171,14 +178,37 @@ class ServiceProvidersController extends Controller{
             $filter = " and sp.user_id = '" .$user_id . "' ";
         }
 
-        $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
-            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
-            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no "
-            . " FROM service_providers sp inner join user_personal_details  d "
-            . " using(user_id) where sp.status_id "
-            . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
+        if(!is_null($sort)){
+            $sort_by = " order by $sort desc ";
+        }
+
+        // $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
+        //     . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+        //     . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+        //     . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
+        //     . " d.home_location work_phone_no "
+        //     . " FROM service_providers sp inner join user_personal_details  d "
+        //     . " using(user_id) where sp.status_id "
+        //     . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
+
+        $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
+            . " (select count(*) from reviews where service_provider_id = sp.id "
+            . " and provider_service_id=ps.id) as reviews, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
+            . " if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " FROM provider_services ps inner join "
+            . " service_providers sp on sp.id = ps.service_provider_id inner  join "
+            . " user_personal_details  d using(user_id) inner join services s on "
+            . " s.id = ps.service_id where sp.status_id =1  " 
+            . $filter .    $sort_by ;
+
+        //die($rawQuery);
 
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
