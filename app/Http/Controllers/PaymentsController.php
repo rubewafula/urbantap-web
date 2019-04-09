@@ -280,9 +280,9 @@ class PaymentsController extends Controller
 
             if($balance <= $halfAmount){
 
-                $customerMessage = "Dear $name, you have successfully paid $transaction_amount for your booking, reference $invoice_number. Your slot has been reserved for $booking_time. Thank you.";
+                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $invoice_number. Your slot has been reserved for $booking_time. Thank you.";
 
-                $serviceProviderMessage = "Dear Provider, Booking reference number, $invoice_number has been reserved. Please note the booking time is $booking_time for this request.";
+                $serviceProviderMessage = "Dear Service Provider, Booking reference number, $invoice_number has been reserved. Please note the booking time is $booking_time for this request.";
 
                 $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
                 $sms->sendSMSMessage($providerMsisdn, $serviceProviderMessage, $smsReference);
@@ -290,7 +290,7 @@ class PaymentsController extends Controller
             }else {
 
                 $amountToBooking =  $halfAmount - $transaction_amount;
-                $customerMessage = "Dear $name, you have successfully paid $transaction_amount for your booking, reference $invoice_number. Please pay at least $amountToBooking to reserve your booking. Thank you.";
+                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $invoice_number. Please pay at least KSh. $amountToBooking to reserve your booking. Thank you.";
 
                 $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
             }
