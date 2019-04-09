@@ -4,7 +4,8 @@
 
 namespace App\Utilities;
 
-class DBStatus{
+class DBStatus {
+	
 	const RECORD_PENDING = 1;
 	const RECORD_APPROVED = 2;
 	const RECORD_DELETED = 3;
@@ -17,6 +18,7 @@ class DBStatus{
 	const BOOKING_COMPLETE = 1;
 	const BOOKING_REJECTED = 9;
 	const BOOKING_POST_REJECTED = 10;
+	const BOOKING_PAID= 11;
 
 
 	const USER_NEW= 20;
@@ -28,6 +30,4 @@ class DBStatus{
 	const SMS_DELIVERED =26;
 	const SMS_FAILED= 27;
 
-
 }
-
