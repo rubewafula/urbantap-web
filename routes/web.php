@@ -11,10 +11,14 @@
 |
 */
 Auth::routes();
+ Route::get('loadwaf','WafController@waf');
+
 Route::get('/logout', 'Auth\LoginController@logout');
 
+Route::get('verification','AuthController@generate_verification');
+
 Route::group(['middleware' => ['auth']], function () {
-    Route::get('/','HomeController@index');
+    //Route::get('/','HomeController@index');
 
     Route::get('/services', 'ServicesController@services');
     Route::post('/services/new','ServicesController@new_service');
@@ -32,9 +36,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/provider/{id}','ProviderController@service_provider');
     Route::post('/provider/update','ProviderController@update_provider');
 
-
-
-
     Route::get('/businesses','BusinessController@businesses');
     Route::get('/business/{id}','BusinessController@business');
     Route::post('/business/new','BusinessController@new_business');
@@ -46,8 +47,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/business/appointments/accept/{_id}','BusinessController@accept_appointment');
     Route::get('/business/appointments/reject/{_id}','BusinessController@reject_appointment');
     Route::post('/business/gallery/upload','BusinessController@upload_gallery');
-
-
 
     Route::get('/experts','ExpertsController@experts');
     Route::get('/expert/{id}','ExpertsController@expert');
@@ -62,31 +61,20 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/expert/appointments/reject/{_id}','ExpertsController@reject_appointment');
     Route::post('/expert/gallery/upload','ExpertsController@upload_gallery');
 
-
-
-
-
     Route::get('/companies','CompanyController@index')->middleware('perm:1');
     Route::get('/companies/{id}','CompanyController@company')->middleware('perm:1');
     Route::post('/companies/new','CompanyController@new_company')->middleware('perm:1');
     Route::post('/companies/update','CompanyController@update_company')->middleware('perm:1');
-
-
-
 
     Route::get('/depots','DepotController@index')->middleware('perm:1');
     Route::get('/depots/{id}','DepotController@depot')->middleware('perm:1');
     Route::post('/depots/new','DepotController@new_depot')->middleware('perm:1');
     Route::post('/depots/update','DepotController@update_depot')->middleware('perm:1');
 
-
-
     Route::get('/drivers','DriverController@index')->middleware('perm:1');
     Route::get('/drivers/{id}','DriverController@driver')->middleware('perm:1');
     Route::post('/drivers/new','DriverController@new_driver');
     Route::post('/drivers/update','DriverController@update_driver')->middleware('perm:1');
-
-
 
     Route::get('/vehicles','VehicleController@index')->middleware('perm:1');
     Route::get('/vehicles/{id}','VehicleController@vehicle');//->middleware('perm:1');
@@ -96,21 +84,16 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/vehicles/revoke_driver/{vehicle_id}/{driver_id}','VehicleController@revoke_driver')->middleware('perm:1');
     Route::post('/vehicles/blacklist','VehicleController@blacklist_vehicle')->middleware('perm:1');
 
-
-
     Route::get('/users', 'UserController@index')->middleware('perm:1');
     Route::get('/users/delete/{user_id}', 'UserController@delete_user')->middleware('perm:1');
     Route::post('/enroll', 'UserController@register_user')->middleware('perm:1');
     Route::get('/users/profile/{user_id}', 'UserController@profile')->middleware('perm:1');
     Route::post('/users/profile/update', 'UserController@update')->middleware('perm:1');
 
-
     Route::post('/orders/new','OrderController@new_order');//->middleware('perm:1');
     Route::get('/orders/{order_id}','OrderController@view_order');//->middleware('perm:1');
     Route::get('/orders/mark/{order_id}','OrderController@mark_loaded');//->middleware('perm:1');
 
-
-
-
 });
 
+require 'payments.php';
