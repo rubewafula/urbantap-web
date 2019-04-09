@@ -30,7 +30,7 @@ class HomePageController extends Controller
 
        
         $service_query = "select id, service_name , service_meta from services ";
-        $top_service_query = "select id, service_name , service_meta, service_icon from "
+        $top_service_query = "select s.id, service_name , service_meta, service_icon from "
             . " top_services ts inner join services s on ts.service_id = s.id "
             . " order by ts.priority desc limit 10";
 
