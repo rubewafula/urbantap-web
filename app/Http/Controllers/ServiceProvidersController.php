@@ -52,73 +52,59 @@ class ServiceProvidersController extends Controller{
 
         $filter= '';
         if(!is_null($user_id)){
-            $filter = " and sp.user_id = '" .$user_id . "' ";
+            $filter = " and sp.id = '" .$user_id . "' ";
         }
 
         $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
             . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
             . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no "
+            . " d.home_location work_phone_no, sp.business_description "
             . " FROM service_providers sp inner join user_personal_details  d "
             . " using(user_id) where 1=1 " . $filter ;
 
-        $results = RawQuery::paginate($rawQuery);
+        //die($rawQuery);
+
+        $results =[]; 
+        $results['provider'] =  RawQuery::query($rawQuery)[0];
        
-        $service_provider_id =  $results['result'][0]->id;
+        $service_provider_id =  $user_id;
 
-        $sql_provider_services = "select ps.id, ps.service_provider_id, ps.service_id, "
+        $sql_provider_services = "select ps.id as provider_service_id,  "
+            . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
-            . " ps.updated_at from provider_services ps "
-            . " where ps.service_provider_id = '" . $service_provider_id . "' ";
+            . "  ps.updated_at from provider_services ps inner join services s on " 
+            . " s.id = ps.service_id  where ps.service_provider_id = '" . $service_provider_id . "' ";
 
-        $services = RawQuery::paginate($sql_provider_services);
+        $services = RawQuery::query($sql_provider_services);
+        $results['services'] = $services;
 
-        $working_hours_sql = "select day, time_from, time_to from operating_hours "
-            . " where service_provider_id='" . $service_provider_id . "'";
+        $working_hours_sql = "select service_day, time_from, time_to from operating_hours "
+            . " where service_provider_id ='" . $service_provider_id . "'";
 
-        $working_hours = RawQuery::paginate($working_hours_sql);
-
-        if(!empty($working_hours)){
-            $results['operating_hours'] = $working_hours['result'];
-        }
+        $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
         $portfolios_sql = "SELECT p.media_data, p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
-        $portfolios = RawQuery::paginate($portfolios_sql);
+        $results['portfolios'] = RawQuery::query($portfolios_sql);
 
-        //die(print_r($portfolios, 1));
-
-        if(!empty($portfolios)){
-            $results['portfolios'] = $portfolios['result'];
-        }
-
-
-        $full_services = [];
-        foreach($services['result'] as $key=>$service){
-            $service_provider_id = $service->service_provider_id;
-            $provider_service_id =  $service->id;
-
-            $reviews_sql = "SELECT r.provider_service_id, r.rating, r.review, "
-                . " r.status_id, u.name as reviewer, u.email, s.service_name"
+        
+        $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
+                . " r.provider_service_id, r.rating, r.review, "
+                . " r.status_id, u.name as reviewer, u.email, s.service_name, "
+                . " if(d.passport_photo is null, 'avatar-bg-1.png', "
+                . " json_extract(d.passport_photo, '$.media_url')) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
+                . " inner join user_personal_details d on u.id = d.user_id "
                 . " inner join provider_services ps on ps.id = r.provider_service_id "
                 . " inner join services s on s.id = ps.service_id where "
                 . " r.service_provider_id = '" . $service_provider_id . "' "
-                . " and r.provider_service_id = '" . $provider_service_id . "' ";
+                . " order by r.id desc limit 5";
 
-            $reviews = RawQuery::paginate($reviews_sql);
-            //die(print_r($reviews, 1));
-            if(!empty($reviews)){
-                 $service->reviews =  $reviews['result'];
-            }
+       //die($reviews_sql);
 
-            //append reviews to each service
-            $full_services[] = $service;
-        }
-        
-        $results['services'] = $full_services;
+        $results['reviews'] = RawQuery::query($reviews_sql);
 
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : '.var_export($results, 1));
@@ -129,6 +115,88 @@ class ServiceProvidersController extends Controller{
 
     }
 
+
+    public function getwithserviceid($service_id=null, Request $request){
+        $req= $request->all();
+        $page = 1; 
+        $limit =null;
+        $sort = null;
+        $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
+        //die(print_r($req, 1));
+        if(array_key_exists('page', $req)){
+             $page = is_numeric($request['page']) ? $request['page'] : 1;
+        }
+        if(array_key_exists('limit', $req)){
+             $limit = is_numeric($request['limit']) ? $request['limit'] : null;
+        }
+
+        if(array_key_exists('sort', $req)){
+             $sort = $request['sort'];
+        }
+       
+        $validator = Validator::make(['id'=>$service_id, 'sort'=>$sort],
+            ['id'=>'integer|exists:services,id|nullable', 
+             'sort' => 'in:since,overall_likes, overall_ratings,total_requests|nullable']
+        );
+        if($validator ->fails()){
+            $out =[
+               'sucess'=> false, 
+               'message'=> $validator->messages()
+
+            ];
+
+            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $filter= '';
+        if(!is_null($service_id)){
+            $filter = " and s.id = '" .$service_id . "' ";
+        }
+
+        if(!is_null($sort)){
+            $sort_by = " order by $sort desc ";
+        }
+
+        // $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
+        //     . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+        //     . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+        //     . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
+        //     . " d.home_location work_phone_no "
+        //     . " FROM service_providers sp inner join user_personal_details  d "
+        //     . " using(user_id) where sp.status_id "
+        //     . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
+
+        $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
+            . " (select count(*) from reviews where service_provider_id = sp.id "
+            . " and provider_service_id=ps.id) as reviews, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
+            . " if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " FROM provider_services ps inner join "
+            . " service_providers sp on sp.id = ps.service_provider_id inner  join "
+            . " user_personal_details  d using(user_id) inner join services s on "
+            . " s.id = ps.service_id where sp.status_id =1  " 
+            . $filter .    $sort_by ;
+
+        //die($rawQuery);
+
+        //die($rawQuery);
+        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
+
+        //dd(HTTPCodes);
+        Log::info('Extracted service service_providers results : '.var_export($results, 1));
+        if(empty($results)){
+            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
+
+
+    }
 
 	 /**
      * Display the specified service providers.
