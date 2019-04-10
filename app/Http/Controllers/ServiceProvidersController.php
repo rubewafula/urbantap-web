@@ -97,7 +97,8 @@ class ServiceProvidersController extends Controller{
         
         $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
                 . " r.provider_service_id, r.rating, r.review, "
-                . " r.status_id, u.name as reviewer, u.email, s.service_name, "
+                . " r.status_id, concat(u.first_name, ' ', u.last_name) as reviewer, "
+                . " u.email, s.service_name, "
                 . " concat( '$image_url' , if(d.passport_photo is null, 'avatar-bg-1.png', "
                 . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
