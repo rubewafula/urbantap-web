@@ -16,6 +16,7 @@ use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
 
 
 class ServiceProvidersController extends Controller{
@@ -36,6 +37,9 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         //die(print_r($req, 1));
+
+        $image_url = URL::to('/static/images/avatar/');
+        $sp_providers_url =  URL::to('/static/images/service-providers/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -50,6 +54,7 @@ class ServiceProvidersController extends Controller{
             return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
+       
         $filter= '';
         if(!is_null($user_id)){
             $filter = " and sp.id = '" .$user_id . "' ";
@@ -93,8 +98,8 @@ class ServiceProvidersController extends Controller{
         $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
                 . " r.provider_service_id, r.rating, r.review, "
                 . " r.status_id, u.name as reviewer, u.email, s.service_name, "
-                . " if(d.passport_photo is null, 'avatar-bg-1.png', "
-                . " json_extract(d.passport_photo, '$.media_url')) as thumbnail "
+                . " concat( '$image_url' , if(d.passport_photo is null, 'avatar-bg-1.png', "
+                . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
                 . " inner join user_personal_details d on u.id = d.user_id "
                 . " inner join provider_services ps on ps.id = r.provider_service_id "
@@ -157,6 +162,9 @@ class ServiceProvidersController extends Controller{
             $sort_by = " order by $sort desc ";
         }
 
+        $image_url = URL::to('/static/images/avatar/');
+        $sp_providers_url =  URL::to('/static/images/service-providers/');
+
         // $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
         //     . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
         //     . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
@@ -173,10 +181,10 @@ class ServiceProvidersController extends Controller{
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
-            . " if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " concat( '$image_url' ,if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url'))) as thumbnail, "
+            . " concat( '$sp_providers_url' ,if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url')) ) as cover_photo "
             . " FROM provider_services ps inner join "
             . " service_providers sp on sp.id = ps.service_provider_id inner  join "
             . " user_personal_details  d using(user_id) inner join services s on "
