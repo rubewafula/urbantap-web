@@ -66,6 +66,8 @@ class ServiceProvidersController extends Controller{
             . " d.id_number, d.date_of_birth, d.gender, "
             . " concat( '$image_url' , if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo, "
             . " d.home_location, work_phone_no, sp.business_description "
             . " FROM service_providers sp inner join user_personal_details  d "
             . " using(user_id) where 1=1 " . $filter ;
