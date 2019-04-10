@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;	
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
-use App\Utilities\RawPaginate;
+use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 
@@ -70,7 +70,7 @@ class ServiceProviderPortfoliosController extends Controller{
         $rawQuery = "SELECT p.media_data, p.description "
             . " FROM  portfolios p  where 1=1  " . $filter ;
 
-        $results = RawPaginate::paginate($rawQuery, $page=$page, $limit=$limit);
+        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
         //dd(HTTPCodes);
         Log::info('Extracted user personal details : '.var_export($results, 1));

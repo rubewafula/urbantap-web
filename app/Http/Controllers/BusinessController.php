@@ -24,7 +24,8 @@ class BusinessController extends Controller
      */
     public function index()
     {
-        return BusinessResource::collection(Business::paginate(25));
+        return BusinessResource::collection(
+            Business::paginate(25));
 
     }
 
@@ -57,7 +58,9 @@ class BusinessController extends Controller
             'phone_no' => 'required',
         ]);
 
-        if (is_null(Business::where('service_provider_id', $request->service_provider)->first())){
+        if (is_null(Business::where('service_provider_id', 
+            $request->service_provider)->first())){
+
             DB::transaction(function() use ($request) {
                 $business = new Business();
                 $business->service_provider_id = $request->service_provider;
@@ -75,7 +78,8 @@ class BusinessController extends Controller
 
         }else{
 
-            Session::flash("error", "Service provider is already registered to another business!");
+            Session::flash("error", "Service provider is already registered to 
+                another business!");
         }
 
 
@@ -88,10 +92,14 @@ class BusinessController extends Controller
         if (is_null($business)){
             abort(404);
         }else{
-            $services = ProviderServices::where('service_provider_id', $business->serviceProvider->id)->orderBy('id', 'desc')->get();
-            $appointments = Appointment::where('service_provider_id', $business->serviceProvider->id)->orderBy('id', 'desc')->paginate(20);
-            $operatingHours = OperatingHours::where('service_provider_id', $business->serviceProvider->id)->orderBy('id', 'desc')->get();
-            $images = ServiceProviderImages::where('service_provider_id', $business->serviceProvider->id)->orderBy('id', 'desc')->get();
+            $services = ProviderServices::where('service_provider_id', 
+                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
+            $appointments = Appointment::where('service_provider_id',
+             $business->serviceProvider->id)->orderBy('id', 'desc')->paginate(20);
+            $operatingHours = OperatingHours::where('service_provider_id', 
+                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
+            $images = ServiceProviderImages::where('service_provider_id', 
+                $business->serviceProvider->id)->orderBy('id', 'desc')->get();
             return view('business.business')
                 ->with('business', $business)
                 ->with('services', $services)
@@ -281,8 +289,5 @@ class BusinessController extends Controller
 
         return redirect()->back();
     }
-
-
-
 
 }

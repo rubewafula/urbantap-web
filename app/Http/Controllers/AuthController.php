@@ -50,9 +50,9 @@ class AuthController extends Controller
 
             return Response::json([ 'success' => FALSE,'message'=>' The  Role of the  user  is not  allowed',HTTPCodes::HTTP_BAD_REQUEST]);
         } 
-
-
-         $phone= '254'.substr($request->phone_no,-9);
+        
+         preg_match("/^(?:\+?254|0)?(7\d{8})/", "254726986944", $matches);
+         $phone= '254' . $matches[1];
   
           $user = User::Create([
             'first_name' => $request->first_name,
@@ -67,6 +67,7 @@ class AuthController extends Controller
 
         ]);
 
+        $user->save();
 
         //$user->save();
 
@@ -83,7 +84,7 @@ class AuthController extends Controller
 
         //  Send  Email to verify  Email 
 
-          $user->notify(new SignupActivate($user));
+          #$user->notify(new SignupActivate($user));
 
            $out = [
                 'success' => TRUE,
@@ -271,25 +272,24 @@ class AuthController extends Controller
 //        $credentials['active'] = 1;
 //        $credentials['deleted_at'] = null;
 
-            if(!Auth::attempt($credentials))
-                return response()->json([
-                    'message' => 'Invalid credentials, please check your email and password'
-                ], 401);
-            $user = $request->user();
-            $tokenResult = $user->createToken('Personal Access Token');
-            $token = $tokenResult->token;
+        if(!Auth::attempt($credentials))
+            return response()->json([
+                'message' => 'Invalid credentials, please check your email and password'
+            ], 401);
+        $user = $request->user();
+        $tokenResult = $user->createToken('Personal Access Token');
+        $token = $tokenResult->token;
 //        if ($request->remember_me)
 //            $token->expires_at = Carbon::now()->addWeeks(1);
-            $token->save();
-            return response()->json([
-                'access_token' => $tokenResult->accessToken,
-                'token_type' => 'Bearer',
-                'expires_at' => Carbon::parse(
-                    $tokenResult->token->expires_at
-                )->toDateTimeString(),
-                'user' => $request->user()
-            ]);
-
+        $token->save();
+        return response()->json([
+            'access_token' => $tokenResult->accessToken,
+            'token_type' => 'Bearer',
+            'expires_at' => Carbon::parse(
+                $tokenResult->token->expires_at
+            )->toDateTimeString(),
+            'user' => $request->user()
+        ]);
     }
 
     public function logout(Request $request)
@@ -304,7 +304,5 @@ class AuthController extends Controller
     {
         return response()->json($request->user());
     }
-
-
 
 }

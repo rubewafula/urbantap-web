@@ -9,7 +9,7 @@ use Illuminate\Http\Request;
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Validator;
-use App\Utilities\RawPaginate;
+use App\Utilities\RawQuery;
 
 class OperatingHoursController extends Controller
 {
@@ -47,7 +47,7 @@ class OperatingHoursController extends Controller
         $query = "select day, time_from, time_to from operating_hours op "
             . " where 1=1 ". $filter;
 
-        $operating_hours = RawPaginate::paginate($query);
+        $operating_hours = RawQuery::paginate($query);
 
 
         Log::info('Query : ' . $query);

@@ -109,7 +109,6 @@ Route::group([
     Route::post('appointments/book', 'ApiController@book_appointment');
 });
 
-
 /** crude before service request can be done **/
 Route::group([
     'prefix' => 'status-categories' 
@@ -193,7 +192,9 @@ Route::group([
  'prefix' => 'service-providers'
 ], function(){
     Route::get('all', 'ServiceProvidersController@get');
+    Route::get('popular', 'ServiceProvidersController@popular');
     Route::get('get/{id}', 'ServiceProvidersController@get');
+    Route::get('services/{id}', 'ServiceProvidersController@getwithserviceid');
     Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
     Route::put('update', 'ServiceProvidersController@update');
@@ -248,8 +249,14 @@ Route::group([
    Route::get('all', 'BookingsController@get');
    Route::get('service-providers/all/{id}', 'BookingsController@get');
    Route::get('users/all/{id}', 'BookingsController@getUserBookings');
+   Route::get('details/{id}', 'BookingsController@getBookingDetails');
+   Route::get('user/booking-with-details/{id}', 
+        'BookingsController@getUserBookingWithDetails');
+   Route::get('provider/booking-with-details/{id}', 
+        'BookingsController@getProviderBookingWithDetails');
+
    Route::post('create', 'BookingsController@create');
-   Route::put('update', 'BookingsController@update');
+   Route::put('update', 'BookingsController@updateBooking');
    Route::delete('delete','BookingsController@delete');
 
 });
@@ -271,15 +278,12 @@ Route::post('balances/create','BalancesController@store');
 
 
 Route::group([
-'prefix' => 'categories'
+'prefix' => 'home'
 ], function(){
-   Route::get('all', 'CategoriesController@get');
-   Route::get('get/{id}', 'CategoriesController@get');
-   Route::get('create', 'CategoriesController@create');
-   Route::get('update', 'CategoriesController@update');
-   Route::get('del','CategoriesController@delete');
+   Route::get('get', 'HomePageController@get');
 
 });
+
 
 
 
