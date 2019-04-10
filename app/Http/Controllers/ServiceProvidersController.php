@@ -181,9 +181,9 @@ class ServiceProvidersController extends Controller{
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " concat( '$image_url' ,if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " concat( '$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " json_extract(d.passport_photo, '$.media_url'))) as thumbnail, "
-            . " concat( '$sp_providers_url' ,if(sp.cover_photo is null, 'img-03.jpg', "
+            . " concat( '$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url')) ) as cover_photo "
             . " FROM provider_services ps inner join "
             . " service_providers sp on sp.id = ps.service_provider_id inner  join "
@@ -222,6 +222,11 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         $sort = null;
+
+        $image_url = URL::to('/static/images/avatar/');
+        $sp_providers_url =  URL::to('/static/images/service-providers/');
+
+
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
         //die(print_r($req, 1));
         if(array_key_exists('page', $req)){
@@ -274,10 +279,10 @@ class ServiceProvidersController extends Controller{
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
-            . " if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " conact('$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url'))) as thumbnail, "
+            . " conact('$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
             . " FROM provider_services ps inner join "
             . " service_providers sp on sp.id = ps.service_provider_id inner  join "
             . " user_personal_details  d using(user_id) inner join services s on "
