@@ -63,8 +63,10 @@ class ServiceProvidersController extends Controller{
         $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
             . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no, sp.business_description "
+            . " d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' , if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " d.home_location, work_phone_no, sp.business_description "
             . " FROM service_providers sp inner join user_personal_details  d "
             . " using(user_id) where 1=1 " . $filter ;
 
@@ -99,7 +101,7 @@ class ServiceProvidersController extends Controller{
                 . " r.provider_service_id, r.rating, r.review, "
                 . " r.status_id, concat(u.first_name, ' ', u.last_name) as reviewer, "
                 . " u.email, s.service_name, "
-                . " concat( '$image_url' , if(d.passport_photo is null, 'avatar-bg-1.png', "
+                . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
                 . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
                 . " inner join user_personal_details d on u.id = d.user_id "
