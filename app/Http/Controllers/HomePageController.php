@@ -29,9 +29,14 @@ class HomePageController extends Controller
 
     public function get($id=null){
 
-       
+        $image_url = URL::to('/static/images/avatar/');
+        $sp_providers_url =  URL::to('/static/images/service-providers/');
+        $icon_url = URL::to('/static/images/icons/');
+
         $service_query = "select id, service_name , service_meta from services ";
-        $top_service_query = "select s.id, service_name , service_meta, service_icon from "
+        $top_service_query = "select s.id, service_name , service_meta, "
+            . " concat('$icon_url', '/', if(service_icon is null, 'spa.png', service_icon)) "
+            . " as service_icon from "
             . " top_services ts inner join services s on ts.service_id = s.id "
             . " order by ts.priority desc limit 10";
 
@@ -40,8 +45,7 @@ class HomePageController extends Controller
         $top_review_id_q = "select id as rating_count from reviews order by 1 desc limit 1";
         $weekly_providers_q = "select count(*) as weekly_providers_count from service_providers where created_at > now() - interval 1 week ";
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
+        
 
         $popular_providers = "SELECT sp.id, s.service_name, sp.type, "
             . " (select count(*) from reviews where service_provider_id = sp.id "
