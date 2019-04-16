@@ -40,6 +40,7 @@ class ServiceProvidersController extends Controller{
 
         $image_url = URL::to('/static/images/avatar/');
         $sp_providers_url =  URL::to('/static/images/service-providers/');
+        $p_services_url =  URL::to('/static/images/provider-services/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -80,10 +81,14 @@ class ServiceProvidersController extends Controller{
         $service_provider_id =  $user_id;
 
         $sql_provider_services = "select ps.id as provider_service_id,  "
+            . " concat('$p_services_url' ,'/', if(ps.media_url is null, '2.jpg', "
+            . " json_extract(ps.media_url, '$.media_url')) ) as service_photo, "
             . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on " 
             . " s.id = ps.service_id  where ps.service_provider_id = '" . $service_provider_id . "' ";
+
+       
 
         $services = RawQuery::query($sql_provider_services);
         $results['services'] = $services;
@@ -93,7 +98,10 @@ class ServiceProvidersController extends Controller{
 
         $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
-        $portfolios_sql = "SELECT p.media_data, p.description  FROM  portfolios p "
+        $portfolios_sql = "SELECT  "
+            . " concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
+            . " json_extract(media_data, '$.media_url')) ) as media_photo, " 
+            . " p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
         $results['portfolios'] = RawQuery::query($portfolios_sql);
@@ -355,12 +363,28 @@ class ServiceProvidersController extends Controller{
     {
 
     	$validator = Validator::make($request->all(),[
-		    'user_id' => 'required|exists:users,id|unique:service_providers',
-            'service_provider_name' => 'required|unique:service_providers',
+		    'user_id' => 'required|exists:users,id',
+            'business_name' => 'required|unique:service_providers,service_provider_name',
             'business_description' => 'required|string',
-            'work_location' =>'string',
-            'work_lat'=>'nullable|regex:/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/',  
-            'work_lng'=>'nullable|regex:/^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$/'           
+            'keywords' => 'string|nullable',
+            'location_name' =>'string',
+            'location_city' =>'string',
+            'business_phone' => [
+                'required',
+                'regex:/^(\+?254)?7\d{8}$/'
+            ],
+            'location_email' =>'nullable|email',
+            'facebook_page'=>'string|nullable',
+            'twitter' =>'string|nullable',
+            'instagram' => 'string|nullable',
+            'work_lat'=>[
+                 'required',
+                 'regex:/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/'
+             ],  
+            'work_lng'=>[
+                 'required', 
+                 'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
+            ]           
 		]);
 
 		if ($validator->fails()) {
@@ -372,18 +396,26 @@ class ServiceProvidersController extends Controller{
 		}else{
 
         	DB::insert("insert into service_providers (type, user_id, service_provider_name,"
-                . " business_description, work_location, work_lat, work_lng, status_id, "
+                . " business_description, work_location, work_location_city, business_phone, "
+                . " business_email, facebook, twitter, instagram, work_lat, work_lng, status_id, "
                 . " created_at, updated_at)  values (1, :user_id, "
-                . " :service_provider_name, :business_description, :work_location, "
+                . " :service_provider_name, :business_description, :work_location, :work_location_city, "
+                . " :business_phone, :business_email, :facebook, :twitter, :instagram, "
                 . " :work_lat, :work_lng, " . DBStatus::RECORD_PENDING . ", now(), "
                 . " now())  ", 
                     [
-                        'service_provider_name'=> $request->get('service_provider_name'),
                         'user_id'=>$request->get('user_id'),
+                        'service_provider_name'=> $request->get('business_name'),
+                        'business_description'=>$request->get('business_description'),
                         'work_location'=>$request->get('work_location'),
+                        'work_location_city'=>$request->get('work_location_city'),
+                        'business_phone'=>$request->get('business_phone'),
+                        'business_email'=>$request->get('business_email'),
+                        'facebook'=>$request->get('facebook'),
+                        'twitter'=>$request->get('twitter'),
+                        'instagram'=>$request->get('instagram'),
                         'work_lat'=>$request->get('work_lat'),
                         'work_lng'=>$request->get('work_lng'),
-                        'business_description'=>$request->get('business_description')
                     ]
         	    );
 
