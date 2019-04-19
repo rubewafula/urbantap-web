@@ -52,7 +52,7 @@ class ServicesController extends Controller
         Log::info('Extracted service services results : ' . var_export($results, 1));
 
         if(empty($results)){
-            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+            return Response::json([], HTTPCodes::HTTP_NO_CONTENT );
         }
         return Response::json($results, HTTPCodes::HTTP_OK);
 
