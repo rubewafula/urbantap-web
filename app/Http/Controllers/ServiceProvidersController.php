@@ -17,9 +17,23 @@ use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
+
 
 
 class ServiceProvidersController extends Controller{
+
+        private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
+    private $audio_ext = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
+    private $video_ext = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
+
+
+
+     private function allExtensions()
+    {
+        return array_merge($this->image_ext, $this->audio_ext, $this->video_ext);
+    }
+
 
     /**
      * Display the specified service providers.
@@ -359,9 +373,62 @@ class ServiceProvidersController extends Controller{
      *  @return JSON
      *
     ***/
+
+
+
+public  function  upload_coverphoto($request)
+{
+
+   $file = $request->file('cover_photo');
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return null;
+        }
+ $max_size = (int)ini_get('upload_max_filesize') * 1000;
+        $all_ext = implode(',', $this->allExtensions());
+
+        $this->validate($request, [
+            'name' => 'nullable|unique:files',
+            'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
+        ]);
+
+        $file = $request->file('cover_photo');
+
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return FALSE;
+        }
+        $ext = $file->getClientOriginalExtension();
+        $size = $file->getClientSize();
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('user_id'));
+        $type = $this->getType($ext);
+
+        if($type == 'unknown'){
+            Log::info("Aborting file upload unknown file type "+ $type);
+            return FALSE;
+        }
+
+        $fullPath = 'public/' . $type . '/' .$name . '.' . $ext;
+
+        if (Storage::putFileAs('public/' . $type . '/', $file, $name . '.' . $ext)) {
+            return [
+                    'media_url'=>$fullPath,
+                    'name' => $name,
+                    'type' => $type,
+                    'extension' => $ext,
+                    'size'=>$size
+                ];
+        }
+
+        return false;
+
+
+
+}
+
+
     public function create(Request $request)
     {
-
     	$validator = Validator::make($request->all(),[
 		    'user_id' => 'required|exists:users,id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
@@ -395,13 +462,26 @@ class ServiceProvidersController extends Controller{
 			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
 		}else{
 
+
+            $cover_photo= $this->upload_coverphoto($request);
+            
+            if($cover_photo !=  FALSE)
+            {
+
+                  $cover_photo= json_encode($cover_photo); 
+
+            }else{
+                $cover_photo=NULL;
+            }
+      
+
         	DB::insert("insert into service_providers (type, user_id, service_provider_name,"
                 . " business_description, work_location, work_location_city, business_phone, "
-                . " business_email, facebook, twitter, instagram, work_lat, work_lng, status_id, "
+                . " business_email, facebook, twitter, instagram, work_lat, work_lng, status_id,cover_photo, "
                 . " created_at, updated_at)  values (1, :user_id, "
                 . " :service_provider_name, :business_description, :work_location, :work_location_city, "
                 . " :business_phone, :business_email, :facebook, :twitter, :instagram, "
-                . " :work_lat, :work_lng, " . DBStatus::RECORD_PENDING . ", now(), "
+                . " :work_lat, :work_lng,". DBStatus::RECORD_PENDING .",:cover_photo, now(), "
                 . " now())  ", 
                     [
                         'user_id'=>$request->get('user_id'),
@@ -416,6 +496,7 @@ class ServiceProvidersController extends Controller{
                         'instagram'=>$request->get('instagram'),
                         'work_lat'=>$request->get('work_lat'),
                         'work_lng'=>$request->get('work_lng'),
+                        'cover_photo' => $cover_photo
                     ]
         	    );
 
