@@ -102,7 +102,7 @@ class AuthController extends Controller
           'user_id'=>$user->id,
           'msisdn'=>$phone,
           'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : '',
+          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
           'message'=> $message,
           'status_id'=>DBStatus::SMS_NEW
         ]);
@@ -135,6 +135,7 @@ class AuthController extends Controller
 
         $out = [
             'success' => TRUE,
+            'is_mobile' => !is_null($phone),
             'user_id' => $user->id,
             'message' => 'Registration successful'
         ];
@@ -212,7 +213,7 @@ class AuthController extends Controller
           'user_id'=>$user->id,
           'msisdn'=>$phone,
           'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : '',
+          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
           'message'=> $message,
           'status_id'=>DBStatus::SMS_NEW
         ]);
@@ -280,8 +281,13 @@ class AuthController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
       }
 
+      $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
+      $phone = -1;
+      if($valid_phone == 1){
+        $phone = '254'. $p_matches[1];
+      }
 
-      $user= User::where('phone_no',$request->get('username'))
+      $user= User::where('phone_no',$phone)
           ->orWhere('email', $request->get('username'))->first();
 
       if(!empty($user) && ($user->verification_code == $request->get('verification_code') || 
