@@ -90,4 +90,10 @@ alter table service_providers add facebook varchar(244) null after service_provi
 alter table service_providers add twitter varchar(244) null after service_provider_name;
 alter table service_providers add instagram varchar(244) null after service_provider_name;
 
+alter table outboxes modify network enum('SAFARICOM','AIRTEL','TELKOM','EQUITEL','ORANGE','JTL', 'EMAIL') null;
+alter table outboxes modify message text not null;
+alter table outboxes add email varchar(256)  null;
+--alter table users modify phone_no varchar(25) null;
+--alter table users modify email varchar(256) null;
+alter table outboxes modify msisdn int(15) null;
 
