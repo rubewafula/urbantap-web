@@ -315,6 +315,7 @@ class AuthController extends Controller
             $token->save();
 
             $out = [
+                'success'=>TRUE,
                 'access_token' => $tokenResult->accessToken,
                 'token_type' => 'Bearer',
                 'expires_at' => Carbon::parse(
@@ -385,6 +386,7 @@ class AuthController extends Controller
 
         if(!Auth::attempt($credentials)){
             return response()->json([
+                'success' =>false,
                 'message' => 'Invalid credentials, please check your username and password'
             ], HTTPCodes::HTTP_UNAUTHORIZED);
         }
@@ -408,6 +410,7 @@ class AuthController extends Controller
         $token->save();
 
         return response()->json([
+            'success'=>true,
             'access_token' => $tokenResult->accessToken,
             'token_type' => 'Bearer',
             'expires_at' => Carbon::parse(
