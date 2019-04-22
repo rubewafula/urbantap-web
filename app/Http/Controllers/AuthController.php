@@ -245,6 +245,7 @@ class AuthController extends Controller
 
         $out = [
             'success' => TRUE,
+            'is_mobile' => !is_null($phone),
             'user_id' => $user->id,
             'message' => 'Verification resend success'
         ];
@@ -290,10 +291,29 @@ class AuthController extends Controller
             #$user->verification_code= NULL;
             $user->save();
 
+            $user->details = UserPersonalDetail::where('user_id', $user->id)->first();
+
+            if($user->details &&  $user->details->passport_photo == null){
+              $user->details->passport_photo = 
+              [
+                'media_type' => 'image',
+                'media_url'=>env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
+              ];
+            }
+
+            $tokenResult = $user->createToken('Personal Access Token');
+            $token = $tokenResult->token;
+            $token->save();
+
             $out = [
-                'success' => TRUE,
-                'message' =>'Phone number  verified'
+                'access_token' => $tokenResult->accessToken,
+                'token_type' => 'Bearer',
+                'expires_at' => Carbon::parse(
+                    $tokenResult->token->expires_at
+                )->toDateTimeString(),
+                'user' => $user
             ];
+
             return Response::json($out, HTTPCodes::HTTP_OK);
 
       } else{
@@ -356,7 +376,7 @@ class AuthController extends Controller
 
         if(!Auth::attempt($credentials)){
             return response()->json([
-                'message' => 'Invalid credentials, please check your email and password'
+                'message' => 'Invalid credentials, please check your username and password'
             ], HTTPCodes::HTTP_UNAUTHORIZED);
         }
 
