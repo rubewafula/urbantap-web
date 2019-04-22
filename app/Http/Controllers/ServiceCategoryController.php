@@ -47,7 +47,7 @@ class ServiceCategoryController extends Controller{
         //dd(HTTPCodes);
         Log::info('Extracted service categroy results : '.var_export($results, 1));
         if(empty($results)){
-        		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+           return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
         }
         return Response::json($results, HTTPCodes::HTTP_OK);
 

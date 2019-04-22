@@ -102,7 +102,7 @@ class AuthController extends Controller
           'user_id'=>$user->id,
           'msisdn'=>$phone,
           'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : '',
+          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
           'message'=> $message,
           'status_id'=>DBStatus::SMS_NEW
         ]);
@@ -212,7 +212,7 @@ class AuthController extends Controller
           'user_id'=>$user->id,
           'msisdn'=>$phone,
           'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : '',
+          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
           'message'=> $message,
           'status_id'=>DBStatus::SMS_NEW
         ]);
