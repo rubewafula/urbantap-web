@@ -427,6 +427,24 @@ public  function  upload_coverphoto($request)
 }
 
 
+ private function getType($ext)
+    {
+        if (in_array($ext, $this->image_ext)) {
+            return 'image';
+        }
+
+        if (in_array($ext, $this->audio_ext)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, $this->video_ext)) {
+            return 'video';
+        }
+
+        return 'unknown';
+    }
+
+
     public function create(Request $request)
     {
     	$validator = Validator::make($request->all(),[
