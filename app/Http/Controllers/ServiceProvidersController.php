@@ -340,6 +340,11 @@ class ServiceProvidersController extends Controller{
      *
      * @return JSON 
      */
+
+    /** popular**/
+
+
+
  
     public function popular()
     {
@@ -374,6 +379,12 @@ class ServiceProvidersController extends Controller{
      *
     ***/
 
+
+public  function  test_coverphoto()
+{
+
+    echo 'cover Photo';
+}
 
 
 public  function  upload_coverphoto($request)
