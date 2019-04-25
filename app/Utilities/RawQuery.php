@@ -10,7 +10,7 @@ class RawQuery{
 	const NUM_ROWS = 20;
 	const OFFSET = 0;
 	
-	public static function paginate($rawQuery, $page = null, $limit = null) {
+	public static function paginate($rawQuery, $page = null, $limit = null, $params=null) {
         if(is_null($limit) || $limit < 1) $limit = RawQuery::NUM_ROWS;
         if(is_null($page) || $page < 1) $page = RawQuery::PAGE;
 
@@ -34,7 +34,13 @@ class RawQuery{
 		
 		$actualQuery = $rawQuery . " limit ". $offset . ", " . $limit;
 
-		$rawResult = DB::select( DB::raw($actualQuery ) );
+		if(!is_null($params)){
+			$rawResult = DB::select( DB::raw($actualQuery ),$params );
+		}else{
+			$rawResult = DB::select( DB::raw($actualQuery));
+		}
+
+		
 
 		$output = ['result' => $rawResult, 'total' => $totalCount, 'page' => $page, 
 		'page_count' => $limit ];
