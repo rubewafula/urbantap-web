@@ -44,6 +44,7 @@ class ServiceProviderPortfoliosController extends Controller{
         //die(print_r($req, 1));
         if(array_key_exists('page', $req)){
              $page = is_numeric($request['page']) ? $request['page'] : 1;
+             
         }
         if(array_key_exists('limit', $req)){
              $limit = is_numeric($request['limit']) ? $request['limit'] : null;
