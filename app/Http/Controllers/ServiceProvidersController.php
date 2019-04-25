@@ -427,6 +427,31 @@ public  function  upload_coverphoto($request)
 }
 
 
+
+:{"_parts":
+    [
+        ["cover_photo",{"uri":"file:///storage/emulated/0/Pictures/images/image-9280164e-f3da-4e68-b927-0f47b0cef75c.jpg",
+            "type":"image/jpg",
+            "name":"image-9280164e-f3da-4e68-b927-0f47b0cef75c.jpg"}
+        ],
+        ["user_id",18],
+        ["categoryId",1],
+        ["business_name","Bolingo"],
+        ["business_description","Bojhhf "],
+        ["keywords","Hhfjf"],
+        ["work_lat","-1.2832999999999997"],
+        ["work_lng",36.8219],
+        ["location_name","Off Mombasa Road, Nairobi, Kenya"],
+        ["location_city","Off Mombasa Road, Nairobi, Kenya"],
+        ["business_phone","5678"],
+        ["business_email","Fhfifig"],
+        ["facebookPage",""],
+        ["twitter",""],
+        ["instagram",""],
+        ["services",[2,3,4,5,6]
+    ]]}}
+
+
     public function create(Request $request)
     {
     	$validator = Validator::make($request->all(),[
@@ -440,7 +465,7 @@ public  function  upload_coverphoto($request)
                 'required',
                 'regex:/^(\+?254)?7\d{8}$/'
             ],
-            'location_email' =>'nullable|email',
+            'business_email' =>'nullable|email',
             'facebook_page'=>'string|nullable',
             'twitter' =>'string|nullable',
             'instagram' => 'string|nullable',
@@ -451,7 +476,8 @@ public  function  upload_coverphoto($request)
             'work_lng'=>[
                  'required', 
                  'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
-            ]           
+            ] ,
+            'services'=>['required']         
 		]);
 
 		if ($validator->fails()) {
