@@ -200,6 +200,8 @@ Route::group([
     Route::post('create', 'ServiceProvidersController@create');
     Route::put('update', 'ServiceProvidersController@update');
     Route::delete('del','ServiceProvidersController@delete');
+    Route::get('location_service','ServiceProvidersController@search_by_location_service');
+
 });
 
 
