@@ -17,9 +17,16 @@ class RawQuery{
         $offset = ($page-1) * $limit;
 
 
-		$countQuery = preg_replace('/(select)(.*)(from.*$)/i', "$1 count(*) as c $3", $rawQuery);
+		$countQuery = preg_replace('/(select)(.*)( from .*$)/i', "$1 count(*) as c $3", $rawQuery);
 
-		$rawResult = DB::select( DB::raw($countQuery ) );
+
+		if(!is_null($params)){
+			$rawResult = DB::select( DB::raw($countQuery ), $params );
+		}else{
+			$rawResult = DB::select( DB::raw($countQuery ) );
+		}
+
+		
 
 		if(empty($rawResult)){
 			return [];

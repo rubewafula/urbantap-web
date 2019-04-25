@@ -433,6 +433,7 @@ public  function  upload_coverphoto($request)
 }
 
 
+
  private function getType($ext)
     {
         if (in_array($ext, $this->image_ext)) {
@@ -450,8 +451,6 @@ public  function  upload_coverphoto($request)
         return 'unknown';
     }
 
-    
-
 
     public function create(Request $request)
     {
@@ -466,7 +465,7 @@ public  function  upload_coverphoto($request)
                 'required',
                 'regex:/^(\+?254)?7\d{8}$/'
             ],
-            'location_email' =>'nullable|email',
+            'business_email' =>'nullable|email',
             'facebook_page'=>'string|nullable',
             'twitter' =>'string|nullable',
             'instagram' => 'string|nullable',
@@ -477,7 +476,8 @@ public  function  upload_coverphoto($request)
             'work_lng'=>[
                  'required', 
                  'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
-            ]           
+            ] ,
+            'services'=>['required']         
 		]);
 
 		if ($validator->fails()) {
@@ -692,12 +692,13 @@ public  function  upload_coverphoto($request)
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo, "
             . " d.home_location, work_phone_no, sp.business_description  from service_providers sp  inner  join "
-            . " user_personal_details  d using(user_id)  inner join operating_hours op on sp.id = op.service_provider_id inner join provider_services ps on ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id where sp.status_id=1 and op.service_day = date_format(:service_date, '%W') and time(:service_date) between time_from and time_to and s.service_name like  :service and (work_location like :location or work_location_city like :location2",
+            . " user_personal_details  d using(user_id)  inner join operating_hours op on sp.id = op.service_provider_id inner join provider_services ps on ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id where sp.status_id=1 and op.service_day = date_format(:service_date, '%W') and time(:service_date2) between time_from and time_to and s.service_name like  :service and (work_location like :location or work_location_city like :location2)",
              $page = null, $limit = null, $params=[
             'service_date'=>$request->service_date,
+            'service_date2'=>$request->service_date,
             'service'=>'%'.$request->service.'%',
             'location'=>'%'.$request->location.'%',
-             'location2'=>'%'.$request->location.'%'
+            'location2'=>'%'.$request->location.'%'
         ]);
         
        return Response::json($service_providers, HTTPCodes::HTTP_OK);
