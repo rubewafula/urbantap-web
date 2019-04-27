@@ -406,6 +406,13 @@ public  function  upload_coverphoto($request)
         }
 
         $fullPath = $name . '.' . $ext;
+
+        $file_path = 'public/static/' . $type . '/service-providers/'.$fullPath;
+
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+
         if (Storage::putFileAs('public/static/' . $type . '/service-providers', $file, $fullPath)) {
             return [
                     'media_url'=>$fullPath,
