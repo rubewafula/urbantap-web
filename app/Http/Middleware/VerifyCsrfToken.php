@@ -13,9 +13,15 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         //
+<<<<<<< HEAD
+        '/mpesa/c2b/confirm',
+        '/mpesa/c2b/process',
+=======
         '/mpesa/c2b/payment',
         '/mpesa/c2b/process',
         '/api/sms/sendsms',
-        '/booking/checkstatus'
+        '/booking/checkstatus',
+>>>>>>> 03433bf731d929cf2f026e10ce019f2c184c5cb8
+        '/api/*'
     ];
 }

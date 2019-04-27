@@ -1,6 +1,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 CREATE  TABLE  users_ (id INT(11) AUTO_INCREMENT,
 first_name VARCHAR(100) NOT NULL,
 last_name VARCHAR(100) NOT NULL,
@@ -13,12 +14,17 @@ ALTER TABLE `role_user` CHANGE `user_id` `user_id` INT(10) NOT NULL;
 =======
 =======
 >>>>>>> rube/service-request
+=======
+>>>>>>> rube/service-request
 -- MySQL dump 10.13  Distrib 5.7.25, for Linux (x86_64)
 --
 -- Host: localhost    Database: urbantap
 -- ------------------------------------------------------
 -- Server version	5.7.25-0ubuntu0.16.04.2
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -160,6 +166,7 @@ CREATE TABLE `bookings` (
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 =======
@@ -309,6 +316,8 @@ CREATE TABLE `bookings` (
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
+=======
+>>>>>>> rube/service-request
 --
 -- Dumping data for table `bookings`
 --
@@ -317,7 +326,11 @@ LOCK TABLES `bookings` WRITE;
 /*!40000 ALTER TABLE `bookings` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `bookings` VALUES (3,2,3,2,'2019-02-15 12:30:00',45,'2019-02-15 13:20:00',7,'USER LOCATION',NULL,'2019-02-14 21:29:31','2019-02-14 21:29:31',NULL),(4,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 01:14:39','2019-02-15 22:14:39','2019-02-15 22:14:39','{\"name\": \"Kasarani\"}'),(5,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 19:08:34','2019-02-16 16:08:34','2019-02-16 16:08:34','{\"name\": \"Kasarani\"}'),(6,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 19:08:43','2019-02-16 16:08:43','2019-02-16 16:08:43','{\"name\": \"Kasarani\"}'),(7,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 19:08:48','2019-02-16 16:08:48','2019-02-16 16:08:48','{\"name\": \"Kasarani\"}'),(8,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 19:12:11','2019-02-16 16:12:11','2019-02-16 16:12:11','{\"name\": \"Kasarani\"}'),(9,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION','2019-02-16 19:12:52','2019-02-16 16:12:52','2019-02-16 16:12:52','{\"name\": \"Kasarani\"}');
+=======
+INSERT INTO `bookings` VALUES (3,2,3,2,'2019-02-15 12:30:00',45,'2019-02-15 13:20:00',7,'USER LOCATION',0.00,NULL,'2019-02-14 21:29:31','2019-02-14 21:29:31',NULL),(4,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 01:14:39','2019-02-15 22:14:39','2019-02-15 22:14:39','{\"name\": \"Kasarani\"}'),(5,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:34','2019-02-16 16:08:34','2019-02-16 16:08:34','{\"name\": \"Kasarani\"}'),(6,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:43','2019-02-16 16:08:43','2019-02-16 16:08:43','{\"name\": \"Kasarani\"}'),(7,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:48','2019-02-16 16:08:48','2019-02-16 16:08:48','{\"name\": \"Kasarani\"}'),(8,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:12:11','2019-02-16 16:12:11','2019-02-16 16:12:11','{\"name\": \"Kasarani\"}'),(9,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:12:52','2019-02-16 16:12:52','2019-02-16 16:12:52','{\"name\": \"Kasarani\"}');
+>>>>>>> rube/service-request
 =======
 INSERT INTO `bookings` VALUES (3,2,3,2,'2019-02-15 12:30:00',45,'2019-02-15 13:20:00',7,'USER LOCATION',0.00,NULL,'2019-02-14 21:29:31','2019-02-14 21:29:31',NULL),(4,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 01:14:39','2019-02-15 22:14:39','2019-02-15 22:14:39','{\"name\": \"Kasarani\"}'),(5,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:34','2019-02-16 16:08:34','2019-02-16 16:08:34','{\"name\": \"Kasarani\"}'),(6,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:43','2019-02-16 16:08:43','2019-02-16 16:08:43','{\"name\": \"Kasarani\"}'),(7,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:08:48','2019-02-16 16:08:48','2019-02-16 16:08:48','{\"name\": \"Kasarani\"}'),(8,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:12:11','2019-02-16 16:12:11','2019-02-16 16:12:11','{\"name\": \"Kasarani\"}'),(9,2,2,2,'2019-02-16 12:09:00',45,'2019-02-16 13:01:00',1,'USER LOCATION',0.00,'2019-02-16 19:12:52','2019-02-16 16:12:52','2019-02-16 16:12:52','{\"name\": \"Kasarani\"}');
 >>>>>>> rube/service-request
@@ -378,7 +391,11 @@ CREATE TABLE `categories` (
   PRIMARY KEY (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -395,7 +412,11 @@ LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `categories` VALUES (1,'Salon',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(2,'Massage',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(3,'shoes',0,'2019-01-26 20:07:20','2019-01-26 20:07:20'),(4,'under 23 shoes',0,'2019-01-26 20:13:15','2019-01-26 20:13:15'),(5,'Media Professionals',0,'2019-01-26 21:08:06','2019-01-26 21:08:06');
+=======
+INSERT INTO `categories` VALUES (1,'Salon',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(2,'Massage',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(3,'shoes',0,'2019-01-26 20:07:20','2019-01-26 20:07:20'),(4,'under 23 shoes',0,'2019-01-26 20:13:15','2019-01-26 20:13:15'),(5,'Media Professionals',0,'2019-01-26 21:08:06','2019-01-26 21:08:06'),(6,'Media Personalities',0,'2019-04-05 21:36:49','2019-04-05 21:36:49');
+>>>>>>> rube/service-request
 =======
 INSERT INTO `categories` VALUES (1,'Salon',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(2,'Massage',0,'2019-01-04 18:26:34','2019-01-04 18:26:34'),(3,'shoes',0,'2019-01-26 20:07:20','2019-01-26 20:07:20'),(4,'under 23 shoes',0,'2019-01-26 20:13:15','2019-01-26 20:13:15'),(5,'Media Professionals',0,'2019-01-26 21:08:06','2019-01-26 21:08:06'),(6,'Media Personalities',0,'2019-04-05 21:36:49','2019-04-05 21:36:49');
 >>>>>>> rube/service-request
@@ -417,6 +438,10 @@ CREATE TABLE `cost_parameters` (
   `service_id` int(11) NOT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  `cost_parameter` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+>>>>>>> rube/service-request
 =======
   `cost_parameter` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
 >>>>>>> rube/service-request
@@ -486,7 +511,11 @@ CREATE TABLE `migrations` (
   PRIMARY KEY (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=103 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=111 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=111 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -503,7 +532,11 @@ LOCK TABLES `migrations` WRITE;
 /*!40000 ALTER TABLE `migrations` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(8,'2018_09_30_123658_create_service_providers_table',1),(9,'2018_10_01_114758_create_categories_table',1),(10,'2018_10_01_143625_create_user_groups_table',1),(11,'2018_10_01_143747_create_permissions_table',1),(12,'2018_10_01_143821_create_user_permissions_table',1),(13,'2018_10_01_144237_create_businesses_table',1),(14,'2018_10_01_145014_create_operating_hours_table',1),(15,'2018_10_01_145235_create_services_table',1),(16,'2018_10_02_123847_create_service_provider_images_table',1),(17,'2018_10_02_124129_create_provider_services_table',1),(22,'2018_11_01_092645_create_appointments_table',1),(102,'2019_01_07_185249_create_status_categories_table',2);
+=======
+INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(8,'2018_09_30_123658_create_service_providers_table',1),(9,'2018_10_01_114758_create_categories_table',1),(10,'2018_10_01_143625_create_user_groups_table',1),(11,'2018_10_01_143747_create_permissions_table',1),(12,'2018_10_01_143821_create_user_permissions_table',1),(13,'2018_10_01_144237_create_businesses_table',1),(14,'2018_10_01_145014_create_operating_hours_table',1),(15,'2018_10_01_145235_create_services_table',1),(16,'2018_10_02_123847_create_service_provider_images_table',1),(17,'2018_10_02_124129_create_provider_services_table',1),(22,'2018_11_01_092645_create_appointments_table',1),(102,'2019_01_07_185249_create_status_categories_table',2),(103,'2016_06_01_000001_create_oauth_auth_codes_table',3),(104,'2016_06_01_000002_create_oauth_access_tokens_table',3),(105,'2016_06_01_000003_create_oauth_refresh_tokens_table',3),(106,'2016_06_01_000004_create_oauth_clients_table',3),(107,'2016_06_01_000005_create_oauth_personal_access_clients_table',3),(108,'2019_01_11_233237_users_table',4),(109,'2019_01_11_235234_users_table_verified',4),(110,'2019_01_12_000434_add_verficationfields',4);
+>>>>>>> rube/service-request
 =======
 INSERT INTO `migrations` VALUES (1,'2014_10_12_000000_create_users_table',1),(2,'2014_10_12_100000_create_password_resets_table',1),(8,'2018_09_30_123658_create_service_providers_table',1),(9,'2018_10_01_114758_create_categories_table',1),(10,'2018_10_01_143625_create_user_groups_table',1),(11,'2018_10_01_143747_create_permissions_table',1),(12,'2018_10_01_143821_create_user_permissions_table',1),(13,'2018_10_01_144237_create_businesses_table',1),(14,'2018_10_01_145014_create_operating_hours_table',1),(15,'2018_10_01_145235_create_services_table',1),(16,'2018_10_02_123847_create_service_provider_images_table',1),(17,'2018_10_02_124129_create_provider_services_table',1),(22,'2018_11_01_092645_create_appointments_table',1),(102,'2019_01_07_185249_create_status_categories_table',2),(103,'2016_06_01_000001_create_oauth_auth_codes_table',3),(104,'2016_06_01_000002_create_oauth_access_tokens_table',3),(105,'2016_06_01_000003_create_oauth_refresh_tokens_table',3),(106,'2016_06_01_000004_create_oauth_clients_table',3),(107,'2016_06_01_000005_create_oauth_personal_access_clients_table',3),(108,'2019_01_11_233237_users_table',4),(109,'2019_01_11_235234_users_table_verified',4),(110,'2019_01_12_000434_add_verficationfields',4);
 >>>>>>> rube/service-request
@@ -525,7 +558,11 @@ CREATE TABLE `mpesa_transactions` (
   `user_id` int(11) DEFAULT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   `msisdn` int(11) NOT NULL,
+=======
+  `msisdn` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+>>>>>>> rube/service-request
 =======
   `msisdn` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
 >>>>>>> rube/service-request
@@ -541,6 +578,11 @@ CREATE TABLE `mpesa_transactions` (
   `paybill_no` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  `bill_ref_no` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `transaction_ref` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+>>>>>>> rube/service-request
 =======
   `bill_ref_no` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `transaction_ref` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -555,7 +597,11 @@ CREATE TABLE `mpesa_transactions` (
   PRIMARY KEY (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -572,6 +618,10 @@ LOCK TABLES `mpesa_transactions` WRITE;
 /*!40000 ALTER TABLE `mpesa_transactions` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+INSERT INTO `mpesa_transactions` VALUES (1,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','21','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 18:44:24','2019-04-02 18:44:24'),(2,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:18:26','2019-04-02 19:18:26'),(3,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:19:17','2019-04-02 19:19:17'),(4,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:19:37','2019-04-02 19:19:37'),(5,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:43:29','2019-04-02 19:43:29'),(6,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:43:32','2019-04-02 19:43:32'),(7,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:44:36','2019-04-02 19:44:36'),(8,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',1,'2019-04-02 19:51:08','2019-04-02 19:51:08'),(9,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',1,'2019-04-02 19:51:23','2019-04-02 19:51:23'),(10,NULL,'254726498973','2019-04-11 21:57:43','Pay Bill','75','NDB96EJ0F5',10.00,'ANTONY THIONGO ','731029','75','NDB96EJ0F5',0,NULL,NULL),(11,NULL,'254726498973','2019-04-11 22:59:17','Pay Bill','65','NDB36FCN0H',10.00,'ANTONY THIONGO ','731029','65','NDB36FCN0H',0,NULL,NULL),(12,NULL,'254726498973','2019-04-11 23:46:21','Pay Bill','67','NDB26FO0I4',10.00,'ANTONY THIONGO ','731029','67','NDB26FO0I4',0,NULL,NULL),(13,NULL,'254726498973','2019-04-11 23:48:34','Pay Bill','78','NDB46FOBG2',10.00,'ANTONY THIONGO ','731029','78','NDB46FOBG2',1,NULL,NULL),(14,NULL,'254726498973','2019-04-12 00:25:57','Pay Bill','43','NDC56FVX5F',10.00,'ANTONY THIONGO ','731029','43','NDC56FVX5F',1,NULL,NULL),(15,NULL,'254726498973','2019-04-12 20:27:12','Pay Bill','37','NDC475ZLMY',10.00,'ANTONY THIONGO ','731029','37','NDC475ZLMY',1,NULL,NULL),(16,NULL,'254726498973','2019-04-12 21:00:30','Pay Bill','85','NDC9776383',10.00,'ANTONY THIONGO ','731029','85','NDC9776383',1,NULL,NULL);
+>>>>>>> rube/service-request
 =======
 INSERT INTO `mpesa_transactions` VALUES (1,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','21','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 18:44:24','2019-04-02 18:44:24'),(2,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:18:26','2019-04-02 19:18:26'),(3,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:19:17','2019-04-02 19:19:17'),(4,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:19:37','2019-04-02 19:19:37'),(5,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:43:29','2019-04-02 19:43:29'),(6,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:43:32','2019-04-02 19:43:32'),(7,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',0,'2019-04-02 19:44:36','2019-04-02 19:44:36'),(8,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',1,'2019-04-02 19:51:08','2019-04-02 19:51:08'),(9,NULL,'726498973','2019-04-02 20:50:12','Pay Bill','INV001','M930303',50.00,'ANTONY NJOROGE THIONGO','731029','B399393','M930303',1,'2019-04-02 19:51:23','2019-04-02 19:51:23'),(10,NULL,'254726498973','2019-04-11 21:57:43','Pay Bill','75','NDB96EJ0F5',10.00,'ANTONY THIONGO ','731029','75','NDB96EJ0F5',0,NULL,NULL),(11,NULL,'254726498973','2019-04-11 22:59:17','Pay Bill','65','NDB36FCN0H',10.00,'ANTONY THIONGO ','731029','65','NDB36FCN0H',0,NULL,NULL),(12,NULL,'254726498973','2019-04-11 23:46:21','Pay Bill','67','NDB26FO0I4',10.00,'ANTONY THIONGO ','731029','67','NDB26FO0I4',0,NULL,NULL),(13,NULL,'254726498973','2019-04-11 23:48:34','Pay Bill','78','NDB46FOBG2',10.00,'ANTONY THIONGO ','731029','78','NDB46FOBG2',1,NULL,NULL),(14,NULL,'254726498973','2019-04-12 00:25:57','Pay Bill','43','NDC56FVX5F',10.00,'ANTONY THIONGO ','731029','43','NDC56FVX5F',1,NULL,NULL),(15,NULL,'254726498973','2019-04-12 20:27:12','Pay Bill','37','NDC475ZLMY',10.00,'ANTONY THIONGO ','731029','37','NDC475ZLMY',1,NULL,NULL),(16,NULL,'254726498973','2019-04-12 21:00:30','Pay Bill','85','NDC9776383',10.00,'ANTONY THIONGO ','731029','85','NDC9776383',1,NULL,NULL);
 >>>>>>> rube/service-request
@@ -584,7 +634,10 @@ UNLOCK TABLES;
 --
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
 -- Table structure for table `oauth_access_tokens`
@@ -733,6 +786,9 @@ UNLOCK TABLES;
 
 --
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -780,6 +836,7 @@ CREATE TABLE `outboxes` (
   `user_id` int(11) DEFAULT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   `msisdn` mediumint(9) NOT NULL,
   `network` enum('SAFARICOM','AIRTEL','TELKOM','EQUITEL','ORANGE','JTL') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `short_code` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -791,6 +848,8 @@ CREATE TABLE `outboxes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
   `msisdn` mediumtext COLLATE utf8mb4_unicode_ci,
@@ -805,6 +864,9 @@ CREATE TABLE `outboxes` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -818,6 +880,10 @@ LOCK TABLES `outboxes` WRITE;
 /*!40000 ALTER TABLE `outboxes` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+INSERT INTO `outboxes` VALUES (1,14,'254725920576','SAFARICOM',NULL,NULL,'Dear Erito Wanyamam,\n Use 7174 to verify your URBANTAP account. STOP *456*9*5#',24,'2019-04-22 14:14:26','2019-04-22 14:14:26',NULL);
+>>>>>>> rube/service-request
 =======
 INSERT INTO `outboxes` VALUES (1,14,'254725920576','SAFARICOM',NULL,NULL,'Dear Erito Wanyamam,\n Use 7174 to verify your URBANTAP account. STOP *456*9*5#',24,'2019-04-22 14:14:26','2019-04-22 14:14:26',NULL);
 >>>>>>> rube/service-request
@@ -932,6 +998,10 @@ CREATE TABLE `portfolios` (
   `updated_at` timestamp NULL DEFAULT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+  `provider_service_id` int(10) unsigned NOT NULL,
+>>>>>>> rube/service-request
 =======
   `provider_service_id` int(10) unsigned NOT NULL,
 >>>>>>> rube/service-request
@@ -953,7 +1023,11 @@ LOCK TABLES `portfolios` WRITE;
 /*!40000 ALTER TABLE `portfolios` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `portfolios` VALUES (1,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',3,'2019-02-10 13:23:34','2019-02-10 13:19:46','2019-02-10 13:19:46'),(2,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',1,'2019-02-10 13:27:23','2019-02-10 13:27:23','2019-02-10 13:27:23');
+=======
+INSERT INTO `portfolios` VALUES (1,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',3,'2019-02-10 13:23:34','2019-02-10 13:19:46','2019-02-10 13:19:46',0),(2,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',1,'2019-02-10 13:27:23','2019-02-10 13:27:23','2019-02-10 13:27:23',0);
+>>>>>>> rube/service-request
 =======
 INSERT INTO `portfolios` VALUES (1,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',3,'2019-02-10 13:23:34','2019-02-10 13:19:46','2019-02-10 13:19:46',0),(2,2,'{\"name\": \"\", \"size\": 8667, \"type\": \"image\", \"extension\": \"jpeg\", \"media_url\": \"public/image/.jpeg\"}','Grooming on another level. Well beyond zero',1,'2019-02-10 13:27:23','2019-02-10 13:27:23','2019-02-10 13:27:23',0);
 >>>>>>> rube/service-request
@@ -1076,7 +1150,10 @@ UNLOCK TABLES;
 --
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
 -- Table structure for table `role_user`
@@ -1108,6 +1185,9 @@ UNLOCK TABLES;
 
 --
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -1240,7 +1320,10 @@ CREATE TABLE `service_providers` (
   `service_provider_name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
   `instagram` varchar(244) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1250,6 +1333,9 @@ CREATE TABLE `service_providers` (
   `business_phone` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `work_location_city` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -1260,10 +1346,13 @@ CREATE TABLE `service_providers` (
   `status_id` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   `overall_rating` float(10,2) DEFAULT '0.00',
   `overall_dislikes` int(11) DEFAULT '0',
   `overall_likes` int(11) DEFAULT '0',
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
   `total_requests` int(11) NOT NULL DEFAULT '23',
@@ -1272,6 +1361,9 @@ CREATE TABLE `service_providers` (
   `overall_likes` int(11) DEFAULT '0',
   `cover_photo` json DEFAULT NULL COMMENT 'sample {"media_url":"...", "media_type":"[video|audio|image]", "size":"xMB"}',
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -1283,7 +1375,11 @@ CREATE TABLE `service_providers` (
   CONSTRAINT `user_service_providers_fk-1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -1300,7 +1396,11 @@ LOCK TABLES `service_providers` WRITE;
 /*!40000 ALTER TABLE `service_providers` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `service_providers` VALUES (2,1,1,'Rube Wagph','Baber service',NULL,NULL,NULL,'1',0.00,0,0,'2019-02-09 17:42:47','2019-02-09 17:42:47'),(3,2,1,'Wa pau','Saloon worker in Kamasa','Kasarani',NULL,NULL,'1',0.00,0,0,'2019-02-09 20:39:35','2019-02-09 20:39:35');
+=======
+INSERT INTO `service_providers` VALUES (2,1,1,'Rube Wagph',NULL,NULL,NULL,NULL,NULL,NULL,'Baber service',NULL,NULL,NULL,'1',23,0.00,0,0,NULL,'2019-02-09 17:42:47','2019-02-09 17:42:47'),(3,2,1,'Wa pau',NULL,NULL,NULL,NULL,NULL,NULL,'Saloon worker in Kamasa','Kasarani',NULL,NULL,'1',23,0.00,0,0,NULL,'2019-02-09 20:39:35','2019-02-09 20:39:35'),(4,3,1,'Kamirithu  herbs  clinic',NULL,NULL,NULL,NULL,NULL,NULL,'Treatment  of  deases','kasarani',NULL,NULL,'1',23,0.00,0,0,NULL,'2019-04-15 17:38:12','2019-04-15 17:38:12');
+>>>>>>> rube/service-request
 =======
 INSERT INTO `service_providers` VALUES (2,1,1,'Rube Wagph',NULL,NULL,NULL,NULL,NULL,NULL,'Baber service',NULL,NULL,NULL,'1',23,0.00,0,0,NULL,'2019-02-09 17:42:47','2019-02-09 17:42:47'),(3,2,1,'Wa pau',NULL,NULL,NULL,NULL,NULL,NULL,'Saloon worker in Kamasa','Kasarani',NULL,NULL,'1',23,0.00,0,0,NULL,'2019-02-09 20:39:35','2019-02-09 20:39:35'),(4,3,1,'Kamirithu  herbs  clinic',NULL,NULL,NULL,NULL,NULL,NULL,'Treatment  of  deases','kasarani',NULL,NULL,'1',23,0.00,0,0,NULL,'2019-04-15 17:38:12','2019-04-15 17:38:12');
 >>>>>>> rube/service-request
@@ -1361,7 +1461,11 @@ CREATE TABLE `status_categories` (
   PRIMARY KEY (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -1378,7 +1482,11 @@ LOCK TABLES `status_categories` WRITE;
 /*!40000 ALTER TABLE `status_categories` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `status_categories` VALUES (1,'001','Transaction status','2019-01-27 18:53:13','2019-01-27 18:53:13',NULL),(2,'002','Transaction status',NULL,'2019-01-27 18:57:35','2019-01-27 18:57:35');
+=======
+INSERT INTO `status_categories` VALUES (1,'001','Transaction status','2019-01-27 18:53:13','2019-01-27 18:53:13',NULL),(2,'002','Transaction status',NULL,'2019-01-27 18:57:35','2019-01-27 18:57:35'),(3,'003','Another status',NULL,'2019-04-03 15:02:25','2019-04-03 15:02:25');
+>>>>>>> rube/service-request
 =======
 INSERT INTO `status_categories` VALUES (1,'001','Transaction status','2019-01-27 18:53:13','2019-01-27 18:53:13',NULL),(2,'002','Transaction status',NULL,'2019-01-27 18:57:35','2019-01-27 18:57:35'),(3,'003','Another status',NULL,'2019-04-03 15:02:25','2019-04-03 15:02:25');
 >>>>>>> rube/service-request
@@ -1467,7 +1575,11 @@ CREATE TABLE `transactions` (
   PRIMARY KEY (`id`)
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+=======
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+>>>>>>> rube/service-request
 =======
 ) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 >>>>>>> rube/service-request
@@ -1484,6 +1596,10 @@ LOCK TABLES `transactions` WRITE;
 /*!40000 ALTER TABLE `transactions` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+INSERT INTO `transactions` VALUES (1,3,'CREDIT','M930303',50.00,50.00,0,'2019-04-02 22:44:37','2019-04-02 19:44:37','2019-04-02 19:44:37'),(2,3,'CREDIT','M930303',50.00,50.00,1,'2019-04-02 22:51:08','2019-04-02 19:51:08','2019-04-02 19:51:08'),(3,3,'CREDIT','M930303',50.00,50.00,1,'2019-04-02 22:51:23','2019-04-02 19:51:23','2019-04-02 19:51:23'),(4,11,'CREDIT','NDB36FCN0H',10.00,10.00,0,'2019-04-11 19:59:19','2019-04-11 16:59:19','2019-04-11 16:59:19'),(5,11,'CREDIT','NDB26FO0I4',10.00,10.00,0,'2019-04-11 20:46:22','2019-04-11 17:46:22','2019-04-11 17:46:22'),(6,11,'CREDIT','NDB46FOBG2',10.00,10.00,1,'2019-04-11 20:48:35','2019-04-11 17:48:35','2019-04-11 17:48:35'),(7,11,'CREDIT','NDC56FVX5F',10.00,10.00,1,'2019-04-11 21:25:59','2019-04-11 18:25:59','2019-04-11 18:25:59'),(8,11,'CREDIT','NDC475ZLMY',10.00,10.00,1,'2019-04-12 17:27:13','2019-04-12 14:27:13','2019-04-12 14:27:13'),(9,11,'CREDIT','NDC9776383',10.00,10.00,1,'2019-04-12 18:00:32','2019-04-12 15:00:32','2019-04-12 15:00:32');
+>>>>>>> rube/service-request
 =======
 INSERT INTO `transactions` VALUES (1,3,'CREDIT','M930303',50.00,50.00,0,'2019-04-02 22:44:37','2019-04-02 19:44:37','2019-04-02 19:44:37'),(2,3,'CREDIT','M930303',50.00,50.00,1,'2019-04-02 22:51:08','2019-04-02 19:51:08','2019-04-02 19:51:08'),(3,3,'CREDIT','M930303',50.00,50.00,1,'2019-04-02 22:51:23','2019-04-02 19:51:23','2019-04-02 19:51:23'),(4,11,'CREDIT','NDB36FCN0H',10.00,10.00,0,'2019-04-11 19:59:19','2019-04-11 16:59:19','2019-04-11 16:59:19'),(5,11,'CREDIT','NDB26FO0I4',10.00,10.00,0,'2019-04-11 20:46:22','2019-04-11 17:46:22','2019-04-11 17:46:22'),(6,11,'CREDIT','NDB46FOBG2',10.00,10.00,1,'2019-04-11 20:48:35','2019-04-11 17:48:35','2019-04-11 17:48:35'),(7,11,'CREDIT','NDC56FVX5F',10.00,10.00,1,'2019-04-11 21:25:59','2019-04-11 18:25:59','2019-04-11 18:25:59'),(8,11,'CREDIT','NDC475ZLMY',10.00,10.00,1,'2019-04-12 17:27:13','2019-04-12 14:27:13','2019-04-12 14:27:13'),(9,11,'CREDIT','NDC9776383',10.00,10.00,1,'2019-04-12 18:00:32','2019-04-12 15:00:32','2019-04-12 15:00:32');
 >>>>>>> rube/service-request
@@ -1496,7 +1612,10 @@ UNLOCK TABLES;
 --
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
 -- Table structure for table `user_balance`
@@ -1533,6 +1652,9 @@ UNLOCK TABLES;
 
 --
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -1633,6 +1755,7 @@ CREATE TABLE `users` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   `name` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
   `user_group` int(10) unsigned NOT NULL DEFAULT '100',
   `phone_no` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
@@ -1645,6 +1768,8 @@ CREATE TABLE `users` (
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 =======
+=======
+>>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
   `first_name` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
@@ -1669,6 +1794,9 @@ CREATE TABLE `users` (
   UNIQUE KEY `users_email_unique` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 <<<<<<< HEAD
+<<<<<<< HEAD
+>>>>>>> rube/service-request
+=======
 >>>>>>> rube/service-request
 =======
 >>>>>>> rube/service-request
@@ -1682,7 +1810,11 @@ LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 INSERT INTO `users` VALUES (1,'Dennis Muoki',1,'+254713653112','muokid3@gmail.com','$2y$10$5Tf07ADgOESV4to4wTrq1.RLqtDQKzJRVge20.JqzyDAQbcsF6.wa',NULL,NULL,NULL),(2,'Pauline Weku',1,'254726986977','pauline@ke.ke','',NULL,'2019-02-09 20:28:25','2019-02-09 20:28:25');
+=======
+INSERT INTO `users` VALUES (1,'Dennis Muoki',NULL,1,'+254713653112','muokid3@gmail.com','$2y$10$5Tf07ADgOESV4to4wTrq1.RLqtDQKzJRVge20.JqzyDAQbcsF6.wa',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(2,'Pauline Weku',NULL,1,'254726986977','pauline@ke.ke','',NULL,0,NULL,NULL,'2019-02-09 20:28:25','2019-02-09 20:28:25',NULL,0,0,0,NULL,NULL),(3,'ANTONY NJOROGE THIONGO',NULL,4,'0726498973','0726498973@urbantap.com','$2y$10$5Bw.lNGwQbxAuVP0ysWUleAyOgiEcJF3R9EAS1IkMaaAnhWroOFru',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(4,'John','Doe',100,'254726986944','johndoe@gmail.com','$2y$10$ld2oi7yVCT/gtLcY1PempOQujQjk.PJLHSc1.XKR373bqbTwAqvuS',NULL,0,'9055',20,'2019-04-07 16:56:19','2019-04-07 16:56:19',NULL,0,0,0,NULL,NULL),(5,'John','Doe',100,'254726986944','kabuyanga@gmail.com','$2y$10$hfmSKpoFp53TXTRKRKmb9OYDk1EFe2ajA2q4XB/YJgBlj0cHUgFhO',NULL,0,'4734',20,'2019-04-07 17:03:24','2019-04-07 17:03:24',NULL,0,0,0,NULL,NULL),(6,'John','Doe',100,'254726986944','kabuyanga23@gmail.com','$2y$10$3SuGHWTi0BUKWE.1uBp2KOu2ty5PMah/7oCp21EN3.xsuPJLkarIi',NULL,0,'9078',20,'2019-04-07 17:05:17','2019-04-07 17:05:17',NULL,0,0,0,NULL,NULL),(7,'John','Doe',100,'254726986944','kabuyanga27@gmail.com','$2y$10$wogPS/CbG6qdPm0klqmn1eZyq5vQgnhYh99YtwqwPtiS64kjvDtXC',NULL,0,'3675',20,'2019-04-07 17:07:55','2019-04-07 17:07:55',NULL,0,0,0,NULL,NULL),(8,'Evans','Wanyamam',100,'254726986944','Wanyama@gmail.com','$2y$10$ZeGGlaz5mmFXcAVdGOiG4uBPx5mx6OXDnxh5ipwEwFWe9ZYdMk7Uy',NULL,0,'8890',20,'2019-04-08 06:28:13','2019-04-08 06:28:13',NULL,0,0,0,NULL,NULL),(9,'Evans','Wachiye',100,'254726986944','okwawanyama@gmail.com','$2y$10$4GQDB28FVvH6LjouF51Vs.TrzhJ/HMi7VY71SHrhuQ4fhWs.UJwCe',NULL,0,'5362',20,'2019-04-08 06:31:59','2019-04-08 06:31:59',NULL,0,0,0,NULL,NULL),(10,'Titus','Githiru',100,'254726986944','titusgithiru@gmail.com','$2y$10$4JgEmTDSxz7BflZ0XDaROOD7Cpesj2wAYrNOIc8f.ttPuHcvzXaDy',NULL,0,'1159',20,'2019-04-10 18:50:57','2019-04-10 18:50:57',5910,0,0,0,NULL,NULL),(11,'ANTONY','',4,'254726498973','254726498973@urbantap.co.ke','$2y$10$tjc8OE06urUjFimZ4CAqp.qH9jyG8AZRX.W/1OPdX/jTI9WtiuQF2',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(12,'Wekes Reto',NULL,100,'254735920576',NULL,'$2y$10$JQti.MRl55Hql3HAJubWT.9OWTOT19rSGuo8hhfqOqGA6StlAA5Ta',NULL,0,'0',NULL,'2019-04-22 14:07:23','2019-04-22 14:07:23',5472,0,0,0,NULL,NULL),(13,'Ericko Wachiyr',NULL,100,'254725920576',NULL,'$2y$10$9PG7AmKAlwCcDmEww4G6Y.4uaTp2I6/ZVowfg8LLiCrjAwANqSbAS',NULL,0,'0',NULL,'2019-04-22 14:09:58','2019-04-22 14:09:58',7593,0,0,0,NULL,NULL),(14,'Erito Wanyamam',NULL,100,'254725920576',NULL,'$2y$10$W.Ysv1xNSTPYGf1w9vzzs.RKqOBzHS1hQ6R7MmVwtTgQ9EEp7SR6G',NULL,0,'0',NULL,'2019-04-22 14:14:26','2019-04-22 14:14:26',7174,0,0,0,NULL,NULL);
+>>>>>>> rube/service-request
 =======
 INSERT INTO `users` VALUES (1,'Dennis Muoki',NULL,1,'+254713653112','muokid3@gmail.com','$2y$10$5Tf07ADgOESV4to4wTrq1.RLqtDQKzJRVge20.JqzyDAQbcsF6.wa',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(2,'Pauline Weku',NULL,1,'254726986977','pauline@ke.ke','',NULL,0,NULL,NULL,'2019-02-09 20:28:25','2019-02-09 20:28:25',NULL,0,0,0,NULL,NULL),(3,'ANTONY NJOROGE THIONGO',NULL,4,'0726498973','0726498973@urbantap.com','$2y$10$5Bw.lNGwQbxAuVP0ysWUleAyOgiEcJF3R9EAS1IkMaaAnhWroOFru',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(4,'John','Doe',100,'254726986944','johndoe@gmail.com','$2y$10$ld2oi7yVCT/gtLcY1PempOQujQjk.PJLHSc1.XKR373bqbTwAqvuS',NULL,0,'9055',20,'2019-04-07 16:56:19','2019-04-07 16:56:19',NULL,0,0,0,NULL,NULL),(5,'John','Doe',100,'254726986944','kabuyanga@gmail.com','$2y$10$hfmSKpoFp53TXTRKRKmb9OYDk1EFe2ajA2q4XB/YJgBlj0cHUgFhO',NULL,0,'4734',20,'2019-04-07 17:03:24','2019-04-07 17:03:24',NULL,0,0,0,NULL,NULL),(6,'John','Doe',100,'254726986944','kabuyanga23@gmail.com','$2y$10$3SuGHWTi0BUKWE.1uBp2KOu2ty5PMah/7oCp21EN3.xsuPJLkarIi',NULL,0,'9078',20,'2019-04-07 17:05:17','2019-04-07 17:05:17',NULL,0,0,0,NULL,NULL),(7,'John','Doe',100,'254726986944','kabuyanga27@gmail.com','$2y$10$wogPS/CbG6qdPm0klqmn1eZyq5vQgnhYh99YtwqwPtiS64kjvDtXC',NULL,0,'3675',20,'2019-04-07 17:07:55','2019-04-07 17:07:55',NULL,0,0,0,NULL,NULL),(8,'Evans','Wanyamam',100,'254726986944','Wanyama@gmail.com','$2y$10$ZeGGlaz5mmFXcAVdGOiG4uBPx5mx6OXDnxh5ipwEwFWe9ZYdMk7Uy',NULL,0,'8890',20,'2019-04-08 06:28:13','2019-04-08 06:28:13',NULL,0,0,0,NULL,NULL),(9,'Evans','Wachiye',100,'254726986944','okwawanyama@gmail.com','$2y$10$4GQDB28FVvH6LjouF51Vs.TrzhJ/HMi7VY71SHrhuQ4fhWs.UJwCe',NULL,0,'5362',20,'2019-04-08 06:31:59','2019-04-08 06:31:59',NULL,0,0,0,NULL,NULL),(10,'Titus','Githiru',100,'254726986944','titusgithiru@gmail.com','$2y$10$4JgEmTDSxz7BflZ0XDaROOD7Cpesj2wAYrNOIc8f.ttPuHcvzXaDy',NULL,0,'1159',20,'2019-04-10 18:50:57','2019-04-10 18:50:57',5910,0,0,0,NULL,NULL),(11,'ANTONY','',4,'254726498973','254726498973@urbantap.co.ke','$2y$10$tjc8OE06urUjFimZ4CAqp.qH9jyG8AZRX.W/1OPdX/jTI9WtiuQF2',NULL,0,NULL,NULL,NULL,NULL,NULL,0,0,0,NULL,NULL),(12,'Wekes Reto',NULL,100,'254735920576',NULL,'$2y$10$JQti.MRl55Hql3HAJubWT.9OWTOT19rSGuo8hhfqOqGA6StlAA5Ta',NULL,0,'0',NULL,'2019-04-22 14:07:23','2019-04-22 14:07:23',5472,0,0,0,NULL,NULL),(13,'Ericko Wachiyr',NULL,100,'254725920576',NULL,'$2y$10$9PG7AmKAlwCcDmEww4G6Y.4uaTp2I6/ZVowfg8LLiCrjAwANqSbAS',NULL,0,'0',NULL,'2019-04-22 14:09:58','2019-04-22 14:09:58',7593,0,0,0,NULL,NULL),(14,'Erito Wanyamam',NULL,100,'254725920576',NULL,'$2y$10$W.Ysv1xNSTPYGf1w9vzzs.RKqOBzHS1hQ6R7MmVwtTgQ9EEp7SR6G',NULL,0,'0',NULL,'2019-04-22 14:14:26','2019-04-22 14:14:26',7174,0,0,0,NULL,NULL);
 >>>>>>> rube/service-request
@@ -1703,7 +1835,11 @@ UNLOCK TABLES;
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 -- Dump completed on 2019-03-26  0:43:38
+=======
+-- Dump completed on 2019-04-22 22:00:36
+>>>>>>> rube/service-request
 =======
 -- Dump completed on 2019-04-22 22:00:36
 >>>>>>> rube/service-request
