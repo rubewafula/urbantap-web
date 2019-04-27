@@ -18,12 +18,13 @@ use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
+use IlluminateSupportFacadesLog;
 
 
 
 class ServiceProvidersController extends Controller{
 
-        private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
+    private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
     private $audio_ext = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
     private $video_ext = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
 
@@ -52,9 +53,9 @@ class ServiceProvidersController extends Controller{
         $limit =null;
         //die(print_r($req, 1));
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
-        $p_services_url =  URL::to('/static/images/provider-services/');
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/image/provider-services/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -80,11 +81,11 @@ class ServiceProvidersController extends Controller{
             . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
             . " d.id_number, d.date_of_birth, d.gender, "
             . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo, "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
             . " d.home_location, work_phone_no, sp.business_description "
-            . " FROM service_providers sp inner join user_personal_details d "
+            . " FROM service_providers sp left join user_personal_details d "
             . " using(user_id) where 1=1 " . $filter ;
 
         //die($rawQuery);
@@ -96,7 +97,7 @@ class ServiceProvidersController extends Controller{
 
         $sql_provider_services = "select ps.id as provider_service_id,  "
             . " concat('$p_services_url' ,'/', if(ps.media_url is null, '2.jpg', "
-            . " json_extract(ps.media_url, '$.media_url')) ) as service_photo, "
+            . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
             . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on " 
@@ -114,7 +115,7 @@ class ServiceProvidersController extends Controller{
 
         $portfolios_sql = "SELECT  "
             . " concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
-            . " json_extract(media_data, '$.media_url')) ) as media_photo, " 
+            . " JSON_UNQUOTE(json_extract(media_data, '$.media_url'))) ) as media_photo, " 
             . " p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
@@ -126,7 +127,7 @@ class ServiceProvidersController extends Controller{
                 . " r.status_id, concat(u.first_name, ' ', u.last_name) as reviewer, "
                 . " u.email, s.service_name, "
                 . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-                . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail "
+                . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
                 . " inner join user_personal_details d on u.id = d.user_id "
                 . " inner join provider_services ps on ps.id = r.provider_service_id "
@@ -385,12 +386,12 @@ class ServiceProvidersController extends Controller{
 public  function  upload_coverphoto($request)
 {
 
-   $file = $request->file('cover_photo');
+        $file = $request->file('cover_photo');
         if(is_null($file)){
             /** No file uploaded accept and proceeed **/
             return null;
         }
- $max_size = (int)ini_get('upload_max_filesize') * 1000;
+        $max_size = (int)ini_get('upload_max_filesize') * 1000;
         $all_ext = implode(',', $this->allExtensions());
 
         $this->validate($request, [
@@ -414,9 +415,8 @@ public  function  upload_coverphoto($request)
             return FALSE;
         }
 
-        $fullPath = 'public/' . $type . '/' .$name . '.' . $ext;
-
-        if (Storage::putFileAs('public/' . $type . '/', $file, $name . '.' . $ext)) {
+        $fullPath = $name . '.' . $ext;
+        if (Storage::putFileAs('public/static/' . $type . '/service-providers', $file, $fullPath)) {
             return [
                     'media_url'=>$fullPath,
                     'name' => $name,
@@ -454,6 +454,11 @@ public  function  upload_coverphoto($request)
 
     public function create(Request $request)
     {
+        Log::info(print_r($request->all(), 1));
+        $request->replace($request->all()); 
+
+        Log::info("user_id " . $request->get('user_id') . " === ['user_id'] == " .  $request->get('[user_id]'));
+        //die(print_r($request->all(), 1));
     	$validator = Validator::make($request->all(),[
 		    'user_id' => 'required|exists:users,id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
@@ -463,7 +468,7 @@ public  function  upload_coverphoto($request)
             'location_city' =>'string',
             'business_phone' => [
                 'required',
-                'regex:/^(\+?254)?7\d{8}$/'
+                'regex:/^((\+?254)|0)?7\d{8}$/'
             ],
             'business_email' =>'nullable|email',
             'facebook_page'=>'string|nullable',
@@ -479,14 +484,14 @@ public  function  upload_coverphoto($request)
             ] ,
             'services'=>['required']         
 		]);
-
-		if ($validator->fails()) {
-			$out = [
+   
+         if ($validator->fails()) {
+		$out = [
 		        'success' => false,
 		        'message' => $validator->messages()
 		    ];
-			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-		}else{
+			return Response::json($out, HTTPCodes::HTTP_OK);
+	}else{
 
 
             $cover_photo= $this->upload_coverphoto($request);
@@ -525,10 +530,27 @@ public  function  upload_coverphoto($request)
                         'cover_photo' => $cover_photo
                     ]
         	    );
+                $service_provider_id = DB::getPdo()->lastInsertId();
+
+                $services_query = "insert into provider_services (id, "
+                    . " service_provider_id, service_id, description, cost, duration, "
+                    . " rating, media_url, created_at, updated_at, status_id)  values "; 
+                $values = [];
+        
+                foreach(json_decode($request->get('services'), 1)  as $key=>$service_id){
+                   if(is_numeric($service_id)){
+                       array_push($values, " (null, '$service_provider_id', "
+                           . " '$service_id', '', 0, 60, 1, null, now(), now(), 1) ");
+                   }
+		}
+
+                $services_query .= implode(",", $values);
+                Log::info("Services QUERY: " . $services_query);
+                DB::insert($services_query);
 
 	    	$out = [
 		        'success' => true,
-		        'id'=>DB::getPdo()->lastInsertId(),
+		        'id'=>$service_provider_id,
 		        'message' => 'Service provider Created'
 		    ];
 
@@ -653,7 +675,7 @@ public  function  upload_coverphoto($request)
     {
 
 
-          $image_url = URL::to('/static/images/avatar/');
+        $image_url = URL::to('/static/images/avatar/');
         $sp_providers_url =  URL::to('/static/images/service-providers/');
         $p_services_url =  URL::to('/static/images/provider-services/');
 
