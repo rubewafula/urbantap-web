@@ -1,7 +1,5 @@
 <?php
-
 use Illuminate\Http\Request;
-
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -39,6 +37,7 @@ Route::group([
     Route::post('signup', 'AuthController@signup');
     Route::post('resend_verification','AuthController@resend_verification');
     Route::post('verify_code','AuthController@verify_code');
+    Route::get('account/verify/{code}','AuthController@verify_code');
     
 
     Route::group([
@@ -194,12 +193,15 @@ Route::group([
  'prefix' => 'service-providers'
 ], function(){
     Route::get('all', 'ServiceProvidersController@get');
-     Route::get('popular', 'ServiceProvidersController@popular');
+    Route::get('popular', 'ServiceProvidersController@popular');
     Route::get('get/{id}', 'ServiceProvidersController@get');
+    Route::get('services/{id}', 'ServiceProvidersController@getwithserviceid');
     Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
     Route::put('update', 'ServiceProvidersController@update');
     Route::delete('del','ServiceProvidersController@delete');
+    Route::get('location_service','ServiceProvidersController@search_by_location_service');
+
 });
 
 
@@ -277,17 +279,6 @@ Route::group([
 Route::get('balances/all','BalancesController@get_all');
 Route::post('balances/create','BalancesController@store');
 
-
-Route::group([
-'prefix' => 'categories'
-], function(){
-   Route::get('all', 'CategoriesController@get');
-   Route::get('get/{id}', 'CategoriesController@get');
-   Route::get('create', 'CategoriesController@create');
-   Route::get('update', 'CategoriesController@update');
-   Route::get('del','CategoriesController@delete');
-
-});
 
 Route::group([
 'prefix' => 'home'

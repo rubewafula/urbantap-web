@@ -24,260 +24,273 @@ use App\Utilities\SMS;
 class PaymentsController extends Controller
 {
 
-    private $rabbitMQConnection;
-    private $connection;
-    private $channel;
+	private $rabbitMQConnection;
+	private $connection;
+	private $channel;
 
-    
-    public function mpesa_register_url(){
 
-        Log::info(" Calling MPESA Register Confirm");
+	public function mpesa_register_url(){
 
-        $url = 'https://api.safaricom.co.ke/mpesa/c2b/v1/registerurl';
+		Log::info(" Calling MPESA Register Confirm");
 
-        $curl_post_data = array(
+		$url = 'https://api.safaricom.co.ke/mpesa/c2b/v1/registerurl';
 
-          'ShortCode' => env("SHORT_CODE"),
-          'ResponseType' => 'Completed',
-          'ConfirmationURL' => env("CONFIRMATION_URL"),
-          'ValidationURL' => env("VALIDATION_URL")
-        );
+		$curl_post_data = array(
 
-        $data_string = json_encode($curl_post_data);
+				'ShortCode' => env("SHORT_CODE"),
+				'ResponseType' => 'Completed',
+				'ConfirmationURL' => env("CONFIRMATION_URL"),
+				'ValidationURL' => env("VALIDATION_URL")
+				);
 
-        $curl = curl_init();
+		$data_string = json_encode($curl_post_data);
 
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json',
-         'Authorization:Bearer clr9eF6kx17kcC7A6E1kZHItUyfC')); //setting custom header
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+		$curl = curl_init();
 
-        Log::info("Got response from the curl MPESA");
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json',
+					'Authorization:Bearer clr9eF6kx17kcC7A6E1kZHItUyfC')); //setting custom header
+		curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($curl, CURLOPT_POST, true);
+		curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
 
-        $curl_response = curl_exec($curl);
+		Log::info("Got response from the curl MPESA");
 
-        $json_response = json_decode($curl_response);
+		$curl_response = curl_exec($curl);
 
-        Log::info($json_response);
+		$json_response = json_decode($curl_response);
 
-        return $json_response;
-    }
+		Log::info($json_response);
 
+		return $json_response;
+	}
 
-    public static function mpesa_generate_token(){
 
-        Log::info("Calling token generation Safaricom API");
+	public static function mpesa_generate_token(){
 
-        $url = env("TOKEN_URL");
+		Log::info("Calling token generation Safaricom API");
 
-        $consumer_key = env("CONSUMER_KEY");
-        $consumer_secret = env("CONSUMER_SECRET");
+		$url = env("TOKEN_URL");
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $url);
-        $credentials = base64_encode($consumer_key.':'.$consumer_secret);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Basic '.$credentials)); //setting a custom header
-        curl_setopt($curl, CURLOPT_HEADER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+		$consumer_key = env("CONSUMER_KEY");
+		$consumer_secret = env("CONSUMER_SECRET");
 
-        $curl_response = curl_exec($curl);
+		$curl = curl_init();
+		curl_setopt($curl, CURLOPT_URL, $url);
+		$credentials = base64_encode($consumer_key.':'.$consumer_secret);
+		curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Basic '.$credentials)); //setting a custom header
+		curl_setopt($curl, CURLOPT_HEADER, true);
+		curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
 
-        Log::info($curl_response);
+		$curl_response = curl_exec($curl);
 
-        $decodedJSON = json_decode($curl_response, true);
+		Log::info($curl_response);
 
-        return $decodedJSON["access_token"];
-    }
+		$decodedJSON = json_decode($curl_response, true);
 
+		return $decodedJSON["access_token"];
+	}
 
-    public function receive_mpesa(){
 
-        Log::info("Callback URL for MPESA called");
+	public function receive_mpesa(){
 
-        $postData = file_get_contents('php://input');
+		Log::info("Callback URL for MPESA called");
 
-        Log::info("Got post data from Safaricom ".$postData);
+		$postData = file_get_contents('php://input');
 
-        if( $postData != null){
+		Log::info("Got post data from Safaricom ".$postData);
 
-            $rabbitMQConnection = new RabbitMQConnection();
-            $connection = $rabbitMQConnection->getConnection();
-            $channel = $connection->channel();
+		if( $postData != null){
 
-            $dataInJSON = json_encode($postData);
+			$rabbitMQConnection = new RabbitMQConnection();
+			$connection = $rabbitMQConnection->getConnection();
+			$channel = $connection->channel();
 
-            // $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
-           
-            $msg = new AMQPMessage($postData);
-            $publishResult = $channel->basic_publish($msg, '', env("RABBIT_MPESA_QUEUE"));
+			$dataInJSON = json_encode($postData);
 
-            echo("Publishing Result ".$publishResult);
+			// $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
 
-            Log::info("Message published to the queue successfully");
+			$msg = new AMQPMessage($postData);
+			$publishResult = $channel->basic_publish($msg, '', env("RABBIT_MPESA_QUEUE"));
 
-            echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
+			echo("Publishing Result ".$publishResult);
 
-            $channel->close();
-            $connection->close();
-        }
+			Log::info("Message published to the queue successfully");
 
-    }
+			echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
 
-    public function mpesa_payment(){
+			$channel->close();
+			$connection->close();
+		}
 
-        $user_id = "";
-        $running_balance = 0;
+	}
 
-        Log::info("Callback URL from Inbox Consumer called");
 
-        $postData = file_get_contents('php://input');
+	public function receive_mpesa_tips(){
 
-        Log::info($postData);
+		Log::info("URL for MPESA Tips Called");
+		$postData = file_get_contents('php://input');
+		Log::info("Money for Tips Received from MPESA ".$postData);
+	}
 
-        if( $postData != null){
+	public function mpesa_payment(){
 
-            $decoded = json_decode($postData);
+		$user_id = "";
+		$running_balance = 0;
 
-            $transaction_type = $decoded->TransactionType;
-            $transaction_id = $decoded->TransID;
-            $transaction_time = $decoded->TransTime;
-            $transaction_amount = $decoded->TransAmount;
-            $business_code = $decoded->BusinessShortCode;
-            $bill_ref_no = $decoded->BillRefNumber;
-            $invoice_number = $decoded->InvoiceNumber;
-            $org_account_balance = $decoded->OrgAccountBalance;
-            $third_party_trans_id = $decoded->ThirdPartyTransID;
-            $msisdn = $decoded->MSISDN;
-            $first_name = $decoded->FirstName;
-            $middle_name = $decoded->MiddleName;
-            $last_name = $decoded->LastName;
+		Log::info("Callback URL from Inbox Consumer called [MPESA Payments]");
 
-            $name = $first_name. " ".$middle_name." ".$last_name;
+		$postData = file_get_contents('php://input');
 
-            $MPESATransactionLog = new MpesaTransaction();
+		Log::info($postData);
 
-            $MPESATransactionLog->message = $transaction_type;
-            $MPESATransactionLog->transaction_ref = $transaction_id;
-            $MPESATransactionLog->transaction_time = $transaction_time;
-            $MPESATransactionLog->amount = $transaction_amount;
-            $MPESATransactionLog->paybill_no = $business_code;
-            $MPESATransactionLog->mpesa_code = $transaction_id;
-            $MPESATransactionLog->bill_ref_no = $bill_ref_no;
-            $MPESATransactionLog->account_no = $invoice_number;
-            $MPESATransactionLog->msisdn = $msisdn;
-            $MPESATransactionLog->names = $name;
-            $MPESATransactionLog->status_id = 0;
+		if( $postData != null){
 
-            $MPESATransactionLog->save();
+			$decoded = json_decode($postData);
 
-            $user = DB::select(DB::raw("select * from users where phone_no='".$msisdn."'"));
+			$transaction_type = $decoded->TransactionType;
+			$transaction_id = $decoded->TransID;
+			$transaction_time = $decoded->TransTime;
+			$transaction_amount = $decoded->TransAmount;
+			$business_code = $decoded->BusinessShortCode;
+			$bill_ref_no = $decoded->BillRefNumber;
+			$invoice_number = $decoded->InvoiceNumber;
+			$org_account_balance = $decoded->OrgAccountBalance;
+			$third_party_trans_id = $decoded->ThirdPartyTransID;
+			$msisdn = $decoded->MSISDN;
+			$first_name = $decoded->FirstName;
+			$middle_name = $decoded->MiddleName;
+			$last_name = $decoded->LastName;
 
-            if(count($user) > 0){
+			$name = $first_name. " ".$middle_name." ".$last_name;
 
-                $user_id = $user[0]->id;
-                $running_balance_rs = DB::select(DB::raw("select * from user_balance where 
-                    user_id='".$user_id."'"));
+			Log::info("Now preparing the query to insert the MPESA Transaction");
 
-                if(count($running_balance_rs) > 0){
+                        DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
+				amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
+				VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
+				:mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,0)",
+				 ['message'=>$transaction_type, 'transaction_ref'=>$transaction_id, 
+				 'transaction_time'=>$transaction_time,'amount'=>$transaction_amount,
+				 'paybill_no'=>$business_code,'mpesa_code'=>$transaction_id,
+				 'bill_ref_no'=>$bill_ref_no,'account_no'=>$bill_ref_no,
+				 'msisdn'=>$msisdn,'names'=>$name]);
 
-                    $running_balance = $running_balance_rs[0]->balance;
-                }
+			$tranID = DB::getPdo()->lastInsertId();
 
-            }else{
+			$user = DB::select(DB::raw("select * from users where phone_no='".$msisdn."'"));
 
-                $user_id = DB::table('users')->insertGetId(
-                    array("name"=>$name, "user_group"=>4,"phone_no"=>$msisdn,
-                  "email"=>$msisdn."@urbantap.com","password"=>Hash::make($msisdn))
-                );
-            }
+			if(count($user) > 0){
 
-            $balance = $running_balance+$transaction_amount;
+				$user_id = $user[0]->id;
+				$running_balance_rs = DB::select(DB::raw("select * from user_balance where 
+							user_id='".$user_id."'"));
 
-            $transaction = new Transaction();
+				if(count($running_balance_rs) > 0){
 
-            $transaction->user_id=$user_id;
-            $transaction->transaction_type="CREDIT";
-            $transaction->reference=$transaction_id;
-            $transaction->amount=$transaction_amount;
-            $transaction->running_balance=$balance;
-            $transaction->status_id=0;
+					$running_balance = $running_balance_rs[0]->balance;
+				}
 
-            $transaction->save();
+			}else{
 
-            if(count($user) > 0){
+				$user_id = DB::table('users')->insertGetId(
+						array("first_name"=>$first_name,"last_name"=>$last_name, "user_group"=>4,"phone_no"=>$msisdn,
+							"email"=>$msisdn."@urbantap.co.ke","password"=>Hash::make($msisdn))
+						);
+			}
 
-                DB::update('update user_balance set balance = ?, transaction_id = ? where 
-                    user_id = ?', [$balance, $transaction->id, $user_id]);
-            }else{
+			$balance = $running_balance+$transaction_amount;
 
-                DB::insert('insert into user_balance (user_id, balance, transaction_id, 
-                    created) values (?, ?, ?, now())', [$user_id, $transaction_amount,
-                     $transaction->id]);
-            }
+			$transaction = new Transaction();
 
-            $MPESATransactionLog->status_id=1;
-            $MPESATransactionLog->save();
-            $transaction->status_id=1;
-            $transaction->save();
+			$transaction->user_id=$user_id;
+			$transaction->transaction_type="CREDIT";
+			$transaction->reference=$transaction_id;
+			$transaction->amount=$transaction_amount;
+			$transaction->running_balance=$balance;
+			$transaction->status_id=0;
 
-            $booking_amount = 0;
-            $booking_reference = "";
-            $balance = 0;
-            $booking_time = "";
+			$transaction->save();
 
-            $bookingRs = DB::select(DB::raw("select * from bookings where 
-                    id='".$invoice_number."'"));
+			if(count($user) > 0){
 
-            if(count($bookingRs) > 0){
+				DB::update("update user_balance set balance = '".$balance."', transaction_id = '".$transaction_id."' where 
+						user_id = '".$user_id."'");
+			}else{
 
-                $booking_amount = $bookingRs[0]->amount;
-                $balance = $booking_amount - $transaction_amount;
-                $booking_time = $bookingRs[0]->booking_time; 
+				DB::insert("insert into user_balance(user_id,balance,transaction_id,created) 
+					    VALUES(:user_id, :balance, :transaction_id, now())",['user_id'=>$user_id,
+					    'balance'=>$balance,'transaction_id'=>$transaction->id]);
+			}
+			DB::update("update mpesa_transactions set status_id = '1' where id = '".$tranID."'");
 
-                $serviceProvider = ServiceProvider::find($bookingRs[0]->service_provider_id);
+			$transaction->status_id=1;
+			$transaction->save();
 
-                Log::info("Service Provider ID is ".$bookingRs[0]->service_provider_id);
-                Log::info("User ID  for the Provider is ".$serviceProvider->user_id);
+			$booking_amount = 0;
+			$booking_reference = "";
+			$balance = 0;
+			$booking_time = "";
 
-                $providerMsisdn = User::find($serviceProvider->user_id)->phone_no;
-            }else{
+			$sms = new SMS();
 
-                Log::info("Booking called back by MPESA Number $invoice_number NOT FOUND");
+			$bookingRs = DB::select(DB::raw("select * from bookings where id='".$invoice_number."'"));
 
-                $out = [
-                    'status' => 421,
-                    'success' => false,
-                    'message' => 'Booking Not Found'
-                ];
+			if(count($bookingRs) > 0){
 
-                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
-            }
+				$booking_amount = $bookingRs[0]->amount;
+				$balance = $booking_amount - $transaction_amount;
+				$booking_time = $bookingRs[0]->booking_time; 
 
-            DB::insert('insert into payments (reference, date_received, booking_id, 
-                    payment_method, paid_by_name, paid_by_msisdn, amount, 
-                    received_payment, balance, status_id, created_at) values 
-                    (?, now(), ?, ?,?,?,?,?,?,?, now())', [$transaction_id, $invoice_number,
-                     "MPESA", $name, $msisdn, $booking_amount, $transaction_amount,
-                      $balance, DBStatus::BOOKING_PAID]);
+				$serviceProvider = ServiceProvider::find($bookingRs[0]->service_provider_id);
 
-            DB::insert('insert into booking_trails (booking_id, status_id, description, 
-                originator, created_at) values (?,?,?,?,now())',
-                [$invoice_number, DBStatus::BOOKING_PAID, "MPESA TRANSACTION", "MPESA"]);
+				Log::info("Service Provider ID is ".$bookingRs[0]->service_provider_id);
+				Log::info("User ID  for the Provider is ".$serviceProvider->user_id);
 
-            DB::update('update bookings set status_id = ?, updated_at = now() where 
-                    id = ?', [DBStatus::BOOKING_PAID, $invoice_number]);
+				$providerMsisdn = User::find($serviceProvider->user_id)->phone_no;
+			}else{
+
+				Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
+				$out = [
+                   			 'status' => 421,
+                    			'success' => false,
+                    			'message' => 'Booking Not Found'
+                		];
+
+				$customerMessage = "Dear $name, you have successfully topped up KSh. $transaction_amount to your URBANTAP account, reference $bill_ref_no. Your can book for any of our service using the float in your account. Thank you.";
+	
+				$sms->sendSMSMessage($msisdn, $customerMessage, $bill_ref_no);
+
+		                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+				
+
+			}
+
+			DB::insert("insert into payments(reference, date_received, booking_id, 
+		                payment_method, paid_by_name, paid_by_msisdn, amount, 
+                                received_payment, balance, status_id, created_at) 
+				values(:reference, now(), :booking_id, 
+                    		'MPESA', :paid_by_name, :paid_by_msisdn, :amount, 
+                    		:received_payment, :balance, :status_id, now())",['reference'=>$transaction_id,
+				'booking_id'=>$booking_id,'paid_by_name'=>$name,
+				'paid_by_msisdn'=>$msisdn,'amount'=>$booking_amount, 
+				'received_payment'=>$transaction_amount,'balance'=>$balance,
+				'status_id'=>DBStatus::BOOKING_PAID]);
+
+			DB::insert("insert into booking_trails(booking_id,status_id,description,originator,created_at)
+				    values(:booking_id,:status_id,'MPESA TRANSACTION','MPESA', now())",
+				    ['booking_id'=>$bill_ref_no,'status_id'=>DBStatus::BOOKING_PAID]);
+
+            DB::update("update bookings set status_id = '".$invoice_number."', updated_at = now()
+			 where id = '".DBStatus::BOOKING_PAID."'");
 
             $customerMessage = "";
             $serviceProviderMessage = "";
 
-            $smsReference = $invoice_number;
+            $smsReference = $bill_ref_no;
             $customerMsisdn = $msisdn;
 
             $halfAmount = ceil($booking_amount/2);
-
-            $sms = new SMS();
-
+            
             if($balance <= $halfAmount){
 
                 $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $invoice_number. Your slot has been reserved for $booking_time. Thank you.";

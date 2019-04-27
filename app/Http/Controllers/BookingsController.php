@@ -397,6 +397,18 @@ class BookingsController extends Controller{
             }
         }
 
+        if($booking_allowed){}
+            $booking_cost_sql = "select base_cost from service_costs sc inner join provider_services ps "
+                    . " on ps.service_id =sc.service_id  where ps.provider_service_id =:ps_id";
+
+            $cresult = RawQuery::query($booking_cost_sql, ['ps_id'=>$request['provider_service_id']]);
+                if
+            if (empty($cresult)){
+                $booking_allowed = false;
+                $booking_fail_reason = "Service not yet available, Kindly contact admin";
+
+            }
+        }
 
         if(!$booking_allowed){
             $out = [
@@ -410,8 +422,20 @@ class BookingsController extends Controller{
 
         }else {
 
+            $base_cost = $cresult[0]['base_cost'];
+            $other_amount = 0;
 
-            DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at, booking_type, location) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now(), :booking_type, :location)", [
+            $other_cost_result = RawQuery::query("select sum(c.amount)amt from "
+                . " cost_parameters c inner join provider_services ps using(service_id) "
+                . " where service_provider_id=:sp_id", ['ps_id'=>$request['provider_service_id']]);
+
+            if(!empty($other_cost)){
+                $other_amount = $other_cost_result['amt'];
+            }
+
+            $actual_cost = $base_cost + $other_amount;
+
+            DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at, booking_type, location, amount) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now(), :booking_type, :location, :amount)", [
                     'provider_service_id'=>$request['provider_service_id'],
                     'service_provider_id'=>$request['service_provider_id'],
                     'user_id'=> $request['user_id'],
@@ -421,6 +445,7 @@ class BookingsController extends Controller{
                     'status_id'=>DBStatus::RECORD_PENDING,
                     'booking_type'=>$request['booking_type'],
                     'location'=>$request['location'],
+                    'amount' => $actual_cost
 
                 ]
             );
