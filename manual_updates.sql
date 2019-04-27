@@ -83,4 +83,17 @@ alter table service_providers add cover_photo JSON null COMMENT 'sample {"media_
 alter table bookings add amount double(10,2) not null after booking_type;
 alter table cost_parameters add cost_parameter varchar(100) not null after service_id;
 
+alter table service_providers add work_location_city varchar(100) null after service_provider_name;
+alter table service_providers add business_phone varchar(100) null after service_provider_name;
+alter table service_providers add business_email varchar(100) null after service_provider_name;
+alter table service_providers add facebook varchar(244) null after service_provider_name;
+alter table service_providers add twitter varchar(244) null after service_provider_name;
+alter table service_providers add instagram varchar(244) null after service_provider_name;
+
+alter table outboxes modify network enum('SAFARICOM','AIRTEL','TELKOM','EQUITEL','ORANGE','JTL', 'EMAIL') null;
+alter table outboxes modify message text not null;
+alter table outboxes add email varchar(256)  null;
+--alter table users modify phone_no varchar(25) null;
+--alter table users modify email varchar(256) null;
+alter table outboxes modify msisdn int(15) null;
 

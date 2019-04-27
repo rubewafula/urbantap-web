@@ -16,9 +16,25 @@ use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Storage;
+use IlluminateSupportFacadesLog;
+
 
 
 class ServiceProvidersController extends Controller{
+
+    private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
+    private $audio_ext = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
+    private $video_ext = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
+
+
+
+     private function allExtensions()
+    {
+        return array_merge($this->image_ext, $this->audio_ext, $this->video_ext);
+    }
+
 
     /**
      * Display the specified service providers.
@@ -36,6 +52,10 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         //die(print_r($req, 1));
+
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/image/provider-services/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -50,75 +70,74 @@ class ServiceProvidersController extends Controller{
             return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
+       
         $filter= '';
         if(!is_null($user_id)){
-            $filter = " and sp.user_id = '" .$user_id . "' ";
+            $filter = " and sp.id = '" .$user_id . "' ";
         }
 
         $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
             . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no "
-            . " FROM service_providers sp inner join user_personal_details  d "
+            . " d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " d.home_location, work_phone_no, sp.business_description "
+            . " FROM service_providers sp left join user_personal_details d "
             . " using(user_id) where 1=1 " . $filter ;
 
-        $results = RawQuery::paginate($rawQuery);
+        //die($rawQuery);
+
+        $results =[]; 
+        $results['provider'] =  RawQuery::query($rawQuery)[0];
        
-        $service_provider_id =  $results['result'][0]->id;
+        $service_provider_id =  $user_id;
 
-        $sql_provider_services = "select ps.id, ps.service_provider_id, ps.service_id, "
+        $sql_provider_services = "select ps.id as provider_service_id,  "
+            . " concat('$p_services_url' ,'/', if(ps.media_url is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
+            . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
-            . " ps.updated_at from provider_services ps "
-            . " where ps.service_provider_id = '" . $service_provider_id . "' ";
+            . "  ps.updated_at from provider_services ps inner join services s on " 
+            . " s.id = ps.service_id  where ps.service_provider_id = '" . $service_provider_id . "' ";
 
-        $services = RawQuery::paginate($sql_provider_services);
+       
 
-        $working_hours_sql = "select day, time_from, time_to from operating_hours "
-            . " where service_provider_id='" . $service_provider_id . "'";
+        $services = RawQuery::query($sql_provider_services);
+        $results['services'] = $services;
 
-        $working_hours = RawQuery::paginate($working_hours_sql);
+        $working_hours_sql = "select service_day, time_from, time_to from operating_hours "
+            . " where service_provider_id ='" . $service_provider_id . "'";
 
-        if(!empty($working_hours)){
-            $results['operating_hours'] = $working_hours['result'];
-        }
+        $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
-        $portfolios_sql = "SELECT p.media_data, p.description  FROM  portfolios p "
+        $portfolios_sql = "SELECT  "
+            . " concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(media_data, '$.media_url'))) ) as media_photo, " 
+            . " p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
-        $portfolios = RawQuery::paginate($portfolios_sql);
+        $results['portfolios'] = RawQuery::query($portfolios_sql);
 
-        //die(print_r($portfolios, 1));
-
-        if(!empty($portfolios)){
-            $results['portfolios'] = $portfolios['result'];
-        }
-
-
-        $full_services = [];
-        foreach($services['result'] as $key=>$service){
-            $service_provider_id = $service->service_provider_id;
-            $provider_service_id =  $service->id;
-
-            $reviews_sql = "SELECT r.provider_service_id, r.rating, r.review, "
-                . " r.status_id, u.name as reviewer, u.email, s.service_name"
+        
+        $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
+                . " r.provider_service_id, r.rating, r.review, "
+                . " r.status_id, concat(u.first_name, ' ', u.last_name) as reviewer, "
+                . " u.email, s.service_name, "
+                . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+                . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail "
                 . " FROM  reviews r  inner join users u on u.id=r.user_id "
+                . " inner join user_personal_details d on u.id = d.user_id "
                 . " inner join provider_services ps on ps.id = r.provider_service_id "
                 . " inner join services s on s.id = ps.service_id where "
                 . " r.service_provider_id = '" . $service_provider_id . "' "
-                . " and r.provider_service_id = '" . $provider_service_id . "' ";
+                . " order by r.id desc limit 5";
 
-            $reviews = RawQuery::paginate($reviews_sql);
-            //die(print_r($reviews, 1));
-            if(!empty($reviews)){
-                 $service->reviews =  $reviews['result'];
-            }
+       //die($reviews_sql);
 
-            //append reviews to each service
-            $full_services[] = $service;
-        }
-        
-        $results['services'] = $full_services;
+        $results['reviews'] = RawQuery::query($reviews_sql);
 
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : '.var_export($results, 1));
@@ -129,6 +148,81 @@ class ServiceProvidersController extends Controller{
 
     }
 
+
+    public function getwithserviceid($service_id=null, Request $request){
+        $req= $request->all();
+        $page = 1; 
+        $limit =null;
+        $sort = null;
+        $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
+        //die(print_r($req, 1));
+        if(array_key_exists('page', $req)){
+             $page = is_numeric($request['page']) ? $request['page'] : 1;
+        }
+        if(array_key_exists('limit', $req)){
+             $limit = is_numeric($request['limit']) ? $request['limit'] : null;
+        }
+
+        if(array_key_exists('sort', $req)){
+             $sort = $request['sort'];
+        }
+       
+        $validator = Validator::make(['id'=>$service_id, 'sort'=>$sort],
+            ['id'=>'integer|exists:services,id|nullable', 
+             'sort' => 'in:since,overall_likes, overall_ratings,total_requests|nullable']
+        );
+        if($validator ->fails()){
+            $out =[
+               'sucess'=> false, 
+               'message'=> $validator->messages()
+
+            ];
+
+            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $filter= '';
+        if(!is_null($service_id)){
+            $filter = " and s.id = '" .$service_id . "' ";
+        }
+
+        if(!is_null($sort)){
+            $sort_by = " order by $sort desc ";
+        }
+
+        $image_url = URL::to('/storage/images/avatar/');
+        $sp_providers_url =  URL::to('/storage/images/service-providers/');
+
+
+        $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
+            . " (select count(*) from reviews where service_provider_id = sp.id "
+            . " and provider_service_id=ps.id) as reviews, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " concat( '$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url')))) as thumbnail, "
+            . " concat( '$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url'))) ) as cover_photo "
+            . " FROM provider_services ps inner join "
+            . " service_providers sp on sp.id = ps.service_provider_id inner  join "
+            . " user_personal_details  d using(user_id) inner join services s on "
+            . " s.id = ps.service_id where sp.status_id =1  " 
+            . $filter .    $sort_by ;
+
+        //die($rawQuery);
+
+        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
+
+        Log::info('Extracted service service_providers results : '.var_export($results, 1));
+        if(empty($results)){
+            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+        }
+        return Response::json($results, HTTPCodes::HTTP_OK);
+
+
+    }
 
 	 /**
      * Display the specified service providers.
@@ -146,6 +240,11 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         $sort = null;
+
+        $image_url = URL::to('/static/images/avatar/');
+        $sp_providers_url =  URL::to('/static/images/service-providers/');
+
+
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
         //die(print_r($req, 1));
         if(array_key_exists('page', $req)){
@@ -198,10 +297,10 @@ class ServiceProvidersController extends Controller{
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url')) as thumbnail, "
-            . " if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url')) as cover_photo "
+            . " concat('$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url')))) as thumbnail, "
+            . " concat('$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
             . " FROM provider_services ps inner join "
             . " service_providers sp on sp.id = ps.service_provider_id inner  join "
             . " user_personal_details  d using(user_id) inner join services s on "
@@ -232,6 +331,11 @@ class ServiceProvidersController extends Controller{
      *
      * @return JSON 
      */
+
+    /** popular**/
+
+
+
  
     public function popular()
     {
@@ -265,45 +369,184 @@ class ServiceProvidersController extends Controller{
      *  @return JSON
      *
     ***/
+
+
+
+
+public  function  upload_coverphoto($request)
+{
+
+        $file = $request->file('cover_photo');
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return null;
+        }
+        $max_size = (int)ini_get('upload_max_filesize') * 1000;
+        $all_ext = implode(',', $this->allExtensions());
+
+        $this->validate($request, [
+            'name' => 'nullable|unique:files',
+            'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
+        ]);
+
+        $file = $request->file('cover_photo');
+
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return FALSE;
+        }
+        $ext = $file->getClientOriginalExtension();
+        $size = $file->getClientSize();
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('user_id'));
+        $type = $this->getType($ext);
+
+        if($type == 'unknown'){
+            Log::info("Aborting file upload unknown file type "+ $type);
+            return FALSE;
+        }
+
+        $fullPath = $name . '.' . $ext;
+
+        $file_path = 'public/static/' . $type . '/service-providers/'.$fullPath;
+
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+
+        if (Storage::putFileAs('public/static/' . $type . '/service-providers', $file, $fullPath)) {
+            return [
+                    'media_url'=>$fullPath,
+                    'name' => $name,
+                    'type' => $type,
+                    'extension' => $ext,
+                    'size'=>$size
+                ];
+        }
+
+        return false;
+
+
+
+}
+
+
+
+ private function getType($ext)
+    {
+        if (in_array($ext, $this->image_ext)) {
+            return 'image';
+        }
+
+        if (in_array($ext, $this->audio_ext)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, $this->video_ext)) {
+            return 'video';
+        }
+
+        return 'unknown';
+    }
+
+
     public function create(Request $request)
     {
 
-    	$validator = Validator::make($request->all(),[
-		    'user_id' => 'required|exists:users,id|unique:service_providers',
-            'service_provider_name' => 'required|unique:service_providers',
-            'business_description' => 'required|string',
-            'work_location' =>'string',
-            'work_lat'=>'nullable|regex:/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/',  
-            'work_lng'=>'nullable|regex:/^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$/'           
-		]);
+        $request->replace($request->all());    
 
-		if ($validator->fails()) {
-			$out = [
+    	$validator = Validator::make($request->all(),[
+		    'user_id' => 'required|exists:users,id',
+            'business_name' => 'required|unique:service_providers,service_provider_name',
+            'business_description' => 'required|string',
+            'keywords' => 'string|nullable',
+            'location_name' =>'string',
+            'location_city' =>'string',
+            'business_phone' => [
+                'required',
+                'regex:/^((\+?254)|0)?7\d{8}$/'
+            ],
+            'business_email' =>'nullable|email',
+            'facebook_page'=>'string|nullable',
+            'twitter' =>'string|nullable',
+            'instagram' => 'string|nullable',
+            'work_lat'=>[
+                 'required',
+                 'regex:/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/'
+             ],  
+            'work_lng'=>[
+                 'required', 
+                 'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
+            ] ,
+            'services'=>['required'] ,  
+            'cover_photo' => 'required|file|image|mimes:jpeg,png,gif,webp|max:2048'      
+		]);
+   
+         if ($validator->fails()) {
+		$out = [
 		        'success' => false,
 		        'message' => $validator->messages()
 		    ];
-			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-		}else{
+			return Response::json($out, HTTPCodes::HTTP_OK);
+	}else{
+
+
+            $cover_photo= $this->upload_coverphoto($request);
+            
+            if($cover_photo !=  FALSE)
+            {
+
+                  $cover_photo= json_encode($cover_photo); 
+
+            }else{
+                $cover_photo=NULL;
+            }
+      
 
         	DB::insert("insert into service_providers (type, user_id, service_provider_name,"
-                . " business_description, work_location, work_lat, work_lng, status_id, "
+                . " business_description, work_location, work_location_city, business_phone, "
+                . " business_email, facebook, twitter, instagram, work_lat, work_lng, status_id,cover_photo, "
                 . " created_at, updated_at)  values (1, :user_id, "
-                . " :service_provider_name, :business_description, :work_location, "
-                . " :work_lat, :work_lng, " . DBStatus::RECORD_PENDING . ", now(), "
+                . " :service_provider_name, :business_description, :work_location, :work_location_city, "
+                . " :business_phone, :business_email, :facebook, :twitter, :instagram, "
+                . " :work_lat, :work_lng,". DBStatus::RECORD_PENDING .",:cover_photo, now(), "
                 . " now())  ", 
                     [
-                        'service_provider_name'=> $request->get('service_provider_name'),
                         'user_id'=>$request->get('user_id'),
+                        'service_provider_name'=> $request->get('business_name'),
+                        'business_description'=>$request->get('business_description'),
                         'work_location'=>$request->get('work_location'),
+                        'work_location_city'=>$request->get('work_location_city'),
+                        'business_phone'=>$request->get('business_phone'),
+                        'business_email'=>$request->get('business_email'),
+                        'facebook'=>$request->get('facebook'),
+                        'twitter'=>$request->get('twitter'),
+                        'instagram'=>$request->get('instagram'),
                         'work_lat'=>$request->get('work_lat'),
                         'work_lng'=>$request->get('work_lng'),
-                        'business_description'=>$request->get('business_description')
+                        'cover_photo' => $cover_photo
                     ]
         	    );
+                $service_provider_id = DB::getPdo()->lastInsertId();
+
+                $services_query = "insert into provider_services (id, "
+                    . " service_provider_id, service_id, description, cost, duration, "
+                    . " rating, media_url, created_at, updated_at, status_id)  values "; 
+                $values = [];
+        
+                foreach(json_decode($request->get('services'), 1)  as $key=>$service_id){
+                   if(is_numeric($service_id)){
+                       array_push($values, " (null, '$service_provider_id', "
+                           . " '$service_id', '', 0, 60, 1, null, now(), now(), 1) ");
+                   }
+		}
+
+                $services_query .= implode(",", $values);
+                Log::info("Services QUERY: " . $services_query);
+                DB::insert($services_query);
 
 	    	$out = [
 		        'success' => true,
-		        'id'=>DB::getPdo()->lastInsertId(),
+		        'id'=>$service_provider_id,
 		        'message' => 'Service provider Created'
 		    ];
 
@@ -422,6 +665,65 @@ class ServiceProvidersController extends Controller{
     		return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
     	}
     }
+
+
+    public  function  search_by_location_service(Request  $request)
+    {
+
+
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/image/provider-services/');
+
+        $validator = Validator::make($request->all(),[
+            'service' => 'required',
+            'service_time' =>'nullable|date_format:Y-m-d H:i:s',
+            'location' =>'nullable|max:50'
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+         if(empty($request->service_time))
+         {
+            $request->service_time= date('Y-m-d H:i:s');
+         } 
+      
+         if(empty($request->location))
+         {
+            $request->location= 'Nairobi';
+         }
+
+         $service_providers =  RawQuery::paginate(
+            "select sp.id, sp.type, sp.service_provider_name,sp.work_location, "
+            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+            . " d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " d.home_location, work_phone_no, sp.business_description  from service_providers sp  inner  join "
+            . " user_personal_details  d using(user_id)  inner join operating_hours op on sp.id = op.service_provider_id inner join provider_services ps on ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id where sp.status_id=1 and op.service_day = date_format(:service_date, '%W') and time(:service_date2) between time_from and time_to and s.service_name like  :service and (work_location like :location or work_location_city like :location2)",
+             $page = null, $limit = null, $params=[
+            'service_date'=>$request->service_time,
+            'service_date2'=>$request->service_time,
+            'service'=>'%'.$request->service.'%',
+            'location'=>'%'.$request->location.'%',
+            'location2'=>'%'.$request->location.'%'
+        ]);
+        
+       return Response::json($service_providers, HTTPCodes::HTTP_OK);
+
+        
+   }
+
+
 
 }
 

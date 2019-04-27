@@ -42,12 +42,12 @@ class ServiceCategoryController extends Controller{
         }
 
         $results = DB::select( 
-        	DB::raw("SELECT category_name, created_at, updated_at FROM categories where status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . "limit 100") 
+        	DB::raw("SELECT id, category_name, created_at, updated_at FROM categories where status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . "limit 100") 
         );
         //dd(HTTPCodes);
         Log::info('Extracted service categroy results : '.var_export($results, 1));
         if(empty($results)){
-        		return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+           return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
         }
         return Response::json($results, HTTPCodes::HTTP_OK);
 

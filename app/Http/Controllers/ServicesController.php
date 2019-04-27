@@ -42,7 +42,7 @@ class ServicesController extends Controller
             $filter = " and category_id = '" .$category_id . "' ";
         }
 
-        $query = "SELECT s.category_id, c.category_name, s.service_name FROM services s inner join categories c on c.id = s.category_id where s.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100";
+        $query = "SELECT s.id, s.category_id, c.category_name, s.service_name FROM services s inner join categories c on c.id = s.category_id where s.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100";
         Log::info('Query : ' . $query);
 
         $results = DB::select( 
@@ -52,7 +52,7 @@ class ServicesController extends Controller
         Log::info('Extracted service services results : ' . var_export($results, 1));
 
         if(empty($results)){
-            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+            return Response::json([], HTTPCodes::HTTP_OK );
         }
         return Response::json($results, HTTPCodes::HTTP_OK);
 
