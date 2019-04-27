@@ -190,17 +190,9 @@ class ServiceProvidersController extends Controller{
             $sort_by = " order by $sort desc ";
         }
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
+        $image_url = URL::to('/storage/images/avatar/');
+        $sp_providers_url =  URL::to('/storage/images/service-providers/');
 
-        // $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
-        //     . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
-        //     . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-        //     . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-        //     . " d.home_location work_phone_no "
-        //     . " FROM service_providers sp inner join user_personal_details  d "
-        //     . " using(user_id) where sp.status_id "
-        //     . " not in (" . DBStatus::RECORD_DELETED . ") " . $filter ;
 
         $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
             . " (select count(*) from reviews where service_provider_id = sp.id "
@@ -210,9 +202,9 @@ class ServiceProvidersController extends Controller{
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
             . " concat( '$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url'))) as thumbnail, "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url')))) as thumbnail, "
             . " concat( '$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url')) ) as cover_photo "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url'))) ) as cover_photo "
             . " FROM provider_services ps inner join "
             . " service_providers sp on sp.id = ps.service_provider_id inner  join "
             . " user_personal_details  d using(user_id) inner join services s on "
@@ -221,10 +213,8 @@ class ServiceProvidersController extends Controller{
 
         //die($rawQuery);
 
-        //die($rawQuery);
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
-        //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : '.var_export($results, 1));
         if(empty($results)){
             return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
@@ -308,7 +298,7 @@ class ServiceProvidersController extends Controller{
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
             . " concat('$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " json_extract(d.passport_photo, '$.media_url'))) as thumbnail, "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url')))) as thumbnail, "
             . " concat('$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
             . " FROM provider_services ps inner join "
@@ -674,15 +664,14 @@ public  function  upload_coverphoto($request)
     {
 
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
-        $p_services_url =  URL::to('/static/images/provider-services/');
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/image/provider-services/');
 
-
-        
-
-            $validator = Validator::make($request->all(),[
-            'service' => 'required'
+        $validator = Validator::make($request->all(),[
+            'service' => 'required',
+            'service_time' =>'nullable|date_format:Y-m-d H:i:s',
+            'location' =>'nullable|max:50'
         ]);
 
         if ($validator->fails()) {
@@ -693,9 +682,9 @@ public  function  upload_coverphoto($request)
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
-         if(empty($request->service_date))
+         if(empty($request->service_time))
          {
-            $request->service_date= date('Y-m-d');
+            $request->service_time= date('Y-m-d H:i:s');
          } 
       
          if(empty($request->location))
@@ -711,22 +700,18 @@ public  function  upload_coverphoto($request)
             . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo, "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
             . " d.home_location, work_phone_no, sp.business_description  from service_providers sp  inner  join "
             . " user_personal_details  d using(user_id)  inner join operating_hours op on sp.id = op.service_provider_id inner join provider_services ps on ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id where sp.status_id=1 and op.service_day = date_format(:service_date, '%W') and time(:service_date2) between time_from and time_to and s.service_name like  :service and (work_location like :location or work_location_city like :location2)",
              $page = null, $limit = null, $params=[
-            'service_date'=>$request->service_date,
-            'service_date2'=>$request->service_date,
+            'service_date'=>$request->service_time,
+            'service_date2'=>$request->service_time,
             'service'=>'%'.$request->service.'%',
             'location'=>'%'.$request->location.'%',
             'location2'=>'%'.$request->location.'%'
         ]);
         
        return Response::json($service_providers, HTTPCodes::HTTP_OK);
-
-
-
-
 
         
    }
