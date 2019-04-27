@@ -59,7 +59,7 @@ class HomePageController extends Controller
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
             . " FROM provider_services ps inner join "
-    	    . " service_providers sp on sp.id = ps.service_provider_id inner  left "
+    	    . " service_providers sp on sp.id = ps.service_provider_id  left join "
     	    . " user_personal_details  d using(user_id) inner join services s on "
     	    . " s.id = ps.service_id where sp.status_id =1  order by sp.created_at desc, "
     	    . " overall_likes desc limit 20";
