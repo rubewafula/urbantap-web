@@ -454,6 +454,10 @@ public  function  upload_coverphoto($request)
 
     public function create(Request $request)
     {
+
+
+        $request->replace($request->all()); 
+        
     	$validator = Validator::make($request->all(),[
 		    'user_id' => 'required|exists:users,id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
@@ -477,7 +481,8 @@ public  function  upload_coverphoto($request)
                  'required', 
                  'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
             ] ,
-            'services'=>['required']         
+            'services'=>['required'] ,  
+            'cover_photo' => 'required|file|image|mimes:jpeg,png,gif,webp|max:2048'      
 		]);
 
 		if ($validator->fails()) {
