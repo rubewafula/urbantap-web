@@ -17,6 +17,7 @@ use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 
 
 class UserPersonalDetailsController extends Controller{
@@ -93,11 +94,13 @@ class UserPersonalDetailsController extends Controller{
     public function create(Request $request)
     {
 
+        $profile_url =  URL::to('/static/image/profiles/');
+
     	$validator = Validator::make($request->all(),[
 		    'user_id' => 'required|exists:users,id|unique:user_personal_details,user_id',
-            'id_number' => 'required|integer|unique:user_personal_details',
-            'date_of_birth' => 'required|date|date_format:Y-m-d',
-            'gender' =>'in:Male, Female, Un-disclosed',
+            'id_number' => 'nullable|integer|unique:user_personal_details',
+            'date_of_birth' => 'nullable|date|date_format:Y-m-d',
+            'gender' =>'in:Male, Female, Un-disclosed|nullable',
             'passport_photo' =>'string',
             'home_location' =>'string|nullable',
             'work_phone_no' =>'string|nullable'
@@ -131,6 +134,7 @@ class UserPersonalDetailsController extends Controller{
     	    	$out = [
     		        'success' => true,
     		        'id'=>DB::getPdo()->lastInsertId(),
+                    'profile_photo_url': $profile_url . $store['media_url'];
     		        'message' => 'Service provider Created'
     		    ];
 
@@ -156,6 +160,8 @@ class UserPersonalDetailsController extends Controller{
     public function update(Request $request)
     {
     	
+        $profile_url =  URL::to('/static/image/profiles/');
+
     	$validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:user_personal_details,user_id',
             'id_number' => 'integer|unique:user_personal_details|nullable',
@@ -242,11 +248,15 @@ class UserPersonalDetailsController extends Controller{
             return false;
         }
 
-        $fullPath = 'public/' . $type . '/' .$name . '.' . $ext;
+        $file_path = 'public/static/' . $type . '/profiles/'.$name . '.' . $ext;;
 
-        if (Storage::putFileAs('public/' . $type . '/', $file, $name . '.' . $ext)) {
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+
+        if (Storage::putFileAs('public/static/' . $type .  '/profiles/', $file, $name . '.' . $ext)) {
             return [
-                    'media_url'=>$fullPath,
+                    'media_url'=>$name . '.' . $ext,
                     'name' => $name,
                     'type' => $type,
                     'extension' => $ext,

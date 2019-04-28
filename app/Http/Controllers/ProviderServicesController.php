@@ -10,6 +10,8 @@ use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Validator;
 use App\Utilities\RawQuery;
+use Illuminate\Support\Facades\URL;
+
 
 class ProviderServicesController extends Controller
 {
@@ -26,11 +28,14 @@ class ProviderServicesController extends Controller
      */
  
 
-    public function get($id=null){
+    public function get($id=null, Request $request){
 
         $validator = Validator::make(['service_provider_id'=>$id],
             ['service_provider_id'=>'integer|exists:service_providers,id|nullable']
         );
+
+        //die(print_r($request->all()));
+
         if ($validator->fails()) {
             $out = [
                 'success' => false,
@@ -38,25 +43,89 @@ class ProviderServicesController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
+
+        $validator = Validator::make($request->all(),[
+            'service' => 'nullable|integer',
+            'service_time' =>'nullable|date_format:Y-m-d H:i',
+            'location' =>'nullable'
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+        
         $filter = '';
         if(!is_null($id)){
             $filter = " and ps.service_provider_id = '" .$id . "' ";
         }
 
-        $query = "select s.id as service_id, s.service_name, ps.description, "
-            . " c.category_name, ps.cost, ps.duration, ps.rating from provider_services "
-            . " ps inner join services s on s.id=ps.service_id inner join categories "
-            . "c on c.id =s.category_id where 1=1 ". $filter;
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/image/provider-services/');
 
-        $provider_services = RawQuery::paginate($query);
 
-        Log::info('Query : ' . $query);
+         if(empty($request->get('service_time')) )
+         {
+            $request->service_time= date('Y-m-d H:i');
+         } 
+      
+         if(empty($request->get('location')))
+         {
+            $request->location= 'Nairobi';
+         }
+         $params =[
+                'service_date'=>$request->service_time,
+                'service_date2'=>$request->service_time,
+                'service'=>'%'.$request->service.'%',
+                'location'=>'%'.$request->location.'%',
+                'location2'=>'%'.$request->location.'%'
+            ];
+        //echo print_r($params, 1);
+
+         $query = "select sp.id, sp.type, s.service_name, sp.service_provider_name,sp.work_location, "
+            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, sp.service_provider_name, "
+            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
+            . " d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
+            . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
+            . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
+            . " from service_providers sp  left  join "
+            . " user_personal_details  d using(user_id)  inner join operating_hours op "
+            . " on sp.id = op.service_provider_id inner join provider_services ps on "
+            . " ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id "
+            . " where 1=1 ". $filter . " and op.service_day = date_format(:service_date, '%W') "
+            . " and time(:service_date2) between time_from and time_to and s.service_name like  :service "
+            . " and (work_location like :location or work_location_city like :location2) ";
+
+         $provider_services =  RawQuery::paginate(
+             $query,
+             $page = null, $limit = null, 
+             $params=$params
+        );
+
+
+        // $query = "select s.id as service_id, s.service_name, ps.description, "
+        //     . " c.category_name, ps.cost, ps.duration, ps.rating from provider_services "
+        //     . " ps inner join services s on s.id=ps.service_id inner join categories "
+        //     . "c on c.id =s.category_id where 1=1 ". $filter;
+
+        // $provider_services = RawQuery::paginate($query);
+
+        //echo   $query;
 
         //dd(HTTPCodes);
         Log::info('Extracted statuses results : ' . var_export($provider_services, 1));
 
         if(empty($provider_services)){
-            return Response::json($provider_services[0], HTTPCodes::HTTP_NO_CONTENT );
+            return Response::json([], HTTPCodes::HTTP_OK );
         }
         return Response::json($provider_services, HTTPCodes::HTTP_OK);
 

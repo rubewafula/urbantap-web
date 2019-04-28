@@ -183,6 +183,7 @@ Route::group([
  'prefix' => 'provider-services'
 ], function(){
     Route::get('all', 'ProviderServicesController@get');
+    Route::post('all', 'ProviderServicesController@get');
     Route::get('get/{id}', 'ProviderServicesController@get');
     Route::post('create', 'ProviderServicesController@create');
     Route::put('update', 'ProviderServicesController@update');

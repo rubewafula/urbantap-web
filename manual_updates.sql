@@ -96,4 +96,6 @@ alter table outboxes add email varchar(256)  null;
 --alter table users modify phone_no varchar(25) null;
 --alter table users modify email varchar(256) null;
 alter table outboxes modify msisdn int(15) null;
+alter table users add phone_verified int(1) default 0 after remember_token;
+
 

@@ -241,8 +241,8 @@ class ServiceProvidersController extends Controller{
         $limit =null;
         $sort = null;
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
+        $image_url = URL::to('/storage/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/image/service-providers/');
 
 
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
