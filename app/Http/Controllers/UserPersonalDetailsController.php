@@ -134,7 +134,7 @@ class UserPersonalDetailsController extends Controller{
     	    	$out = [
     		        'success' => true,
     		        'id'=>DB::getPdo()->lastInsertId(),
-                    'profile_photo_url': $profile_url . $store['media_url'],
+                    'profile_photo_url' => $profile_url . $store['media_url'],
     		        'message' => 'Service provider Created'
     		    ];
 
