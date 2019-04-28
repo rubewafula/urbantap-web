@@ -29,9 +29,11 @@ class HomePageController extends Controller
 
     public function get($id=null){
 
-        $image_url = URL::to('/static/images/avatar/');
-        $sp_providers_url =  URL::to('/static/images/service-providers/');
-        $icon_url = URL::to('/static/images/icons/');
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
+
 
         $service_query = "select id, service_name , service_meta from services ";
         $top_service_query = "select s.id, service_name , service_meta, "
@@ -54,7 +56,7 @@ class HomePageController extends Controller
     	    . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
     	    . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
     	    . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " concat('$image_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
@@ -72,7 +74,7 @@ class HomePageController extends Controller
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, "
             . " date_format(sp.created_at, '%b, %Y') as since, "
-            . " concat( '$image_url' , '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " concat( '$profile_url' , '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/',if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')) )) as cover_photo "
