@@ -51,7 +51,7 @@ class HomePageController extends Controller
 
         $popular_providers = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
-            . " (select group_concat(category_name) from categories c inner join services ss " 
+            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
             . " on c.id = ss.category_id  inner join provider_services ps "
             . " on ss.id = ps.service_id where "
             . " ps.service_provider_id=sp.id ) as service_name, "
