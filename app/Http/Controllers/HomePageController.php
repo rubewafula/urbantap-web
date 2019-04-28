@@ -49,9 +49,8 @@ class HomePageController extends Controller
 
         
 
-        $popular_providers = "SELECT sp.id, s.service_name, sp.type, "
-            . " (select count(*) from reviews where service_provider_id = sp.id "
-            . " and provider_service_id=ps.id) as reviews, "
+        $popular_providers = "SELECT sp.id,  "
+            . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
             . " sp.service_provider_name,  sp.business_description, sp.work_location, "
     	    . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
     	    . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
@@ -60,10 +59,8 @@ class HomePageController extends Controller
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
-            . " FROM provider_services ps inner join "
-    	    . " service_providers sp on sp.id = ps.service_provider_id  left join "
-    	    . " user_personal_details  d using(user_id) inner join services s on "
-    	    . " s.id = ps.service_id where sp.status_id =1  order by sp.created_at desc, "
+            . " FROM  service_providers sp left join "
+    	    . " user_personal_details  d using(user_id) order by sp.created_at desc, "
     	    . " overall_likes desc limit 20";
 
         $featured_providers = "SELECT sp.id, s.service_name, sp.type, "
