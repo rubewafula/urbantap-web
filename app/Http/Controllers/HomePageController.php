@@ -51,6 +51,10 @@ class HomePageController extends Controller
 
         $popular_providers = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
+            . " (select group_concat(category_name) from categories c inner join services ss " 
+            . " on c.id = ss.category_id  inner join provider_services ps "
+            . " on ss.id = ps.service_id where "
+            . " ps.service_provider_id=sp.id ) as service_name, "
             . " sp.service_provider_name,  sp.business_description, sp.work_location, "
     	    . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
     	    . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
@@ -62,6 +66,7 @@ class HomePageController extends Controller
             . " FROM  service_providers sp left join "
     	    . " user_personal_details  d using(user_id) order by sp.created_at desc, "
     	    . " overall_likes desc limit 20";
+
 
         $featured_providers = "SELECT sp.id, s.service_name, sp.type, "
             . " (select count(*) from reviews where service_provider_id = sp.id "
