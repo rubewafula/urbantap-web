@@ -94,10 +94,10 @@ class UserPersonalDetailsController extends Controller{
     public function create(Request $request)
     {
 
-        $profile_url =  URL::to('/static/image/profiles/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
 
     	$validator = Validator::make($request->all(),[
-		    'user_id' => 'required|exists:users,id|unique:user_personal_details,user_id',
+            'user_id' => 'required|exists:users,id',
             'id_number' => 'nullable|integer|unique:user_personal_details',
             'date_of_birth' => 'nullable|date|date_format:Y-m-d',
             'gender' =>'in:Male, Female, Un-disclosed|nullable',
@@ -116,7 +116,7 @@ class UserPersonalDetailsController extends Controller{
             $stored = $this->store($request);
             if($stored !== false){
 
-            	DB::insert("insert into user_personal_details (user_id, id_number, "
+            	DB::insert("insert ignore into user_personal_details (user_id, id_number, "
                     . " date_of_birth, gender, passport_photo, home_location, "
                     . " created_at, updated_at)  "
                     . " values (:user_id, :id_number,  :date_of_birth, :gender, "
@@ -130,11 +130,17 @@ class UserPersonalDetailsController extends Controller{
                             'passport_photo'=>json_encode($stored) 
                         ]
             	    );
-
+                $id = DB::getPdo()->lastInsertId();
+                if($id == 0 ){
+                    $update = ['passport_photo' => json_encode($stored)];
+                    DB::table('user_personal_details')
+                        ->where('user_id', $request->get('user_id'))
+                        ->update($update); 
+                }
     	    	$out = [
     		        'success' => true,
-    		        'id'=>DB::getPdo()->lastInsertId(),
-                    'profile_photo_url' => $profile_url . $store['media_url'],
+    		        'id'=>$id,
+                        'cover_photo' => $profile_url .'/'. $stored['media_url'],
     		        'message' => 'Service provider Created'
     		    ];
 
@@ -160,7 +166,7 @@ class UserPersonalDetailsController extends Controller{
     public function update(Request $request)
     {
     	
-        $profile_url =  URL::to('/static/image/profiles/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
 
     	$validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:user_personal_details,user_id',
@@ -233,7 +239,7 @@ class UserPersonalDetailsController extends Controller{
             'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
         ]);
 
-        $file = $request->file('file');
+        $file = $request->file('cover_photo');
         if(is_null($file)){
             /** No file uploaded accept and proceeed **/
             return null;
@@ -244,7 +250,7 @@ class UserPersonalDetailsController extends Controller{
         $type = $this->getType($ext);
 
         if($type == 'unknown'){
-            Log::info("Aborting file upload unknown file type "+ $type);
+            Log::info("Aborting file upload unknown file type ". $type);
             return false;
         }
 
