@@ -57,13 +57,13 @@ class RawQuery{
 	}
 
 	public static function query($rawQuery, $params=null) {
-		DB::enableQueryLog();
+	//	DB::enableQueryLog();
        	if(!is_null($params)){
        		$results =  DB::select( DB::raw($rawQuery ), $params);
        	}else{
 			$results =  DB::select( DB::raw($rawQuery ));
 		}
-		echo print_r(DB::getQueryLog(), 1);
+	//	echo print_r(DB::getQueryLog(), 1);
 		return $results;
 
 		

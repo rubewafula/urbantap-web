@@ -37,6 +37,21 @@ class UserController extends Controller
 
     }
 
+    public function checkLoginStatus(){
+
+	$user = Auth::user();
+	$results = [];
+	if($user == null){
+	   $results = ["status"=>0];
+	}else{
+	   $results = ["status"=>1];
+	}
+
+	return Response::json($results, HTTPCodes::HTTP_OK);
+    }
+
+
+
     function register_user(Request $request)
     {
         $this->validate($request, [
