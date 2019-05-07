@@ -16,7 +16,7 @@ Auth::routes();
 Route::get('/logout', 'Auth\LoginController@logout');
 
 Route::get('verification','AuthController@generate_verification');
-Route::get('user/checklogin','AuthController@checkLoginStatus');
+Route::post('user/checklogin','AuthController@checkLoginStatus');
 
 Route::group(['middleware' => ['auth']], function () {
     //Route::get('/','HomeController@index');
