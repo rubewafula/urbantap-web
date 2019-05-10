@@ -45,7 +45,7 @@ class ProviderServicesController extends Controller
         }
 
         $validator = Validator::make($request->all(),[
-            'service' => 'nullable|integer',
+            'service' => 'nullable|string',
             'service_time' =>'nullable|date_format:Y-m-d H:i',
             'location' =>'nullable'
         ]);
@@ -63,9 +63,14 @@ class ProviderServicesController extends Controller
             $filter = " and ps.service_provider_id = '" .$id . "' ";
         }
 
-        $image_url = URL::to('/storage/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        $p_services_url =  URL::to('/storage/image/provider-services/');
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
+        
+        // $image_url = URL::to('/storage/image/avatar/');
+        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        // $p_services_url =  URL::to('/storage/image/provider-services/');
 
 
          if(empty($request->get('service_time')) )

@@ -97,7 +97,7 @@ class UserPersonalDetailsController extends Controller{
         $profile_url =  URL::to('/storage/static/image/profiles/');
 
     	$validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id|inique:user_personal_details,user_id',
             'id_number' => 'nullable|integer|unique:user_personal_details',
             'date_of_birth' => 'nullable|date|date_format:Y-m-d',
             'gender' =>'in:Male, Female, Un-disclosed|nullable',

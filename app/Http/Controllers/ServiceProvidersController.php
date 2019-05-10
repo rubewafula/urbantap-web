@@ -53,9 +53,15 @@ class ServiceProvidersController extends Controller{
         $limit =null;
         //die(print_r($req, 1));
 
-        $image_url = URL::to('/storage/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        $p_services_url =  URL::to('/storage/image/provider-services/');
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
+
+
+        // $image_url = URL::to('/storage/image/avatar/');
+        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        $p_services_url =  URL::to('/storage/static/image/provider-services/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -84,7 +90,8 @@ class ServiceProvidersController extends Controller{
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
-            . " d.home_location, work_phone_no, sp.business_description "
+            . " d.home_location, work_phone_no, sp.business_description, sp.work_location_city,"
+            . " sp.work_location "
             . " FROM service_providers sp left join user_personal_details d "
             . " using(user_id) where 1=1 " . $filter ;
 
@@ -190,8 +197,13 @@ class ServiceProvidersController extends Controller{
             $sort_by = " order by $sort desc ";
         }
 
-        $image_url = URL::to('/storage/images/avatar/');
-        $sp_providers_url =  URL::to('/storage/images/service-providers/');
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
+
+        // $image_url = URL::to('/storage/images/avatar/');
+        // $sp_providers_url =  URL::to('/storage/images/service-providers/');
 
 
         $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
@@ -241,8 +253,13 @@ class ServiceProvidersController extends Controller{
         $limit =null;
         $sort = null;
 
-        $image_url = URL::to('/storage/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        // $image_url = URL::to('/storage/image/avatar/');
+        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
+
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
 
 
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
@@ -455,7 +472,7 @@ public  function  upload_coverphoto($request)
         $request->replace($request->all());    
 
     	$validator = Validator::make($request->all(),[
-		    'user_id' => 'required|exists:users,id',
+		    'user_id' => 'required|exists:users,id|unique:service_providers,user_id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
             'business_description' => 'required|string',
             'keywords' => 'string|nullable',
@@ -487,7 +504,7 @@ public  function  upload_coverphoto($request)
 		        'message' => $validator->messages()
 		    ];
 			return Response::json($out, HTTPCodes::HTTP_OK);
-	}else{
+	    }else{
 
 
             $cover_photo= $this->upload_coverphoto($request);
@@ -538,7 +555,7 @@ public  function  upload_coverphoto($request)
                        array_push($values, " (null, '$service_provider_id', "
                            . " '$service_id', '', 0, 60, 1, null, now(), now(), 1) ");
                    }
-		}
+		    }
 
                 $services_query .= implode(",", $values);
                 Log::info("Services QUERY: " . $services_query);
@@ -670,10 +687,14 @@ public  function  upload_coverphoto($request)
     public  function  search_by_location_service(Request  $request)
     {
 
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
 
-        $image_url = URL::to('/storage/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        $p_services_url =  URL::to('/storage/image/provider-services/');
+        // $image_url = URL::to('/storage/image/avatar/');
+        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
+        // $p_services_url =  URL::to('/storage/image/provider-services/');
 
         $validator = Validator::make($request->all(),[
             'service' => 'required',
@@ -722,8 +743,6 @@ public  function  upload_coverphoto($request)
 
         
    }
-
-
 
 }
 
