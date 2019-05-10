@@ -82,18 +82,22 @@ class ServiceProvidersController extends Controller{
             $filter = " and sp.id = '" .$user_id . "' ";
         }
 
-        $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name,sp.work_location, "
-            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
-            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender, "
-            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
+        $rawQuery = "SELECT sp.id,  "
+            . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
+            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
+            . " on c.id = ss.category_id  inner join provider_services ps "
+            . " on ss.id = ps.service_id where "
+            . " ps.service_provider_id=sp.id ) as service_name, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
-            . " d.home_location, work_phone_no, sp.business_description, sp.work_location_city,"
-            . " sp.work_location "
-            . " FROM service_providers sp left join user_personal_details d "
-            . " using(user_id) where 1=1 " . $filter ;
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
+            . " FROM  service_providers sp left join "
+            . " user_personal_details  d using(user_id) where 1=1 "  . $filter ;
 
         //die($rawQuery);
 
@@ -206,21 +210,22 @@ class ServiceProvidersController extends Controller{
         // $sp_providers_url =  URL::to('/storage/images/service-providers/');
 
 
-        $rawQuery = "SELECT sp.id, s.service_name, sp.type, "
-            . " (select count(*) from reviews where service_provider_id = sp.id "
-            . " and provider_service_id=ps.id) as reviews, "
+        $rawQuery = "SELECT sp.id,  "
+            . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
+            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
+            . " on c.id = ss.category_id  inner join provider_services ps "
+            . " on ss.id = ps.service_id where "
+            . " ps.service_provider_id=sp.id ) as service_name, "
             . " sp.service_provider_name,  sp.business_description, sp.work_location, "
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
             . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
-            . " concat( '$image_url', '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url')))) as thumbnail, "
-            . " concat( '$sp_providers_url', '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url'))) ) as cover_photo "
-            . " FROM provider_services ps inner join "
-            . " service_providers sp on sp.id = ps.service_provider_id inner  join "
-            . " user_personal_details  d using(user_id) inner join services s on "
-            . " s.id = ps.service_id where sp.status_id =1  " 
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
+            . " FROM  service_providers sp left join "
+            . " user_personal_details  d using(user_id) where sp.status_id =1  " 
             . $filter .    $sort_by ;
 
         //die($rawQuery);
@@ -349,12 +354,22 @@ class ServiceProvidersController extends Controller{
     public function popular()
     {
        
-        $rawQuery = "SELECT sp.id, sp.type, sp.service_provider_name, "
-            . " sp.business_description, sp.work_location,  sp.overall_rating, "
-            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender,  d.passport_photo,  "
-            . " d.home_location, work_phone_no  FROM service_providers sp inner "
-            . " join user_personal_details  d using(user_id) where sp.status_id =1 "
+        $rawQuery = "SELECT sp.id,  "
+            . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
+            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
+            . " on c.id = ss.category_id  inner join provider_services ps "
+            . " on ss.id = ps.service_id where "
+            . " ps.service_provider_id=sp.id ) as service_name, "
+            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
+            . " FROM  service_providers sp left join "
+            . " user_personal_details  d using(user_id) where sp.status_id =1  "
             . " order by overall_rating desc, overall_likes desc limit 20 ";
 
         $results = RawQuery::query($rawQuery);
