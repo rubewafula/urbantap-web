@@ -562,7 +562,7 @@ public  function  upload_coverphoto($request)
                        array_push($values, " (null, '$service_provider_id', "
                            . " '$service_id', '', 0, 60, 1, null, now(), now(), 1) ");
                    }
-		    }
+		}
 
                 $services_query .= implode(",", $values);
                 Log::info("Services QUERY: " . $services_query);

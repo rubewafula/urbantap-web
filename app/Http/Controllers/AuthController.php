@@ -150,7 +150,7 @@ class AuthController extends Controller
         if($user == null){
            $results = ["status"=>0];
         }else{
-           $results = ["status"=>1];
+           $results = ["status"=>1, "user_id"=>$user->id];
         }
 
         return Response::json($results, HTTPCodes::HTTP_OK);
