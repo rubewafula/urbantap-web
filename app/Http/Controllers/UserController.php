@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 
+use Auth;
+
 class UserController extends Controller
 {
     protected $userGroup;
@@ -36,6 +38,21 @@ class UserController extends Controller
         return view('users.index', ['users' => $users]);
 
     }
+
+    public function checkLoginStatus(){
+
+	$user = Auth::user();
+	$results = [];
+	if($user == null){
+	   $results = ["status"=>0];
+	}else{
+	   $results = ["status"=>1];
+	}
+
+	return Response::json($results, HTTPCodes::HTTP_OK);
+    }
+
+
 
     function register_user(Request $request)
     {
