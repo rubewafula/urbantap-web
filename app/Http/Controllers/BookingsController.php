@@ -306,12 +306,13 @@ class BookingsController extends Controller{
 
 
         $validator = Validator::make($request->all(),[
-            'provider_service_id' => 'required|exists:service_providers,id',
+            'service_provider_id' => 'required|exists:service_providers,id',
             'user_id' => 'required|exists:users,id',
-            'provider_service_id' =>'integer|exists:provider_services,id',
-            'booking_time' => 'required|date_format:Y-m-d H:i',
+            'service_id' =>'integer|exists:provider_services,id',
+            'booking_date' => 'required|date_format:Y-m-d',
+            'booking_time' => 'required|date_format:H:i',
             'booking_duration' => 'integer|required',
-            'expiry_time' => 'required|date_format:Y-m-d H:i',
+            'expiry_time' => 'nullable|date_format:Y-m-d H:i',
             'location' => 'required|json',
             'booking_type'=> ['required', Rule::in(['PROVIDER LOCATION', 'USER LOCATION'])],
             
@@ -328,10 +329,9 @@ class BookingsController extends Controller{
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         } 
 
-        $booking_time = $request->get('booking_time');
-        $timestamp = strtotime($booking_time);
-        $booked_time = date('H:i', $timestamp);
-        $booked_date = date('Y-m-d', $timestamp);
+        $booked_date = $request->get('booking_date');
+        $timestamp = strtotime($booked_date);
+        $booked_time = $request->get('booking_time');
         $day = date('l', $timestamp);
         $duration = $request->get('booking_duration');
 
@@ -397,12 +397,12 @@ class BookingsController extends Controller{
             }
         }
 
-        if($booking_allowed){}
+        if($booking_allowed){
             $booking_cost_sql = "select base_cost from service_costs sc inner join provider_services ps "
-                    . " on ps.service_id =sc.service_id  where ps.provider_service_id =:ps_id";
+                    . " on ps.service_id =sc.service_id  where ps.service_id =:ps_id";
 
-            $cresult = RawQuery::query($booking_cost_sql, ['ps_id'=>$request['provider_service_id']]);
-                if
+            $cresult = RawQuery::query($booking_cost_sql, ['ps_id'=>$request['service_id']]);
+                
             if (empty($cresult)){
                 $booking_allowed = false;
                 $booking_fail_reason = "Service not yet available, Kindly contact admin";
@@ -422,24 +422,25 @@ class BookingsController extends Controller{
 
         }else {
 
-            $base_cost = $cresult[0]['base_cost'];
+            $base_cost = $cresult[0]->base_cost;
             $other_amount = 0;
 
             $other_cost_result = RawQuery::query("select sum(c.amount)amt from "
-                . " cost_parameters c inner join provider_services ps using(service_id) "
-                . " where service_provider_id=:sp_id", ['ps_id'=>$request['provider_service_id']]);
+                . " cost_parameters c  "
+                . " where service_id=:ps_id", ['ps_id'=>$request['service_id']]);
 
             if(!empty($other_cost)){
-                $other_amount = $other_cost_result['amt'];
+                $other_amount = $other_cost_result[0]->amt;
             }
 
             $actual_cost = $base_cost + $other_amount;
 
+            $actual_booking_time = $booked_date . ' '. $booked_time;
             DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at, booking_type, location, amount) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now(), :booking_type, :location, :amount)", [
-                    'provider_service_id'=>$request['provider_service_id'],
+                    'provider_service_id'=>$request['service_id'],
                     'service_provider_id'=>$request['service_provider_id'],
                     'user_id'=> $request['user_id'],
-                    'booking_time'=>$request['booking_time'],
+                    'booking_time'=>$actual_booking_time,
                     'booking_duration'=>$request['booking_duration'],
                     'expiry_time'=>$request['expiry_time'],
                     'status_id'=>DBStatus::RECORD_PENDING,
