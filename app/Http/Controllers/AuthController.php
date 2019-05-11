@@ -19,6 +19,7 @@ use  App\Outbox;
 use GuzzleHttp\Client;
 use Exception;
 use App\UserPersonalDetail;
+use App\ServiceProvider;
 
 class AuthController extends Controller
 {
@@ -414,6 +415,8 @@ class AuthController extends Controller
             'media_url'=>env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
           ];
         }
+
+        $user->service_provider = ServiceProvider::where('user_id', $user->id)->first();
 
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
