@@ -59,6 +59,7 @@ class UserPersonalDetailsController extends Controller{
 
             return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
     	}
+        $profile_url =  URL::to('/storage/static/image/profiles/');
 
         $filter= '';
         if(!is_null($user_id)){
@@ -66,7 +67,11 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $rawQuery = "SELECT d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no, u.name, u.phone_no, u.email "
+            . " d.home_location work_phone_no, "
+            . " concat(if(u.first_name is null, '', u.first_name), '', " 
+            . " if(u.last_name is null, '', u.last_name)) as name, u.phone_no, u.email, "
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail "
             . " FROM  user_personal_details  d inner join users u on u.id = d.user_id "
             . " where 1=1  " . $filter ;
 
