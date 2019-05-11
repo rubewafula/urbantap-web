@@ -62,7 +62,7 @@ class HomePageController extends Controller
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " json_extract(sp.cover_photo, '$.media_url'))) as cover_photo "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " FROM  service_providers sp left join "
     	    . " user_personal_details  d using(user_id) order by sp.created_at desc, "
     	    . " overall_likes desc limit 20";
