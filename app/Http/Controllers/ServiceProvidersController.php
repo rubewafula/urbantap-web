@@ -68,7 +68,7 @@ class ServiceProvidersController extends Controller{
         );
         if($validator ->fails()){
             $out =[
-                'sucess'=> false, 
+                'success'=> false, 
                'message'=> $validator->messages()
 
             ];
@@ -102,7 +102,13 @@ class ServiceProvidersController extends Controller{
         //die($rawQuery);
 
         $results =[]; 
-        $results['provider'] =  RawQuery::query($rawQuery)[0];
+        $provider_data =  RawQuery::query($rawQuery);
+
+        if(empty($provider_data)){
+            return Response::json(['success'=>false, 'message'=>'Could not fetch provider data'], HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $results['provider'] = $provider_data[0];
        
         $service_provider_id =  $user_id;
 
