@@ -19,6 +19,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Storage;
 use IlluminateSupportFacadesLog;
+use DateTime;
+use DateInterval;
 
 
 
@@ -35,6 +37,94 @@ class ServiceProvidersController extends Controller{
         return array_merge($this->image_ext, $this->audio_ext, $this->video_ext);
     }
 
+
+    /**
+    * provider time slots 
+    * Default slots for today
+    */
+    public function timeslots(Request $request){
+
+        date_default_timezone_set('Africa/Nairobi');
+        $req= $request->all();
+        $date = new DateTime();
+        $date->sub(new DateInterval('P1D'));
+      
+        $validator = Validator::make($req,
+            ['service_provider_id'=>'integer|exists:service_providers,id', 
+             'slot_date' => 'date_format:Y-m-d|after:'. $date->format('Y-m-d'),]
+        );
+        if($validator ->fails()){
+            $out =[
+               'sucess'=> false, 
+               'message'=> $validator->messages()
+
+            ];
+
+            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $slots = [];
+        $slot_data = $request->get('slot_date');
+
+        $slot_date = DateTime::createFromFormat('Y-m-d H:i', $slot_data . " 00:00");
+
+        $date_now = new DateTime();
+
+        $date_5min_roundup = sprintf("%d minutes %d seconds", 
+            $date_now->format("i") % 5, 
+            $date_now->format("s")
+        );
+        $round_date = $date_now->sub(\DateInterval::createFromDateString($date_5min_roundup));
+        echo  $slot_date->format('Y-m-d H:i');
+
+        $provider_booking_sql = "select booking_time, booking_duration from bookings where service_provider_id=:pid and date(booking_time)=:booking_date and status_id=:st ";
+        $params = ['pid'=>$request->get('service_provider_id'),
+                    'booking_date'=> $slot_data, 'st'=>DBStatus::BOOKING_PAID];
+        $booked_records = RawQuery::query($provider_booking_sql, $params);
+        $booked_slots = [];
+        foreach($booked_records as $key=>$record){
+            $start = $record->booking_time;
+            $bb_date = DateTime::createFromFormat('Y-m-d H:i', $start);
+            $ls_date = DateTime::createFromFormat('Y-m-d H:i', $start)
+                ->add(new DateInterval('PT'.$record->booking_duration.'M'));
+            do{
+
+                array_push($booked_slots, $bb_date->format("H:i"));
+                $bb_date->add(new DateInterval('PT15M'));
+
+            }while($bb_date < $ls_date );
+
+        }
+
+
+        while($slot_data == $slot_date->format('Y-m-d')){
+            Log::info("Checking " . $slot_data  . "==> " . $slot_date->format('Y-m-d H:i'));
+            if($slot_date <  $round_date ){
+                $slot_date = $round_date;
+                //shooting the pegion no closer that 30minutes away
+                $slot_date->add(new DateInterval('PT15M'));
+            }
+
+            $slot_date->add(new DateInterval('PT15M'));
+            Log::info("New slot dat " . $slot_date->format('Y-m-d H:i') ); 
+            if($slot_data == $slot_date->format('Y-m-d')){
+
+                if(!in_array($slot_date->format('H:i'), $booked_slots)){
+                    array_push($slots, $slot_date->format('H:i'));
+                }else{
+                    Log::info("Browsing a booked time slot for SP => "
+                        . $request->get('service_provider_id') . "Time =>" . $slot_date->format('H:i'));
+                }
+                
+            }
+            
+        }
+
+        return Response::json($slots, HTTPCodes::HTTP_OK);
+
+
+
+    }
 
     /**
      * Display the specified service providers.
@@ -119,7 +209,7 @@ class ServiceProvidersController extends Controller{
         $services = RawQuery::query($sql_provider_services);
         $results['services'] = $services;
 
-        $working_hours_sql = "select service_day, time_from, time_to from operating_hours "
+        $working_hours_sql = "select id, service_day, time_from, time_to from operating_hours "
             . " where service_provider_id ='" . $service_provider_id . "'";
 
         $results['operating_hours'] = RawQuery::query($working_hours_sql);
