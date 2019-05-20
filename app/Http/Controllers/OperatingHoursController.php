@@ -44,8 +44,8 @@ class OperatingHoursController extends Controller
         }
          
 
-        $query = "select day, time_from, time_to from operating_hours op "
-            . " where 1=1 ". $filter;
+        $query = "select id, day, time_from, time_to from operating_hours op "
+            . " where 1=1 ". $filter . " and status_id = ".DBStatus::RECORD_ACTIVE;
 
         $operating_hours = RawQuery::paginate($query);
 
@@ -169,7 +169,8 @@ class OperatingHoursController extends Controller
     ***/
     public function delete(Request $request)
     {
-
+	
+	Log::info($request->all());
         $validator = Validator::make($request->all(),[
             'id' => 'required|exists:operating_hours,id'
         ]);

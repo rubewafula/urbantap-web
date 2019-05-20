@@ -199,7 +199,7 @@ Route::group([
     Route::get('services/{id}', 'ServiceProvidersController@getwithserviceid');
     Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
-    Route::put('update', 'ServiceProvidersController@update');
+    Route::post('update', 'ServiceProvidersController@update');
     Route::delete('del','ServiceProvidersController@delete');
     Route::get('location_service','ServiceProvidersController@search_by_location_service');
 

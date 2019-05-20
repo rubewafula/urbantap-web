@@ -88,6 +88,10 @@ class ServiceProvidersController extends Controller{
             . " on c.id = ss.category_id  inner join provider_services ps "
             . " on ss.id = ps.service_id where "
             . " ps.service_provider_id=sp.id ) as service_name, "
+	    . " (select group_concat(distinct c.id) from categories c inner join services ss " 
+            . " on c.id = ss.category_id  inner join provider_services ps "
+            . " on ss.id = ps.service_id where "
+            . " ps.service_provider_id=sp.id ) as service_id, "
             . " sp.service_provider_name,  sp.business_description, sp.work_location, "
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
@@ -125,8 +129,8 @@ class ServiceProvidersController extends Controller{
         $services = RawQuery::query($sql_provider_services);
         $results['services'] = $services;
 
-        $working_hours_sql = "select service_day, time_from, time_to from operating_hours "
-            . " where service_provider_id ='" . $service_provider_id . "'";
+        $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
+            . " where service_provider_id ='" . $service_provider_id . "' and status_id=". DBStatus::RECORD_ACTIVE;
 
         $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
@@ -201,7 +205,7 @@ class ServiceProvidersController extends Controller{
 
         $filter= '';
         if(!is_null($service_id)){
-            $filter = " and s.id = '" .$service_id . "' ";
+            $filter = " and ps.service_id = '" .$service_id . "' ";
         }
 
         if(!is_null($sort)){
@@ -231,7 +235,7 @@ class ServiceProvidersController extends Controller{
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
-            . " FROM  service_providers sp left join "
+            . " FROM  service_providers sp inner join provider_services ps on ps.service_provider_id=ps.id left join "
             . " user_personal_details  d using(user_id) where sp.status_id =1  " 
             . $filter .    $sort_by ;
 
@@ -486,7 +490,7 @@ public  function  upload_coverphoto($request)
         $request->replace($request->all());    
 
     	$validator = Validator::make($request->all(),[
-		    'user_id' => 'required|exists:users,id|unique:service_providers,user_id',
+            'user_id' => 'required|exists:users,id|unique:service_providers,user_id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
             'business_description' => 'required|string',
             'keywords' => 'string|nullable',
@@ -509,8 +513,9 @@ public  function  upload_coverphoto($request)
                  'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
             ] ,
             'services'=>['required'] ,  
-            'cover_photo' => 'required|file|image|mimes:jpeg,png,gif,webp|max:2048'      
-		]);
+            'cover_photo' => 'required|file|image|mimes:jpeg,png,gif,webp|max:2048',
+            'address_data'=>'nullable|json'
+	]);
    
          if ($validator->fails()) {
 		$out = [
@@ -536,11 +541,11 @@ public  function  upload_coverphoto($request)
         	DB::insert("insert into service_providers (type, user_id, service_provider_name,"
                 . " business_description, work_location, work_location_city, business_phone, "
                 . " business_email, facebook, twitter, instagram, work_lat, work_lng, status_id,cover_photo, "
-                . " created_at, updated_at)  values (1, :user_id, "
+                . " created_at, updated_at, key_words, address_data)  values (1, :user_id, "
                 . " :service_provider_name, :business_description, :work_location, :work_location_city, "
                 . " :business_phone, :business_email, :facebook, :twitter, :instagram, "
                 . " :work_lat, :work_lng,". DBStatus::RECORD_PENDING .",:cover_photo, now(), "
-                . " now())  ", 
+                . " now(), :keywords, :address_data)  ", 
                     [
                         'user_id'=>$request->get('user_id'),
                         'service_provider_name'=> $request->get('business_name'),
@@ -554,7 +559,9 @@ public  function  upload_coverphoto($request)
                         'instagram'=>$request->get('instagram'),
                         'work_lat'=>$request->get('work_lat'),
                         'work_lng'=>$request->get('work_lng'),
-                        'cover_photo' => $cover_photo
+                        'cover_photo' => $cover_photo,
+                        'keywords' => $request->get('keywords'),
+                        'address_data'=>$request->get('address_data'),
                     ]
         	    );
                 $service_provider_id = DB::getPdo()->lastInsertId();
@@ -596,27 +603,45 @@ public  function  upload_coverphoto($request)
     ***/
     public function update(Request $request)
     {
-    	
+    
+        $request->replace($request->all());	
     	$validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:service_providers',
+            'service_provider_id' => 'required|exists:service_providers,id',
             'service_provider_name' => 'unique:service_providers',
             'business_description' => 'string',
-            'work_location' =>'string',
-            'work_lat'=>'nullable|regex:/^(\+|-)?(?:90(?:(?:\.0{1,6})?)|(?:[0-9]|[1-8][0-9])(?:(?:\.[0-9]{1,6})?))$/',  
-            'work_lng'=>'nullable|regex:/^(\+|-)?(?:180(?:(?:\.0{1,6})?)|(?:[0-9]|[1-9][0-9]|1[0-7][0-9])(?:(?:\.[0-9]{1,6})?))$/' ,
+            'location_name' =>'nullable|string',
+            'location_city' =>'nullable|string',
+            'business_email' =>'nullable|email',
+            'facebook_page'=>'string|nullable',
+            'twitter' =>'string|nullable',
+            'instagram' => 'string|nullable',
+            'keywords' => 'string|nullable',
+            'business_phone' => [
+                'nullable',
+                'regex:/^((\+?254)|0)?7\d{8}$/'
+            ],
+            'work_lat'=>[
+                 'required',
+                 'regex:/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/'
+             ],
+            'work_lng'=>[
+                 'required', 
+                 'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
+             ] ,
             'status_id' =>'integer', 
             'overall_likes' =>'integer',  
             'overall_dislikes' =>'integer',  
-            'overall_rating' =>'between:0,99.99',        
+            'overall_rating' =>'between:0,99.99',       
+            'address_data'=>'nullable|json', 
         ]);
-
-		if ($validator->fails()) {
-			$out = [
-		        'success' => false,
-		        'message' => $validator->messages()
-		    ];
-			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-		}else{
+        Log::info("Update request => ". var_export($request->all(), 1) );
+	if ($validator->fails()) {
+	    $out = [
+	        'success' => false,
+	        'message' => $validator->messages()
+            ];
+	    return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+	}else{
 
             $update = [];
             if(!empty($request->get('service_provider_name')) ){
@@ -625,10 +650,14 @@ public  function  upload_coverphoto($request)
             if(!empty($request->get('business_description')) ){
                 $update['business_description']  =$request->get('business_description') ;
             }
-             if(!empty($request->get('work_location')) ){
-                $update['work_location']  =$request->get('work_location') ;
+             if(!empty($request->get('location_name')) ){
+                $update['location_name']  =$request->get('location_name') ;
             }
-             if(!empty($request->get('work_lat')) ){
+            if(!empty($request->get('location_city')) ){
+                $update['location_city']  =$request->get('location_city') ;
+            }
+
+            if(!empty($request->get('work_lat')) ){
                 $update['work_lat']  =$request->get('work_lat') ;
             }
               if(!empty($request->get('work_lng')) ){
@@ -646,9 +675,29 @@ public  function  upload_coverphoto($request)
             if(!empty($request->get('overall_dislikes')) ){
                 $update['overall_dislikes']  =$request->get('overall_dislikes') ;
             }
+            if(!empty($request->get('facebook_page')) ){
+                $update['facebook_page']  =$request->get('facebook_page') ;
+            }
+            if(!empty($request->get('twitter')) ){
+                $update['twitter']  =$request->get('twitter') ;
+            }
+            if(!empty($request->get('instagram')) ){
+                $update['instagram']  =$request->get('instagram') ;
+            }
 
-	    	DB::table('service_providers')
-                ->where('user_id', $request->get('id'))
+            if(!empty($request->get('business_phone')) ){
+                $update['business_phone']  =$request->get('business_phone') ;
+            }
+            if(!empty($request->get('keywords')) ){
+                $update['key_words']  =$request->get('keywords') ;
+            }
+            if(!empty($request->get('address_data')) ){
+                $update['address_data']  =$request->get('address_data') ;
+            }
+
+
+	    DB::table('service_providers')
+                ->where('id', $request->get('service_provider_id'))
                 ->update($update);
 
 	    	$out = [
