@@ -199,7 +199,12 @@ Route::group([
     Route::get('services/{id}', 'ServiceProvidersController@getwithserviceid');
     Route::get('details/{id}', 'ServiceProvidersController@details');
     Route::post('create', 'ServiceProvidersController@create');
+<<<<<<< HEAD
     Route::post('update', 'ServiceProvidersController@update');
+=======
+    Route::post('time-slots', 'ServiceProvidersController@timeslots');
+    Route::put('update', 'ServiceProvidersController@update');
+>>>>>>> b7a5155f94bd0e43485cf9706bbb7e399f35428f
     Route::delete('del','ServiceProvidersController@delete');
     Route::get('location_service','ServiceProvidersController@search_by_location_service');
 
