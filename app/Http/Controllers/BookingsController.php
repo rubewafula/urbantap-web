@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Utilities\RawQuery;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Facades\URL;
+
 
 class BookingsController extends Controller{
     /**
@@ -35,23 +37,27 @@ class BookingsController extends Controller{
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
 
-        
-        $query = "select b.id, b.service_provider_id, b.user_id, u.name as client,"
+        $query = "select b.id, b.service_provider_id, b.user_id, "
+            . " concat(if(u.first_name is null, '', u.first_name), ' ', "
+            . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
-            . " b.booking_duration, b.booking_type, b.location, "
-            . " s.status_code, b.expiry_time, "
+            . " b.booking_duration, b.expiry_time, s.status_code, "
+            . " b.booking_type, b.location, sp.service_provider_name, "
+            . " sp.business_description, sp.business_phone, "
             . " s.description as status_description, ps.description as "
-            . " provider_service_description, ps.cost, ps.duration "
-            . " from bookings b inner join statuses s on " 
+            . " provider_service_description, ps.cost, ps.duration, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
+            . " from bookings b inner join statuses s on "
             . " b.status_id = s.id inner join service_providers sp "
             . " on sp.id=b.service_provider_id "
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
             . " u.id = b.user_id where b.service_provider_id = '$service_provider_id'";
-
-
+        
         $results = RawQuery::paginate($query);
 
         if(empty($results)){
@@ -106,21 +112,25 @@ class BookingsController extends Controller{
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
-
-        
-        $query = "select b.id, b.service_provider_id, b.user_id, u.name as client,"
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $query = "select b.id, b.service_provider_id, b.user_id, "
+            . " concat(if(u.first_name is null, '', u.first_name), ' ', "
+            . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, "
-            . " b.booking_type, b.location, "
+            . " b.booking_type, b.location, sp.service_provider_name, "
+            . " sp.business_description, sp.business_phone, "
             . " s.description as status_description, ps.description as "
-            . " provider_service_description, ps.cost, ps.duration "
-            . " from bookings b inner join statuses s on " 
+            . " provider_service_description, ps.cost, ps.duration, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
+            . " from bookings b inner join statuses s on "
             . " b.status_id = s.id inner join service_providers sp "
             . " on sp.id=b.service_provider_id "
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id where b.user_id = '$user_id'";
+            . " u.id = b.user_id where b.user_id = '$user_id'"; 
 
 
         $results = RawQuery::paginate($query);
@@ -177,14 +187,19 @@ class BookingsController extends Controller{
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
-
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
         
-        $query = "select b.id, b.service_provider_id, b.user_id, u.name as client,"
+        $query = "select b.id, b.service_provider_id, b.user_id, "
+            . " concat(if(u.first_name is null, '', u.first_name), ' ', "
+            . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, "
-            . " b.booking_type, b.location, "
+            . " b.booking_type, b.location, sp.service_provider_name, "
+            . " sp.business_description, sp.business_phone, "
             . " s.description as status_description, ps.description as "
-            . " provider_service_description, ps.cost, ps.duration "
+            . " provider_service_description, ps.cost, ps.duration, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " from bookings b inner join statuses s on " 
             . " b.status_id = s.id inner join service_providers sp "
             . " on sp.id=b.service_provider_id "
