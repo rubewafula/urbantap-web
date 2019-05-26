@@ -476,11 +476,11 @@ class BookingsController extends Controller{
             $booking_id = DB::getPdo()->lastInsertId();
 
             $notify = ['booking_id'=>$booking_id, 
-                'request'=>$request
+                'request'=>$request,
                 'booking_time' => $actual_booking_time,
                 'cost' => $actual_cost, 
                 'subject' => 'Booking Request Placed',
-            ]
+            ];
 
             $this->sendNotifications($notify);
 
@@ -498,12 +498,13 @@ class BookingsController extends Controller{
     private function sendNotifications(array $data){
         $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
 
-        $user_mail_template = '';
-        $provider_mail_template = '';
-        $user_mail_content = file_get_contents($user_mail_template);
+        $user_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
+        $provider_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
 
-        $provider_mail_content = file_get_contents($user_mail_template);
-
+       
+        $user_mail_content = Storage::get($booking_t_path);
+        $provider_mail_content = Storage::get($provider_booking_t_path);
+        
         $user = RawQuery::query(
             "select first_name, last_name, email from users where id=:user_id", 
             ['user_id'=>$data['request']['user_id']]
@@ -512,7 +513,7 @@ class BookingsController extends Controller{
         $user_profile = ['first_name' => $user[0]->first_name,
             'last_name' =>$user[0]->last_name,
             'email' => $user[0]->email,
-        ]
+        ];
 
         $data['user'] = $user_profile;
 
@@ -542,7 +543,7 @@ class BookingsController extends Controller{
             'cover_photo' => $sp[0]->cover_photo,
             'service_name' => $sp[0]->service_name,
             'service_description' => $sp[0]->service_description,
-        ]
+        ];
 
         $data['provider'] = $sp_profile;
 
@@ -550,13 +551,13 @@ class BookingsController extends Controller{
             'to'   => $user_profile['email'], 
             'subject' => $data['subject'],
             'email' => $user_html= Utils::loadTemplateData($user_mail_content, $data),
-        ]
+        ];
 
         $provider_notification = [
             'to'   => $sp_profile['business_email'], 
             'subject' => $data['subject'],
             'email' => Utils::loadTemplateData($provider_mail_content, $data),
-        ]
+        ];
 
         $rabbit = new RabbitMQ();
         $rabbit->publish($user_notification, env('EMAIL_MESSAGE_EXCHANGE'));
