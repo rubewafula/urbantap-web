@@ -402,11 +402,11 @@ class BookingsController extends Controller{
                     ]
                 );
 
-                if (!empty($result)){
-                    $booking_allowed = false;
-                    $booking_fail_reason = "Provider slot for specified time already booked";
+                #if (!empty($result)){
+                #    $booking_allowed = false;
+                #    $booking_fail_reason = "Provider slot for specified time already booked";
 
-                }
+                #}
 
             }else{
                 $booking_allowed = false;
@@ -476,7 +476,7 @@ class BookingsController extends Controller{
             $booking_id = DB::getPdo()->lastInsertId();
 
             $notify = ['booking_id'=>$booking_id, 
-                'request'=>$request,
+                'request'=>$request->all(),
                 'booking_time' => $actual_booking_time,
                 'cost' => $actual_cost, 
                 'subject' => 'Booking Request Placed',
@@ -498,12 +498,12 @@ class BookingsController extends Controller{
     private function sendNotifications(array $data){
         $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
 
-        $user_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
-        $provider_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
+        $user_booking_t_path = storage_path() . '/app/public/static/mailer/booking.email.blade.html';
+        $provider_booking_t_path = storage_path() . '/app/public/static/mailer/booking.email.blade.html';
 
        
-        $user_mail_content = Storage::get($booking_t_path);
-        $provider_mail_content = Storage::get($provider_booking_t_path);
+        $user_mail_content = file_get_contents($user_booking_t_path);
+        $provider_mail_content = file_get_contents($provider_booking_t_path);
         
         $user = RawQuery::query(
             "select first_name, last_name, email from users where id=:user_id", 
@@ -519,15 +519,15 @@ class BookingsController extends Controller{
 
         $sp = RawQuery::query(
             "select sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
-            . " sp.business_phone, sp.work_location_city, sp.business_description, ps.work_location, "
+            . " sp.business_phone, sp.work_location_city, sp.business_description, sp.work_location, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
             . " s.service_name, ps.description as service_description "
             . " from service_providers sp inner join provider_services ps on "
             . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
-            . "  where sp.id=:sp_id  and s.service_id =:service_id ", 
+            . "  where sp.id=:sp_id  and s.id =:service_id ", 
             [ 'sp_id'=>$data['request']['service_provider_id'], 
-              's.service_id' => $data['request']['service_id'], ]
+              'service_id' => $data['request']['service_id'], ]
         );
 
         $sp_profile = [
@@ -560,9 +560,19 @@ class BookingsController extends Controller{
         ];
 
         $rabbit = new RabbitMQ();
-        $rabbit->publish($user_notification, env('EMAIL_MESSAGE_EXCHANGE'));
-        $rabbit->publish($provider_notification, env('EMAIL_MESSAGE_EXCHANGE'));
-
+        if($user_notification['to'] != null ){
+            $rabbit->publish($user_notification, env('EMAIL_MESSAGE_QUEUE'), 
+                env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
+ 	}else{
+            Log::info("User missing email info skipped notification");
+        }
+         
+        if($provider_notification['to'] != null ){
+            $rabbit->publish($provider_notification, env('EMAIL_MESSAGE_QUEUE'), 
+                env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
+        }else{
+            Log::info("Provider missing email info skipped notification");
+        }
         
 
     }

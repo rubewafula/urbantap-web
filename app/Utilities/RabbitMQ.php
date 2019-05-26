@@ -4,13 +4,13 @@ namespace App\Utilities;
 
 use PhpAmqpLib\Connection\AMQPStreamConnection;
 use Illuminate\Support\Facades\Log;
-use PhpAmqpLib\Exception\AMQPConnectionClosedException
-use PhpAmqpLib\Exception\AMQPIOException
+use PhpAmqpLib\Exception\AMQPConnectionClosedException;
+use PhpAmqpLib\Exception\AMQPIOException;
 use PhpAmqpLib\Message\AMQPMessage;
-use \RuntimeException
-use \ErrorException
+use \RuntimeException;
+use \ErrorException;
 
-class RabbitMQConnection
+class RabbitMQ
 {
     
     protected $connection;
@@ -18,6 +18,13 @@ class RabbitMQConnection
     public function __construct(){
     	$this->setConnection();
     }
+
+    public function __destruct(){
+    	if($this->connection != null){
+            $this->connection->close();
+        }
+    }
+
 
     public function getConnection(){
 
@@ -48,7 +55,8 @@ class RabbitMQConnection
     	return $this->connection;
     }
 
-   private function publish(array $message, string $exchange){
+   public function publish(array $message, string $queue, 
+       string $exchange, string $route=null){
 
 	    if(is_null($this->connection)){
 	    	$this->setConnection();
@@ -59,9 +67,15 @@ class RabbitMQConnection
 	    	 try {
 	    	 	
 	    	 	 $channel = $this->connection->channel();
-		    	 $dataInJSON = json_encode($postData);
-		    	 $msg = new AMQPMessage($postData);
-		    	 $publishResult = $channel->basic_publish($msg, $exchange);
+		    	 $dataInJSON = json_encode($message);
+		    	 $msg = new AMQPMessage($dataInJSON);
+                         Log::info("PUBLISHING MESSAGE Q => " .$queue. " echange => ". $exchange . " Route => ". $route) ;
+                         if($route != null) {
+		    	     $publishResult = $channel->basic_publish($msg, $exchange, $route);
+                         } else {
+		    	     $publishResult = $channel->basic_publish($msg, $exchange, $queue);
+                         }
+                         Log::info("Publish Result ==> $publishResult");
 		    	 return true;
 
 	    	 } catch (Exception $e) {
@@ -70,8 +84,7 @@ class RabbitMQConnection
 	    	 	if(!is_null($channel)){
 			    	$channel->close();
 	    	 	}
-				$this->connection->close();
-			}
+		}
 	    	
 	    }
 
