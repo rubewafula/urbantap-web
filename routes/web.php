@@ -96,4 +96,10 @@ Route::group(['middleware' => ['auth']], function () {
 
 });
 
+
+Route::get('/api/email',function(){
+
+    return view('mailer.email');
+});
+
 require 'payments.php';
