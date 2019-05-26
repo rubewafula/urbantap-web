@@ -8,9 +8,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Http\Request; 
 
-use PhpAmqpLib\Message\AMQPMessage;
 
-use App\Utilities\RabbitMQConnection;
+use App\Utilities\RabbitMQ;
 use App\MpesaTransaction;
 use App\Transaction;
 use App\User;
@@ -101,26 +100,17 @@ class PaymentsController extends Controller
 
 		if( $postData != null){
 
-			$rabbitMQConnection = new RabbitMQConnection();
-			$connection = $rabbitMQConnection->getConnection();
-			$channel = $connection->channel();
+			$rabbitMQ = new RabbitMQ();
+			$publishResult = $rabbitMQ->publish($postData,  env("RABBIT_MPESA_QUEUE"));
 
-			$dataInJSON = json_encode($postData);
-
-			// $channel->queue_declare(env("MPESA_DEPOSITS_QUEUE"), false, false, false, false);
-
-			$msg = new AMQPMessage($postData);
-			$publishResult = $channel->basic_publish($msg, '', env("RABBIT_MPESA_QUEUE"));
-
-			echo("Publishing Result ".$publishResult);
+			echo("Publishing OK ".$publishResult);
 
 			Log::info("Message published to the queue successfully");
-
-			echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
-
 			$channel->close();
 			$connection->close();
 		}
+
+		echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
 
 	}
 

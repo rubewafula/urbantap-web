@@ -13,9 +13,11 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;	
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
+use App\Utilities\RabbitMQ;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
 use App\Utilities\RawQuery;
+use App\Utilities\Utils;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\URL;
 
@@ -466,14 +468,103 @@ class BookingsController extends Controller{
                 ]
             );
 
+            /**send notifications to users
+             * 1. Customer - notify booking OK  (email)
+             * 2. provider - notify service booked - (email && sms) 
+             * 3. provider - push over app
+             **/
+            $booking_id = DB::getPdo()->lastInsertId();
+
+            $notify = ['booking_id'=>$booking_id, 
+                'request'=>$request,
+                'booking_time' => $actual_booking_time,
+                'cost' => $actual_cost, 
+                'subject' => 'Booking Request Placed',
+            ];
+
+            $this->sendNotifications($notify);
+
             $out = [
                 'success' => true,
-                'id'=>DB::getPdo()->lastInsertId(),
+                'id'=>$booking_id,
                 'message' => 'Bookings Created'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_CREATED);
         }
+    }
+
+
+    private function sendNotifications(array $data){
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+
+        $user_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
+        $provider_booking_t_path = '/storage/static/mailer/booking.email.blade.html';
+
+       
+        $user_mail_content = Storage::get($booking_t_path);
+        $provider_mail_content = Storage::get($provider_booking_t_path);
+        
+        $user = RawQuery::query(
+            "select first_name, last_name, email from users where id=:user_id", 
+            ['user_id'=>$data['request']['user_id']]
+        );
+
+        $user_profile = ['first_name' => $user[0]->first_name,
+            'last_name' =>$user[0]->last_name,
+            'email' => $user[0]->email,
+        ];
+
+        $data['user'] = $user_profile;
+
+        $sp = RawQuery::query(
+            "select sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
+            . " sp.business_phone, sp.work_location_city, sp.business_description, ps.work_location, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
+            . " s.service_name, ps.description as service_description "
+            . " from service_providers sp inner join provider_services ps on "
+            . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
+            . "  where sp.id=:sp_id  and s.service_id =:service_id ", 
+            [ 'sp_id'=>$data['request']['service_provider_id'], 
+              's.service_id' => $data['request']['service_id'], ]
+        );
+
+        $sp_profile = [
+            'service_provider_name' => $sp[0]->service_provider_name,
+            'instagram' =>$sp[0]->instagram,
+            'twitter' => $sp[0]->twitter,
+            'facebook' => $sp[0]->facebook,
+            'business_email' => $sp[0]->business_email,
+            'business_phone' => $sp[0]->business_phone,
+            'work_location_city' => $sp[0]->work_location_city,
+            'business_description' => $sp[0]->business_description,
+            'work_location' => $sp[0]->work_location,
+            'cover_photo' => $sp[0]->cover_photo,
+            'service_name' => $sp[0]->service_name,
+            'service_description' => $sp[0]->service_description,
+        ];
+
+        $data['provider'] = $sp_profile;
+
+        $user_notification = [
+            'to'   => $user_profile['email'], 
+            'subject' => $data['subject'],
+            'email' => $user_html= Utils::loadTemplateData($user_mail_content, $data),
+        ];
+
+        $provider_notification = [
+            'to'   => $sp_profile['business_email'], 
+            'subject' => $data['subject'],
+            'email' => Utils::loadTemplateData($provider_mail_content, $data),
+        ];
+
+        $rabbit = new RabbitMQ();
+        $rabbit->publish($user_notification, env('EMAIL_MESSAGE_EXCHANGE'));
+        $rabbit->publish($provider_notification, env('EMAIL_MESSAGE_EXCHANGE'));
+
+        
+
     }
 
     /**

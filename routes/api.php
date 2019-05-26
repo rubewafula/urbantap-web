@@ -289,7 +289,3 @@ Route::group([
    Route::get('get', 'HomePageController@get');
 
 });
-
-
-
-
