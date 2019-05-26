@@ -27,6 +27,7 @@ class EmailController extends Controller
 		$outbox = new Outbox();
 		$outbox->user_id = $user_id;
 		$outbox->status_id = 0;
+		$outbox->message = "EMAIL";
 		$outbox->service_provider_id = $service_provider_id;
 		$outbox->reference = $reference;
 		$outbox->save();
