@@ -10,7 +10,7 @@
                             <table border="0" cellpadding="0" cellspacing="0" style="margin-top:40px;margin-left:10px;margin-right:10px;background-color: #FFFFFF;" width="650">
                                 <tr style="background: #1F1B1B;">
                                     <td width="30%">
-                                        <img src="/images/urbantap-white-g.png" width="200px" style="margin-left: 10px;" />
+                                        <img src="http://172.104.224.221/images/urbantap-white-g.png" width="200px" style="margin-left: 10px;" />
                                     </td>
                                     <td align="center" height="90" valign="middle">
 
@@ -75,12 +75,12 @@
                         <table border="0" cellpadding="0" cellspacing="0" style="margin-top:40px;margin-left:10px;margin-right:10px;background-color: #FFFFFF;" width="650">
                             <tr style="background: #A8E93A;">
                                 <td width="30%">
-                                    <img src="/images/urbantap-white-g.png" width="200px" style="margin-left: 10px;" />
+                                    <img src="[[cover_photo]]" width="200px" style="margin-left: 10px;" />
                                 </td>
                                 <td align="center" valign="middle">
-                                    <a href="[[facebook]]"><img src="/images/facebook.png" width="30px"></a>
-                                    <a href="[[twitter]]"><img src="/images/twitter.png" width="30px"></a>
-                                    <a href="[[instagram]]"><img src="/images/instagram.png" width="30px"></a>
+                                    <a href="[[facebook]]"><img src="http://172.104.224.221/images/facebook.png" width="30px"></a>
+                                    <a href="[[twitter]]"><img src="http://172.104.224.221/images/twitter.png" width="30px"></a>
+                                    <a href="[[instagram]]"><img src="http://172.104.224.221/images/instagram.png" width="30px"></a>
                                 </td>
                                 <td width="30%">
                                     <p style="float: right;padding: 0px 5px;line-height: 1.5em;font-weight: bold;font-size: 13px;">
