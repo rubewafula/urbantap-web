@@ -48,7 +48,7 @@ class EmailNotification extends Notification
     {
         return (new MailMessage)
                     ->subject($this->subject)
-                    ->line($this->email);
+                    ->line(new \Illuminate\Support\HtmlString($this->email));
     }
 
     /**

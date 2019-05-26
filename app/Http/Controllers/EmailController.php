@@ -5,22 +5,23 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;    
 
-use App\Notifications\EmailNotification;
-use App\User;
+use App\Utilities\Email;
 
 class EmailController extends Controller
 {
 
 	public function sendEmail(Request $request){
 
-		$to = $request->to;
+		$to = ["address"=>$request->to];
 		$subject = $request->subject;
 		$email = $request->email;
+		$bcc = [];
+		$cc = [];
+		$attachments = [];
 
-		$client = new User();
-		$client->email = $to;
+		$mailerDaemon = new Email();
 
-		$client->notify(new EmailNotification($to, $subject, $email));
+		$mailerDaemon->sendEmail($to, $bcc, $cc, $subject, $email, $attachments);
 
 		Log::info("Email sent successfully");
 	}

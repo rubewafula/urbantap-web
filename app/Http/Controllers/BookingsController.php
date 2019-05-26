@@ -573,7 +573,18 @@ class BookingsController extends Controller{
         }else{
             Log::info("Provider missing email info skipped notification");
         }
-        
+       
+        //send sms notification
+        if(!is_null($sp_profile['business_phone'])){
+            $sms = ['to' => $sp_profile['business_phone'], 
+                   'message' => "Booking Request. " . $sp_profile['service_name'] 
+                   . " Start Time: " . $data['booking_time'] . ", Cost ".$data['cost'] 
+                   . " Confirm this request within 15 Minutes to reserve the slot. Urbantap" ];
+
+            $rabbit->publish($sms, env('SMS_MESSAGE_QUEUE'),
+                env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
+
+        } 
 
     }
 
