@@ -51,7 +51,7 @@ class ServiceProvidersController extends Controller{
       
         $validator = Validator::make($req,
             ['service_provider_id'=>'integer|exists:service_providers,id', 
-             'slot_date' => 'date_format:Y-m-d|after:'. $date->format('Y-m-d'),]
+             'slot_date' => 'required|date_format:Y-m-d|after:'. $date->format('Y-m-d'),]
         );
         if($validator ->fails()){
             $out =[
@@ -74,10 +74,9 @@ class ServiceProvidersController extends Controller{
             $date_now->format("i") % 5, 
             $date_now->format("s")
         );
-        $round_date = $date_now->sub(\DateInterval::createFromDateString($date_5min_roundup));
-        echo  $slot_date->format('Y-m-d H:i');
-
-        $provider_booking_sql = "select booking_time, booking_duration from bookings where service_provider_id=:pid and date(booking_time)=:booking_date and status_id=:st ";
+        $provider_booking_sql = "select booking_time, booking_duration "
+            . " from bookings where service_provider_id=:pid and "
+            . " date(booking_time)=:booking_date and status_id=:st ";
         $params = ['pid'=>$request->get('service_provider_id'),
                     'booking_date'=> $slot_data, 'st'=>DBStatus::BOOKING_PAID];
         $booked_records = RawQuery::query($provider_booking_sql, $params);
@@ -95,12 +94,45 @@ class ServiceProvidersController extends Controller{
             }while($bb_date < $ls_date );
 
         }
+        
+        $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
+            . " where service_provider_id = :service_provider_id and service_day= :_day" 
+            . " and status_id=:active";
 
+        $_day = $slot_date->format('l');
+        $working_day = RawQuery::query($working_hours_sql,
+            ['service_provider_id' => $request->get('service_provider_id'),
+             '_day'=>$_day, 'active'=>DBStatus::RECORD_ACTIVE ]);
+       
+        if(empty($working_day)){
+            $out = ['success'=>false, 'message'=>['slot_date' => 'Service provider not available on this date']]; 
+            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
 
-        while($slot_data == $slot_date->format('Y-m-d')){
-            Log::info("Checking " . $slot_data  . "==> " . $slot_date->format('Y-m-d H:i'));
+        $work_start_time = $working_day[0]->time_from;
+        $work_end_time = $working_day[0]->time_to;
+       
+        #die(" woking day time $work_start_time ==> $work_end_time");
+        $round_date = $date_now->add(
+            \DateInterval::createFromDateString($date_5min_roundup));
+        
+        $original_work_time = DateTime::createFromFormat('Y-m-d H:i:s', 
+            $slot_date->format('Y-m-d'). " ".$work_start_time);
+        Log::info("Original work time " . $original_work_time->format('Y-m-d H:i') );
+        if($round_date < $original_work_time ){
+            $round_date = $original_work_time;
+            //->sub( \DateInterval::createFromDateString($date_5min_roundup));
+        }
+        Log::info("Round date " . $round_date->format('Y-m-d H:i') );
+        $work_end_datetime = \DateTime::createFromFormat('Y-m-d H:i:s', 
+            $slot_date->format('Y-m-d'). " ".$work_end_time);
+
+        while(true){
+            Log::info("Checking " . $slot_data  . "==> " . $slot_date->format('Y-m-d H:i') 
+                . " work end ==> ". $work_end_datetime->format('Y-m-d H:i'));
             if($slot_date <  $round_date ){
-                $slot_date = $round_date;
+                #FIXME: Date overlap error
+                $slot_date = $round_date->sub(new DateInterval('PT30M'));
                 //shooting the pegion no closer that 30minutes away
                 $slot_date->add(new DateInterval('PT15M'));
             }
@@ -116,6 +148,10 @@ class ServiceProvidersController extends Controller{
                         . $request->get('service_provider_id') . "Time =>" . $slot_date->format('H:i'));
                 }
                 
+            }
+            //Break on work_end_time
+            if($slot_date >= $work_end_datetime){
+                break;
             }
             
         }
@@ -151,7 +187,7 @@ class ServiceProvidersController extends Controller{
 
         // $image_url = URL::to('/storage/image/avatar/');
         // $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        $p_services_url =  URL::to('/storage/static/image/provider-services/');
+        $p_services_url =  URL::to('/storage/static/image/portfolios/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -220,11 +256,12 @@ class ServiceProvidersController extends Controller{
         $results['services'] = $services;
 
         $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
-            . " where service_provider_id ='" . $service_provider_id . "' and status_id=". DBStatus::RECORD_ACTIVE;
+            . " where service_provider_id ='" . $service_provider_id . "'"
+	    . " and status_id=". DBStatus::RECORD_ACTIVE;
 
         $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
-        $portfolios_sql = "SELECT  "
+        $portfolios_sql = "SELECT id, "
             . " concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
             . " JSON_UNQUOTE(json_extract(media_data, '$.media_url'))) ) as media_photo, " 
             . " p.description  FROM  portfolios p "

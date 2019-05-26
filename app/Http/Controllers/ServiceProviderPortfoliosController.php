@@ -17,6 +17,8 @@ use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
+
 
 
 class ServiceProviderPortfoliosController extends Controller{
@@ -63,13 +65,16 @@ class ServiceProviderPortfoliosController extends Controller{
             return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
     	}
 
+        $p_services_url =  URL::to('/storage/static/image/portfolios/');
+
         $filter= '';
         if(!is_null($service_provider_id)){
             $filter = " and p.service_provider_id = '" .$service_provider_id . "' ";
         }
 
-        $rawQuery = "SELECT p.media_data, p.description "
-            . " FROM  portfolios p  where 1=1  " . $filter ;
+        $rawQuery = "SELECT id, concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(media_data, '$.media_url'))) ) as media_photo "
+            . ", p.description FROM  portfolios p  where 1=1  " . $filter ;
 
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
@@ -93,6 +98,8 @@ class ServiceProviderPortfoliosController extends Controller{
     ***/
     public function create(Request $request)
     {
+         
+        Log::info("Received request ==> ". print_r($request->all(), 1));
 
     	$validator = Validator::make($request->all(),[
 		    'service_provider_id' => 'required|exists:service_providers,id',
@@ -107,6 +114,8 @@ class ServiceProviderPortfoliosController extends Controller{
 			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
 		}else{
             $stored = $this->store($request);
+            Log::info("Store file result ==> " . print_r($stored, 1));
+
             if($stored !== false){
 
             	DB::insert("insert into portfolios (service_provider_id, media_data, "
@@ -188,8 +197,14 @@ class ServiceProviderPortfoliosController extends Controller{
      * @param  Request $request Request with form data: filename and file info
      * @return boolean          True if success, otherwise - false
      */
-    public function store(Request $request)
+    public  function store($request)
     {
+
+        $file = $request->file('file');
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return false;
+        }
         $max_size = (int)ini_get('upload_max_filesize') * 1000;
         $all_ext = implode(',', $this->allExtensions());
 
@@ -198,24 +213,33 @@ class ServiceProviderPortfoliosController extends Controller{
             'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
         ]);
 
-        $file = $request->file('file');
+
         if(is_null($file)){
             /** No file uploaded accept and proceeed **/
-            return null;
+            return FALSE;
         }
         $ext = $file->getClientOriginalExtension();
         $size = $file->getClientSize();
-        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('user_id'));
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('service_provider_id'));
+        $fileN = $file->getClientOriginalName();
+        $name = $name . "-" . preg_replace('/[^A-Za-z0-9\-]/', '-', $fileN);
         $type = $this->getType($ext);
 
         if($type == 'unknown'){
             Log::info("Aborting file upload unknown file type "+ $type);
-            return false;
+            return FALSE;
         }
 
-        $fullPath = 'public/' . $type . '/' .$name . '.' . $ext;
+        $fullPath = $name . '.' . $ext;
+        Log::info("Creating portfolio file " . $fullPath );
 
-        if (Storage::putFileAs('public/' . $type . '/', $file, $name . '.' . $ext)) {
+        $file_path = 'public/static/' . $type . '/portfolios/'.$fullPath;
+
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+
+        if (Storage::putFileAs('public/static/' . $type . '/portfolios', $file, $fullPath)) {
             return [
                     'media_url'=>$fullPath,
                     'name' => $name,
@@ -226,6 +250,7 @@ class ServiceProviderPortfoliosController extends Controller{
         }
 
         return false;
+
     }
 
 

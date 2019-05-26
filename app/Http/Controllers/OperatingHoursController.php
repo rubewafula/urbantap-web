@@ -44,7 +44,7 @@ class OperatingHoursController extends Controller
         }
          
 
-        $query = "select id, day, time_from, time_to from operating_hours op "
+        $query = "select id, service_day, time_from, time_to from operating_hours op "
             . " where 1=1 ". $filter . " and status_id = ".DBStatus::RECORD_ACTIVE;
 
         $operating_hours = RawQuery::paginate($query);
@@ -91,7 +91,7 @@ class OperatingHoursController extends Controller
         }else{
 
             DB::insert("insert into operating_hours (service_provider_id,"
-                . " day, time_from, time_to, created_at, updated_at)"
+                . " service_day, time_from, time_to, created_at, updated_at)"
                 . " values (:service_provider_id, :day, :time_from, "
                 . " :time_to, now(),  now())  ", 
                     [
