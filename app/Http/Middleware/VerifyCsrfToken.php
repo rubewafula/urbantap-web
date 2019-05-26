@@ -18,7 +18,7 @@ class VerifyCsrfToken extends Middleware
         '/mpesa/c2b/payment',
         '/api/sms/sendsms',
         '/booking/checkstatus',
-	'/user/checklogin',
+	    '/user/checklogin',
         '/api/*'
     ];
 }

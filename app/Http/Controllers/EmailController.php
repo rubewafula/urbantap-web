@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;    
 
 use App\Utilities\Email;
+use App\Outbox;
 
 class EmailController extends Controller
 {
@@ -18,6 +19,17 @@ class EmailController extends Controller
 		$bcc = [];
 		$cc = [];
 		$attachments = [];
+
+		$service_provider_id = $request->service_provider_id;
+		$user_id = $request->user_id;
+		$reference = $request->reference;
+
+		$outbox = new Outbox();
+		$outbox->user_id = $user_id;
+		$outbox->status_id = 0;
+		$outbox->service_provider_id = $service_provider_id;
+		$outbox->reference = $reference;
+		$outbox->save();
 
 		$mailerDaemon = new Email();
 
