@@ -56,10 +56,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/enroll', 'UserController@register_user')->middleware('perm:1');
     Route::get('/users/profile/{user_id}', 'UserController@profile')->middleware('perm:1');
     Route::post('/users/profile/update', 'UserController@update')->middleware('perm:1');
-
-    Route::post('/orders/new','OrderController@new_order');//->middleware('perm:1');
-    Route::get('/orders/{order_id}','OrderController@view_order');//->middleware('perm:1');
-    Route::get('/orders/mark/{order_id}','OrderController@mark_loaded');//->middleware('perm:1');
    
 });
 
