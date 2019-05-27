@@ -16,6 +16,7 @@ use App\Utilities\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Validator;
@@ -529,6 +530,8 @@ class BookingsController extends Controller
              'service_id' => $data['request']['service_id'],]
         );
 
+        $spModel = new User(['id' => $sp[0]->user_id]);
+
         $sp_profile = [
             'service_provider_name' => $sp[0]->service_provider_name,
             'instagram'             => $sp[0]->instagram,
@@ -556,7 +559,7 @@ class BookingsController extends Controller
         ];
 
         Log::info("Preparing to notify user");
-        $userModel->notify(new BookingCreatedNotification($data));
+        Notification::send([$userModel, $spModel], new BookingCreatedNotification($data));
 
         $provider_notification = [
             'to'      => $sp_profile['business_email'],
