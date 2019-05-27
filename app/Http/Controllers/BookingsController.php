@@ -564,6 +564,7 @@ class BookingsController extends Controller
             'user_id'=>$data['request']['user_id'],
             'service_provider_id'=>$data['request']['service_provider_id'],
             'email' => Utils::loadTemplateData($provider_mail_content, $data),
+        ];
         $rabbit = new RabbitMQ();
         if ($user_notification['to'] != null) {
             $rabbit->publish($user_notification, env('EMAIL_MESSAGE_QUEUE'),
@@ -590,13 +591,6 @@ class BookingsController extends Controller
                 'user_id'=>$data['request']['user_id'],
                 'service_provider_id'=>$data['request']['service_provider_id']
             ];
-
-        //send sms notification
-        if (!is_null($sp_profile['business_phone'])) {
-            $sms = ['to'      => $sp_profile['business_phone'],
-                    'message' => "Booking Request. " . $sp_profile['service_name']
-                        . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
-                        . " Confirm this request within 15 Minutes to reserve the slot. Urbantap"];
 
             $rabbit->publish($sms, env('SMS_MESSAGE_QUEUE'), env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
         }
