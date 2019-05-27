@@ -12,6 +12,7 @@
 */
 
 Broadcast::channel('App.User.{id}', function ($user, $id) {
+    dd($id);
     return true;
 //    return (int) $user->id === (int) $id;
 });
