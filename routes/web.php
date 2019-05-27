@@ -26,17 +26,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/services/{id}','ServicesController@service');
     Route::post('/services/update','ServicesController@update_service');
 
-
-    Route::get('/providers', 'ProviderController@service_providers');
-    Route::post('/provider/new','ProviderController@new_provider');
-    Route::get('/provider/{id}','ProviderController@service_provider');
-    Route::post('/provider/update','ProviderController@update_provider');
-
-    Route::get('/providers', 'ProviderController@service_providers');
-    Route::post('/provider/new','ProviderController@new_provider');
-    Route::get('/provider/{id}','ProviderController@service_provider');
-    Route::post('/provider/update','ProviderController@update_provider');
-
     Route::get('/businesses','BusinessController@businesses');
     Route::get('/business/{id}','BusinessController@business');
     Route::post('/business/new','BusinessController@new_business');
