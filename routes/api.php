@@ -185,17 +185,6 @@ Route::group([
 
 });
 
-Route::group([
-'prefix' => 'appointments'
-], function(){
-   Route::get('all', 'AppointmentsController@get');
-   Route::get('get/{id}', 'AppointmentsController@get');
-   Route::get('create', 'AppointmentsController@create');
-   Route::get('update', 'AppointmentsController@update');
-   Route::get('del','AppointmentsController@delete');
-
-});
-
 
 Route::get('balances/all','BalancesController@get_all');
 Route::post('balances/create','BalancesController@store');
