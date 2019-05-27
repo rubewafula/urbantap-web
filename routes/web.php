@@ -10,6 +10,12 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+use Illuminate\Http\Request;
+use Illuminate\Routing\Route;
+use Illuminate\Support\Facades\Broadcast;
+use Tutlance\Models\User;
+
 Auth::routes();
  Route::get('loadwaf','WafController@waf');
 
@@ -61,3 +67,12 @@ Route::group(['middleware' => ['auth']], function () {
 
 
 require 'payments.php';
+
+
+Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+//    if (Auth::guest() && preg_match('/online/', $request->channel_name)) {
+//        Auth::login(User::makeGuestUser());
+//    }
+    dump($request);
+    return Broadcast::auth($request);
+});
