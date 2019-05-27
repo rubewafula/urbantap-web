@@ -192,3 +192,7 @@ Route::group([
    Route::get('get', 'HomePageController@get');
 
 });
+
+Route::group(['prefix' => 'notifications'], function () {
+    Route::post('', 'UserNotificationController@index');
+});
