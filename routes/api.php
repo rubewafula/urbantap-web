@@ -186,10 +186,6 @@ Route::group([
 });
 
 
-Route::get('balances/all','BalancesController@get_all');
-Route::post('balances/create','BalancesController@store');
-
-
 Route::group([
 'prefix' => 'home'
 ], function(){
