@@ -51,11 +51,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/expert/appointments/reject/{_id}','ExpertsController@reject_appointment');
     Route::post('/expert/gallery/upload','ExpertsController@upload_gallery');
 
-    Route::get('/drivers','DriverController@index')->middleware('perm:1');
-    Route::get('/drivers/{id}','DriverController@driver')->middleware('perm:1');
-    Route::post('/drivers/new','DriverController@new_driver');
-    Route::post('/drivers/update','DriverController@update_driver')->middleware('perm:1');
-
     Route::get('/vehicles','VehicleController@index')->middleware('perm:1');
     Route::get('/vehicles/{id}','VehicleController@vehicle');//->middleware('perm:1');
     Route::post('/vehicles/new','VehicleController@new_vehicle');//->middleware('perm:1');
