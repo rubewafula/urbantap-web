@@ -69,7 +69,7 @@ Route::group(['middleware' => ['auth']], function () {
 require 'payments.php';
 
 
-Route::post('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
 //    if (Auth::guest() && preg_match('/online/', $request->channel_name)) {
 //        Auth::login(User::makeGuestUser());
 //    }
