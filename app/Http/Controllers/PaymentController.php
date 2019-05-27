@@ -21,7 +21,7 @@ use App\Utilities\DBStatus;
 use App\Utilities\HTTPCodes;
 use App\Utilities\SMS;
 
-class PaymentsController extends Controller
+class PaymentController extends Controller
 {
 
 	private $rabbitMQConnection;
