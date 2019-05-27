@@ -516,7 +516,6 @@ class BookingsController extends Controller{
         ];
 
         $data['user'] = $user_profile;
-
         $sp = RawQuery::query(
             "select sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
             . " sp.business_phone, sp.work_location_city, sp.business_description, sp.work_location, "
@@ -550,12 +549,18 @@ class BookingsController extends Controller{
         $user_notification = [
             'to'   => $user_profile['email'], 
             'subject' => $data['subject'],
+            'reference' => $data['booking_id'],
+            'user_id'=>$data['request']['user_id'],
+            'service_provider_id'=>$data['request']['service_provider_id'],
             'email' => $user_html= Utils::loadTemplateData($user_mail_content, $data),
         ];
 
         $provider_notification = [
             'to'   => $sp_profile['business_email'], 
             'subject' => $data['subject'],
+            'reference' => $data['booking_id'],
+            'user_id'=>$data['request']['user_id'],
+            'service_provider_id'=>$data['request']['service_provider_id'],
             'email' => Utils::loadTemplateData($provider_mail_content, $data),
         ];
 
@@ -576,10 +581,15 @@ class BookingsController extends Controller{
        
         //send sms notification
         if(!is_null($sp_profile['business_phone'])){
-            $sms = ['to' => $sp_profile['business_phone'], 
-                   'message' => "Booking Request. " . $sp_profile['service_name'] 
+            $sms = [
+                'recipients' => [$sp_profile['business_phone']], 
+                'message' => "Booking Request. " . $sp_profile['service_name'] 
                    . " Start Time: " . $data['booking_time'] . ", Cost ".$data['cost'] 
-                   . " Confirm this request within 15 Minutes to reserve the slot. Urbantap" ];
+                   . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
+                'reference' => $data['booking_id'],
+                'user_id'=>$data['request']['user_id'],
+                'service_provider_id'=>$data['request']['service_provider_id']
+            ];
 
             $rabbit->publish($sms, env('SMS_MESSAGE_QUEUE'),
                 env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
