@@ -555,6 +555,7 @@ class BookingsController extends Controller
             'email' => $user_html= Utils::loadTemplateData($user_mail_content, $data),
         ];
 
+        Log::info("Preparing to notify user");
         $userModel->notify(new BookingCreatedNotification($data));
 
         $provider_notification = [

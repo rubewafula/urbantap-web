@@ -6,6 +6,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingCreatedNotification
@@ -61,6 +62,7 @@ class BookingCreatedNotification extends Notification
      */
     public function toArray($notifiable)
     {
+        Log::info("Sending Broadcast...", array_merge($this->data, ['user' => $notifiable]));
         return $this->data;
     }
 }
