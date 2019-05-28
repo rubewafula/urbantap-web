@@ -193,6 +193,6 @@ Route::group([
 
 });
 
-Route::group(['prefix' => 'notifications'], function () {
+Route::group(['prefix' => 'notifications', 'middleware' => 'auth:api'], function () {
     Route::post('', 'UserNotificationController@index');
 });

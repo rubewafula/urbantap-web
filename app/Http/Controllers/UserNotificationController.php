@@ -18,7 +18,8 @@ class UserNotificationController extends Controller
     public function index(Request $request)
     {
         // FIXME: This should fetch the logged in user's notifications
-        $user = User::query()->findOrFail($request->get('user_id'), ['id']);
+        $user = $request->user();
+
         return $user->notifications()->latest()->paginate();
     }
 }
