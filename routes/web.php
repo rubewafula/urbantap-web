@@ -71,5 +71,6 @@ Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
 //    if (Auth::guest() && preg_match('/online/', $request->channel_name)) {
 //        Auth::login(User::makeGuestUser());
 //    }
+    \Illuminate\Support\Facades\Log::info("Broadcast request", $request->toArray());
     return Broadcast::auth($request);
 });
