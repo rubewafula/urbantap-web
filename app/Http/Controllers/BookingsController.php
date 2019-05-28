@@ -258,32 +258,12 @@ class BookingsController extends Controller
      *
      * @return JSON
      */
-    public function get($service_provider_id = null, $user_id = null)
+    public function get(Request $request)
     {
 
-        $validator = Validator::make(['service_provider_id' => $service_provider_id,
-                                      'user_id'             => $user_id],
-            ['service_provider_id' => 'integer|exists:service_providers,id|nullable',
-             'user_id'             => 'integer|exists:users,id|nullable']
-        );
-        if ($validator->fails()) {
-            $out = [
-                'success' => false,
-                'message' => $validator->messages()
-            ];
-            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-        }
+        $user = $request->getUser();
+        $user_id = $user->id;
 
-        $filter = '';
-        //$from_date = $request->get('from_date');
-
-
-        if (!is_null($service_provider_id)) {
-            $filter = " and b.service_provider_id = '" . $service_provider_id . "' ";
-        }
-        if (!is_null($user_id)) {
-            $filter = " and b.user_id = '" . $user_id . "' ";
-        }
 
         $query = "select b.service_provider_id, b.user_id, u.name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -297,7 +277,7 @@ class BookingsController extends Controller
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id " . $filter;
+            . " u.id = b.user_id  where  b.user_id = '" . $user_id . "'";
 
 
         $results = RawQuery::paginate($query);
@@ -519,7 +499,7 @@ class BookingsController extends Controller
 
         $data['user'] = $user_profile;
         $sp = RawQuery::query(
-            "select sp.user_id, sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
+            "select sp.user_id, s.service_name, sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
             . " sp.business_phone, sp.work_location_city, sp.business_description, sp.work_location, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
@@ -546,6 +526,7 @@ class BookingsController extends Controller
             'cover_photo'           => $sp[0]->cover_photo,
             'service_name'          => $sp[0]->service_name,
             'service_description'   => $sp[0]->service_description,
+            'service_name'          => $sp[0]->service_name,
         ];
 
         $data['provider'] = $sp_profile;
@@ -556,13 +537,16 @@ class BookingsController extends Controller
             'reference' => $data['booking_id'],
             'user_id'=>$data['request']['user_id'],
             'service_provider_id'=>$data['request']['service_provider_id'],
-            'email' => $user_html= Utils::loadTemplateData($user_mail_content, $data),
+            'email' => Utils::loadTemplateData($user_mail_content, $data),
         ];
+        $notification = "BOOKING Request received from ". $userModel->first_name 
+            . " FOR " . $sp_profile['service_name'] . " Service ";
 
         Log::info("Preparing to notify user");
         Notification::send([$userModel, $spModel], new BookingCreatedNotification([
-            'message'          => 'Booking',
+            'message'          => $notification,
             'user'             => $userModel->toArray(),
+            'booking_id'       => $data['booking_id'],
             'service_provider' => $spModel->toArray(),
         ]));
 
