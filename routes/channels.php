@@ -12,7 +12,5 @@
 */
 
 Broadcast::channel('App.User.{id}', function ($user, $id) {
-    \Illuminate\Support\Facades\Log::info("Auth channel", compact('id', 'user'));
-    return true;
-//    return (int) $user->id === (int) $id;
+    return (int)$user->id === (int)$id;
 });
