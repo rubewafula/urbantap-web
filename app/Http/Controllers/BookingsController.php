@@ -13,6 +13,7 @@ use App\Utilities\HTTPCodes;
 use App\Utilities\RabbitMQ;
 use App\Utilities\RawQuery;
 use App\Utilities\Utils;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -559,7 +560,11 @@ class BookingsController extends Controller
         ];
 
         Log::info("Preparing to notify user");
-        Notification::send([$userModel, $spModel], new BookingCreatedNotification($data));
+        Notification::send([$userModel, $spModel], new BookingCreatedNotification([
+            'message'          => 'Booking',
+            'user'             => $userModel->toArray(),
+            'service_provider' => $spModel->toArray(),
+        ]));
 
         $provider_notification = [
             'to'      => $sp_profile['business_email'],
@@ -583,13 +588,13 @@ class BookingsController extends Controller
         } else {
             Log::info("Provider missing email info skipped notification");
         }
-       
+
         //send sms notification
         if(!is_null($sp_profile['business_phone'])){
             $sms = [
-                'recipients' => [$sp_profile['business_phone']], 
-                'message' => "Booking Request. " . $sp_profile['service_name'] 
-                   . " Start Time: " . $data['booking_time'] . ", Cost ".$data['cost'] 
+                'recipients' => [$sp_profile['business_phone']],
+                'message' => "Booking Request. " . $sp_profile['service_name']
+                   . " Start Time: " . $data['booking_time'] . ", Cost ".$data['cost']
                    . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
                 'reference' => $data['booking_id'],
                 'user_id'=>$data['request']['user_id'],
