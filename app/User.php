@@ -54,4 +54,17 @@ class User extends Authenticatable
         return $this->BelongsToMany('App\Role');
     }
 
+    /**
+     * Create a guest user for auth-ing presence channels
+     *
+     * @return \App\User
+     * @throws \Exception
+     */
+    public static function makeGuestUser(): User
+    {
+        $id = random_int(1, 100);
+        $static = new static(compact('id'));
+        return $static;
+    }
+
 }

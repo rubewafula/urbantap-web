@@ -11,8 +11,10 @@
 |
 */
 
+use App\User;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Broadcast;
-use Tutlance\Models\User;
+use Illuminate\Support\Facades\Log;
 
 Auth::routes();
  Route::get('loadwaf','WafController@waf');
@@ -68,9 +70,9 @@ require 'payments.php';
 
 
 Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
-//    if (Auth::guest() && preg_match('/online/', $request->channel_name)) {
-//        Auth::login(User::makeGuestUser());
-//    }
-    \Illuminate\Support\Facades\Log::info("Broadcast request", $request->toArray());
+    if (Auth::guest() && preg_match('/private/', $request->channel_name)) {
+        Auth::login(User::makeGuestUser());
+    }
+    Log::info("Broadcast request", $request->toArray());
     return Broadcast::auth($request);
 });
