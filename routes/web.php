@@ -69,10 +69,10 @@ Route::group(['middleware' => ['auth']], function () {
 require 'payments.php';
 
 
-Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
-    if (Auth::guest() && preg_match('/private/', $request->channel_name)) {
-        Auth::login(User::makeGuestUser());
-    }
-    Log::info("Broadcast request", $request->toArray());
-    return Broadcast::auth($request);
-});
+//Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+//    if (Auth::guest() && preg_match('/private/', $request->channel_name)) {
+//        Auth::login(User::makeGuestUser());
+//    }
+//    Log::info("Broadcast request", $request->toArray());
+//    return Broadcast::auth($request);
+//});
