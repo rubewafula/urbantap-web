@@ -49,7 +49,11 @@ class BookingStatusController extends BaseBookingController
         return [
             'success' => true,
             'id'      => $request->get('booking_id'),
-            'message' => 'Bookings updated OK'
+            'message' => 'Bookings updated OK',
+            'data'    => [
+                'status_id'          => $status,
+                'status_description' => 'Description Here'
+            ]
         ];
     }
 }
