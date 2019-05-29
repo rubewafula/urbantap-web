@@ -232,8 +232,7 @@ class PaymentsController extends Controller
 
 			if(count($user) > 0){
 
-				DB::update("update user_balance set balance = '".$balance."', transaction_id = '".$transaction_id."' where 
-						user_id = '".$user_id."'");
+				DB::update("update user_balance set balance = '".$balance."' where user_id = '".$user_id."'");
 			}else{
 
 				DB::insert("insert into user_balance(user_id,balance,transaction_id,created) 

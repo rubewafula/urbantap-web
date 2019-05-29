@@ -261,11 +261,15 @@ class BookingsController extends Controller
     public function get(Request $request)
     {
 
-        $user = $request->getUser();
+        $user = $request->user();
+        Log::info("USER => " . var_export($user, 1));
         $user_id = $user->id;
 
-
-        $query = "select b.service_provider_id, b.user_id, u.name as client,"
+        $page=$request->get('page');
+        if(!is_numeric($page)){
+           $page = 1;
+        }
+        $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, "
             . " b.booking_type, b.location, "
@@ -277,12 +281,12 @@ class BookingsController extends Controller
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id  where  b.user_id = '" . $user_id . "'";
+            . " u.id = b.user_id  where  sp.user_id = '" . $user_id . "'";
 
 
-        $results = RawQuery::paginate($query);
+        $results = RawQuery::paginate($query, $page=$page);
 
-        //dd(HTTPCodes);
+        Log::info("Bookings QUERY " . $query);
         Log::info('Extracted service bookings results : ' . var_export($results, 1));
         if (empty($results)) {
             return Response::json($results, HTTPCodes::HTTP_NO_CONTENT);
