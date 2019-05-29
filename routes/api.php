@@ -185,6 +185,10 @@ Route::group([
     Route::put('update', 'BookingsController@updateBooking');
     Route::delete('delete', 'BookingsController@delete');
 
+    // Update booking status
+    Route::patch('accept', 'BookingStatusController@update');
+    Route::patch('reject', 'BookingStatusController@update');
+
 });
 
 

@@ -560,7 +560,7 @@ class BookingsController extends Controller
         ];
 
         Log::info("Preparing to notify user");
-        Notification::send([$userModel, $spModel], new BookingCreatedNotification([
+        $spModel->notify(new BookingCreatedNotification([
             'message'          => 'Booking',
             'user'             => $userModel->toArray(),
             'service_provider' => $spModel->toArray(),
@@ -618,7 +618,6 @@ class BookingsController extends Controller
 
     public function updateBooking(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'booking_id'          => 'required|integer|exists:bookings,id',
             'user_id'             => 'integer|exists:users,id|nullable',
@@ -651,8 +650,6 @@ class BookingsController extends Controller
                 default:
                     $status_id = DBStatus::BOOKING_CANCELLED;
                     break;
-
-
             }
             if ($status_id == DBStatus::BOOKING_ACCEPTED
                 || $status_id == DBStatus::BOOKING_REJECTED
