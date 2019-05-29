@@ -2,17 +2,14 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Notifications\Notification;
 
 /**
- * Class BookingCreatedNotification
+ * Class BookingRejectedNotification
  * @package App\Notifications
  */
-class BookingCreatedNotification extends BaseNotification
+class BookingRejectedNotification extends Notification
 {
     /**
      * @var array
@@ -51,7 +48,6 @@ class BookingCreatedNotification extends BaseNotification
      */
     public function toArray($notifiable)
     {
-        Log::info("Sending Broadcast...", array_merge($this->data, ['user' => $notifiable]));
         return $this->data;
     }
 }

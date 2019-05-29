@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BookingStatusChanged;
 use App\Http\Requests\BookingStatusRequest;
+use App\User;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * Class BookingStatusController
@@ -36,7 +39,12 @@ class BookingStatusController extends BaseBookingController
         }
 
         $this->trail($bookingId, $status, $request->get('reason', ""), $originator);
-
+        broadcast(new BookingStatusChanged([
+            'booking_id' => $bookingId,
+            'user_id'    => $userId = $request->get('user_id'),
+        ], $status, [
+            new User(['id' => $userId])
+        ]));
         return [
             'success' => true,
             'id'      => $request->get('booking_id'),

@@ -41,6 +41,11 @@ class BookingStatusRequest extends FormRequest
                 'required',
                 'integer',
                 'exists:bookings,id'
+            ],
+            'user_id' => [
+                'required',
+                'integer',
+                'exists:users,id'
             ]
         ];
     }
