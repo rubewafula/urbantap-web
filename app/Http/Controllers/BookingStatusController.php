@@ -45,6 +45,7 @@ class BookingStatusController extends BaseBookingController
         ], $status, [
             new User(['id' => $userId])
         ]));
+
         return [
             'success' => true,
             'id'      => $request->get('booking_id'),

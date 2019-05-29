@@ -3,13 +3,12 @@
 namespace App\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
 
 /**
  * Class BookingRejectedNotification
  * @package App\Notifications
  */
-class BookingRejectedNotification extends Notification
+class BookingRejectedNotification extends BaseNotification
 {
     /**
      * @var array
