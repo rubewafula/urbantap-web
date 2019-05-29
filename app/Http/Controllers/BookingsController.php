@@ -271,7 +271,7 @@ class BookingsController extends Controller
         }
         $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
-            . " b.booking_duration, b.expiry_time, s.status_code, "
+            . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
             . " b.booking_type, b.location, "
             . " s.description as status_description, ps.description as "
             . " provider_service_description, ps.cost, ps.duration "
@@ -281,7 +281,7 @@ class BookingsController extends Controller
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id  where  sp.user_id = '" . $user_id . "'";
+            . " u.id = b.user_id  where  sp.user_id = '" . $user_id . "' order by b.id desc";
 
 
         $results = RawQuery::paginate($query, $page=$page);

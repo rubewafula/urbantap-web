@@ -274,7 +274,7 @@ class PaymentsController extends Controller
                     			'message' => 'Booking Not Found'
                 		];
 
-				$customerMessage = "Dear $name, you have successfully topped up KSh. $transaction_amount to your URBANTAP account, reference $bill_ref_no. Your can book for any of our service using the float in your account. Thank you.";
+				$customerMessage = "Dear $name, you have topped up KSh. $transaction_amount to your URBANTAP account. Your can now book for any of our services. Thank you.";
 	
 				$sms->sendSMSMessage($msisdn, $customerMessage, $bill_ref_no);
 
