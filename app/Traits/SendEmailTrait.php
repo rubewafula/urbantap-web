@@ -33,7 +33,9 @@ trait SendEmailTrait
             (new RabbitMQ())->publish(
                 array_merge(
                     $data,
-                    Utils::loadTemplateData($mailContents, $data)
+                    [
+                        'email' => Utils::loadTemplateData($mailContents, $data)
+                    ]
                 ),
                 env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
             );
