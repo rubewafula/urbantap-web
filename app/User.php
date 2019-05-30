@@ -2,6 +2,7 @@
 
 namespace App;
 
+use Illuminate\Notifications\HasDatabaseNotifications;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Passport\HasApiTokens;
@@ -16,12 +17,12 @@ class User extends Authenticatable
      *
      * @var array
      */
-    protected  $table='users';
+    protected $table = 'users';
 
-    protected  $primaryKey ='id';
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'first_name','last_name', 'email', 'phone_no', 'password','verification_code','verification_sent','phone_verified','email_verified','status_id','confirmation_token'
+        'id', 'first_name', 'last_name', 'email', 'phone_no', 'password', 'verification_code', 'verification_sent', 'phone_verified', 'email_verified', 'status_id', 'confirmation_token'
     ];
 
     /**
@@ -33,9 +34,9 @@ class User extends Authenticatable
         'password', 'remember_token',
     ];
 
-    public  function status()
+    public function status()
     {
-        return  $this->BelongsTo('App\Status');
+        return $this->BelongsTo('App\Status');
     }
 
     public function role()
@@ -48,9 +49,22 @@ class User extends Authenticatable
         return $this->belongsTo('App\UserGroup', 'user_group');
     }
 
-    public function  roles()
+    public function roles()
     {
-        return  $this->BelongsToMany('App\Role');
+        return $this->BelongsToMany('App\Role');
+    }
+
+    /**
+     * Create a guest user for auth-ing presence channels
+     *
+     * @return \App\User
+     * @throws \Exception
+     */
+    public static function makeGuestUser(): User
+    {
+        $id = random_int(1, 100);
+        $static = new static(compact('id'));
+        return $static;
     }
 
 }

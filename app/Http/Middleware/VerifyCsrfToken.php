@@ -19,6 +19,7 @@ class VerifyCsrfToken extends Middleware
         '/api/sms/sendsms',
         '/booking/checkstatus',
 	    '/user/checklogin',
-        '/api/*'
+        '/api/*',
+        '/broadcasting/auth'
     ];
 }

@@ -10,6 +10,12 @@
 | contains the "web" middleware group. Now create something great!
 |
 */
+
+use App\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Log;
+
 Auth::routes();
  Route::get('loadwaf','WafController@waf');
 
@@ -25,17 +31,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::post('/services/new','ServicesController@new_service');
     Route::get('/services/{id}','ServicesController@service');
     Route::post('/services/update','ServicesController@update_service');
-
-
-    Route::get('/providers', 'ProviderController@service_providers');
-    Route::post('/provider/new','ProviderController@new_provider');
-    Route::get('/provider/{id}','ProviderController@service_provider');
-    Route::post('/provider/update','ProviderController@update_provider');
-
-    Route::get('/providers', 'ProviderController@service_providers');
-    Route::post('/provider/new','ProviderController@new_provider');
-    Route::get('/provider/{id}','ProviderController@service_provider');
-    Route::post('/provider/update','ProviderController@update_provider');
 
     Route::get('/businesses','BusinessController@businesses');
     Route::get('/business/{id}','BusinessController@business');
@@ -62,40 +57,22 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/expert/appointments/reject/{_id}','ExpertsController@reject_appointment');
     Route::post('/expert/gallery/upload','ExpertsController@upload_gallery');
 
-    Route::get('/companies','CompanyController@index')->middleware('perm:1');
-    Route::get('/companies/{id}','CompanyController@company')->middleware('perm:1');
-    Route::post('/companies/new','CompanyController@new_company')->middleware('perm:1');
-    Route::post('/companies/update','CompanyController@update_company')->middleware('perm:1');
-
-    Route::get('/depots','DepotController@index')->middleware('perm:1');
-    Route::get('/depots/{id}','DepotController@depot')->middleware('perm:1');
-    Route::post('/depots/new','DepotController@new_depot')->middleware('perm:1');
-    Route::post('/depots/update','DepotController@update_depot')->middleware('perm:1');
-
-    Route::get('/drivers','DriverController@index')->middleware('perm:1');
-    Route::get('/drivers/{id}','DriverController@driver')->middleware('perm:1');
-    Route::post('/drivers/new','DriverController@new_driver');
-    Route::post('/drivers/update','DriverController@update_driver')->middleware('perm:1');
-
-    Route::get('/vehicles','VehicleController@index')->middleware('perm:1');
-    Route::get('/vehicles/{id}','VehicleController@vehicle');//->middleware('perm:1');
-    Route::post('/vehicles/new','VehicleController@new_vehicle');//->middleware('perm:1');
-    Route::post('/vehicles/update','VehicleController@update_vehicle')->middleware('perm:1');
-    Route::post('/vehicles/assign_driver','VehicleController@assign_driver')->middleware('perm:1');
-    Route::get('/vehicles/revoke_driver/{vehicle_id}/{driver_id}','VehicleController@revoke_driver')->middleware('perm:1');
-    Route::post('/vehicles/blacklist','VehicleController@blacklist_vehicle')->middleware('perm:1');
-
     Route::get('/users', 'UserController@index')->middleware('perm:1');
     Route::get('/users/delete/{user_id}', 'UserController@delete_user')->middleware('perm:1');
     Route::post('/enroll', 'UserController@register_user')->middleware('perm:1');
     Route::get('/users/profile/{user_id}', 'UserController@profile')->middleware('perm:1');
     Route::post('/users/profile/update', 'UserController@update')->middleware('perm:1');
-
-    Route::post('/orders/new','OrderController@new_order');//->middleware('perm:1');
-    Route::get('/orders/{order_id}','OrderController@view_order');//->middleware('perm:1');
-    Route::get('/orders/mark/{order_id}','OrderController@mark_loaded');//->middleware('perm:1');
    
 });
 
 
 require 'payments.php';
+
+
+//Route::any('/broadcasting/auth', function (Illuminate\Http\Request $request) {
+//    if (Auth::guest() && preg_match('/private/', $request->channel_name)) {
+//        Auth::login(User::makeGuestUser());
+//    }
+//    Log::info("Broadcast request", $request->toArray());
+//    return Broadcast::auth($request);
+//});
