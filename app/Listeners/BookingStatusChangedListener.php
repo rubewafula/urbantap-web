@@ -2,14 +2,34 @@
 
 namespace App\Listeners;
 
+use App\Contracts\ShouldSendMail;
+use App\Contracts\ShouldSendSMS;
 use App\Events\BookingStatusChanged;
 use App\Notifications\BookingAcceptedNotification;
 use App\Notifications\BookingRejectedNotification;
+use App\Traits\ProviderDataTrait;
+use App\Traits\SendEmailTrait;
+use App\Traits\SendSMSTrait;
+use App\User;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\Notification;
 
-class BookingStatusChangedListener
+/**
+ * Class BookingStatusChangedListener
+ * @package App\Listeners
+ */
+class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
 {
+    use SendEmailTrait, SendSMSTrait, ProviderDataTrait;
+    /**
+     * @var string
+     */
+    private $userMailTemplate = "";
+    /**
+     * @var string
+     */
+    private $serviceProviderMailTemplate = "";
+
     /**
      * Create the event listener.
      *
@@ -36,5 +56,20 @@ class BookingStatusChangedListener
                 Notification::send($event->notifiable, new BookingRejectedNotification($event->data));
                 break;
         }
+    }
+
+
+
+
+    /**
+     * Get provider data
+     *
+     * @param User $user
+     * @param array $data
+     * @return array
+     */
+    protected function getServiceProviderNotificationData(User $user, array $data): array
+    {
+        // TODO: Implement getServiceProviderNotificationData() method.
     }
 }
