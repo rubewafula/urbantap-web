@@ -101,6 +101,13 @@ class PaymentsController extends Controller
 		if( $postData != null){
 
 			$rabbitMQ = new RabbitMQ();
+			$decoded = json_decode($postData);
+
+			if($decoded->BusinessShortCode == env("TIPS_TILL_NO")){
+
+				$publishResult = $rabbitMQ->publish($postData,  env("TIPS_QUEUE"));
+			}
+
 			$publishResult = $rabbitMQ->publish($postData,  env("RABBIT_MPESA_QUEUE"));
 
 			echo("Publishing OK ".$publishResult);
@@ -123,22 +130,17 @@ class PaymentsController extends Controller
 	        Log::info(print_r($payload,1));
 		$data = json_encode($payload);
 
-        	$httpRequest = curl_init('http://139.162.142.202:9000/confirm');
-	        //curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        	//curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-	        //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	        //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data)));
+        $httpRequest = curl_init('http://139.162.142.202:9000/confirm');
 
 		curl_setopt($httpRequest, CURLOPT_NOBODY, true);
-	        curl_setopt($httpRequest, CURLOPT_POST, true);
-        	curl_setopt($httpRequest, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
-       		curl_setopt($httpRequest, CURLOPT_RETURNTRANSFER, 1);
-        	curl_setopt($httpRequest, CURLOPT_POSTFIELDS, "$data");
+	    curl_setopt($httpRequest, CURLOPT_POST, true);
+        curl_setopt($httpRequest, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+       	curl_setopt($httpRequest, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($httpRequest, CURLOPT_POSTFIELDS, "$data");
 		curl_setopt($httpRequest, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data)));
-        	curl_setopt($httpRequest, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+        curl_setopt($httpRequest, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
 
         	$result = curl_exec($httpRequest);
-		//Log::info($result);
 		
 		Log::info("Got results from BAE Payment");
 
