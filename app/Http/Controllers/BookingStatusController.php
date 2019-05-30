@@ -42,9 +42,7 @@ class BookingStatusController extends BaseBookingController
         broadcast(new BookingStatusChanged([
             'booking_id' => $bookingId,
             'user_id'    => $userId = $request->get('user_id'),
-        ], $status, [
-            new User(['id' => $userId])
-        ]));
+        ], $status, User::query()->findOrFail($userId, ['id', 'first_name', 'last_name', 'email'])));
 
         return [
             'success' => true,
