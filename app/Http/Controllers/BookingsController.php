@@ -6,6 +6,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\BookingCreated;
 use App\Notifications\BookingCreatedNotification;
 use App\User;
 use App\Utilities\DBStatus;
@@ -265,9 +266,9 @@ class BookingsController extends Controller
         Log::info("USER => " . var_export($user, 1));
         $user_id = $user->id;
 
-        $page=$request->get('page');
-        if(!is_numeric($page)){
-           $page = 1;
+        $page = $request->get('page');
+        if (!is_numeric($page)) {
+            $page = 1;
         }
         $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -284,7 +285,7 @@ class BookingsController extends Controller
             . " u.id = b.user_id  where  sp.user_id = '" . $user_id . "'";
 
 
-        $results = RawQuery::paginate($query, $page=$page);
+        $results = RawQuery::paginate($query, $page = $page);
 
         Log::info("Bookings QUERY " . $query);
         Log::info('Extracted service bookings results : ' . var_export($results, 1));
@@ -459,14 +460,14 @@ class BookingsController extends Controller
              **/
             $booking_id = DB::getPdo()->lastInsertId();
 
-            $notify = ['booking_id'   => $booking_id,
-                       'request'      => $request->all(),
-                       'booking_time' => $actual_booking_time,
-                       'cost'         => $actual_cost,
-                       'subject'      => 'Booking Request Placed',
-            ];
-
-            $this->sendNotifications($notify);
+            $user = User::query()->findOrFail($request->get('user_id'), ['id', 'first_name', 'last_name', 'email']);
+            broadcast(new BookingCreated($user, [
+                'booking_id'   => $booking_id,
+                'request'      => $request->all(),
+                'booking_time' => $actual_booking_time,
+                'cost'         => $actual_cost,
+                'subject'      => 'Booking Request Placed',
+            ]));
 
             $out = [
                 'success' => true,
@@ -479,6 +480,11 @@ class BookingsController extends Controller
     }
 
 
+    /**
+     * @param array $data
+     * @deprecated
+     * @see  BookingCreatedListener@handle
+     */
     private function sendNotifications(array $data)
     {
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
@@ -490,16 +496,19 @@ class BookingsController extends Controller
         $user_mail_content = file_get_contents($user_booking_t_path);
         $provider_mail_content = file_get_contents($provider_booking_t_path);
 
-        $user = RawQuery::query(
-            "select first_name, last_name, email from users where id=:user_id",
-            ['user_id' => $userId = $data['request']['user_id']]
-        );
+        // Fetch user
+        $userModel = $user = User::query()->findOrFail($data['request']['user_id'], ['id', 'first_name', 'last_name', 'email']);
 
-        $user_profile = ['first_name' => $user[0]->first_name,
-                         'last_name'  => $user[0]->last_name,
-                         'email'      => $user[0]->email,
+
+//        $user = RawQuery::query(
+//            "select first_name, last_name, email from users where id=:user_id",
+//            ['user_id' => $userId = $data['request']['user_id']]
+//        );
+
+        $user_profile = ['first_name' => $user->first_name,
+                         'last_name'  => $user->last_name,
+                         'email'      => $user->email,
         ];
-        $userModel = new User(array_merge($user_profile, ['id' => $userId]));
 
         $data['user'] = $user_profile;
         $sp = RawQuery::query(
@@ -536,15 +545,14 @@ class BookingsController extends Controller
         $data['provider'] = $sp_profile;
 
         $user_notification = [
-            'to'      => $user_profile['email'],
-            'subject' => $data['subject'],
-            'reference' => $data['booking_id'],
-            'user_id'=>$data['request']['user_id'],
-            'service_provider_id'=>$data['request']['service_provider_id'],
-            'email' => Utils::loadTemplateData($user_mail_content, $data),
+            'to'                  => $user_profile['email'],
+            'subject'             => $data['subject'],
+            'reference'           => $data['booking_id'],
+            'user_id'             => $data['request']['user_id'],
+            'service_provider_id' => $data['request']['service_provider_id'],
+            'email'               => Utils::loadTemplateData($user_mail_content, $data),
         ];
-        $notification = "BOOKING Request received from ". $userModel->first_name 
-            . " FOR " . $sp_profile['service_name'] . " Service ";
+        $notification = "BOOKING Request received from " . $userModel->first_name . " FOR " . $sp_profile['service_name'] . " Service ";
 
         Log::info("Preparing to notify user");
         $spModel->notify(new BookingCreatedNotification([
@@ -555,17 +563,16 @@ class BookingsController extends Controller
         ]));
 
         $provider_notification = [
-            'to'      => $sp_profile['business_email'],
-            'subject' => $data['subject'],
-            'reference' => $data['booking_id'],
-            'user_id'=>$data['request']['user_id'],
-            'service_provider_id'=>$data['request']['service_provider_id'],
-            'email' => Utils::loadTemplateData($provider_mail_content, $data),
+            'to'                  => $sp_profile['business_email'],
+            'subject'             => $data['subject'],
+            'reference'           => $data['booking_id'],
+            'user_id'             => $data['request']['user_id'],
+            'service_provider_id' => $data['request']['service_provider_id'],
+            'email'               => Utils::loadTemplateData($provider_mail_content, $data),
         ];
         $rabbit = new RabbitMQ();
         if ($user_notification['to'] != null) {
-            $rabbit->publish($user_notification, env('EMAIL_MESSAGE_QUEUE'),
-                env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
+            $rabbit->publish($user_notification, env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
         } else {
             Log::info("User missing email info skipped notification");
         }
@@ -578,15 +585,15 @@ class BookingsController extends Controller
         }
 
         //send sms notification
-        if(!is_null($sp_profile['business_phone'])){
+        if (!is_null($sp_profile['business_phone'])) {
             $sms = [
-                'recipients' => [$sp_profile['business_phone']],
-                'message' => "Booking Request. " . $sp_profile['service_name']
-                   . " Start Time: " . $data['booking_time'] . ", Cost ".$data['cost']
-                   . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
-                'reference' => $data['booking_id'],
-                'user_id'=>$data['request']['user_id'],
-                'service_provider_id'=>$data['request']['service_provider_id']
+                'recipients'          => [$sp_profile['business_phone']],
+                'message'             => "Booking Request. " . $sp_profile['service_name']
+                    . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
+                    . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
+                'reference'           => $data['booking_id'],
+                'user_id'             => $data['request']['user_id'],
+                'service_provider_id' => $data['request']['service_provider_id']
             ];
 
             $rabbit->publish($sms, env('SMS_MESSAGE_QUEUE'), env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
@@ -601,6 +608,8 @@ class BookingsController extends Controller
      * 'http://127.0.0.1:8000/api/bookings/update'
      * @param Illuminate\Http\Request $request
      * @return JSON
+     * @deprecated
+     * @see BookingStatusController@update
      *
      ***/
 

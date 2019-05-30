@@ -47,6 +47,8 @@ class BookingRejectedNotification extends BaseNotification
      */
     public function toArray($notifiable)
     {
-        return $this->data;
+        return array_merge($this->data, [
+            'message' => 'Your booking has been rejected. Sorry.'
+        ]);
     }
 }
