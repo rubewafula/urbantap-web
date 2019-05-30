@@ -76,7 +76,7 @@ class SMS {
         }else{
 
             Log::info("SMS could not be queued by the server ".$status_code);
-	    Log::info("Raw CURL Response ".$results);
+	       Log::info("Raw CURL Response ".$results);
         }
 
         return $quedSuccess;

@@ -155,7 +155,7 @@ class PaymentsController extends Controller
 
 			Log::info("Now preparing the query to insert the MPESA Transaction");
 
-                        DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
+            DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
 				amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
 				VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
 				:mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,0)",
@@ -203,8 +203,7 @@ class PaymentsController extends Controller
 
 			if(count($user) > 0){
 
-				DB::update("update user_balance set balance = '".$balance."', transaction_id = '".$transaction_id."' where 
-						user_id = '".$user_id."'");
+				DB::update("update user_balance set balance = '".$balance."' where user_id = '".$user_id."'");
 			}else{
 
 				DB::insert("insert into user_balance(user_id,balance,transaction_id,created) 
@@ -241,25 +240,23 @@ class PaymentsController extends Controller
 
 				Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
 				$out = [
-                   			 'status' => 421,
-                    			'success' => false,
-                    			'message' => 'Booking Not Found'
-                		];
+                   			'status' => 421,
+                    		'success' => false,
+                    		'message' => 'Booking Not Found'
+                	   ];
 
-				$customerMessage = "Dear $name, you have successfully topped up KSh. $transaction_amount to your URBANTAP account, reference $bill_ref_no. Your can book for any of our service using the float in your account. Thank you.";
+				$customerMessage = "Dear $name, you have topped up KSh. $transaction_amount to your URBANTAP account, reference $bill_ref_no. Your can now book for any of our service. Thank you.";
 	
 				$sms->sendSMSMessage($msisdn, $customerMessage, $bill_ref_no);
 
-		                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+		        return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
 				
-
 			}
 
 			DB::insert("insert into payments(reference, date_received, booking_id, 
 		                payment_method, paid_by_name, paid_by_msisdn, amount, 
                                 received_payment, balance, status_id, created_at) 
-				values(:reference, now(), :booking_id, 
-                    		'MPESA', :paid_by_name, :paid_by_msisdn, :amount, 
+				values(:reference, now(), :booking_id, 'MPESA', :paid_by_name, :paid_by_msisdn, :amount, 
                     		:received_payment, :balance, :status_id, now())",['reference'=>$transaction_id,
 				'booking_id'=>$booking_id,'paid_by_name'=>$name,
 				'paid_by_msisdn'=>$msisdn,'amount'=>$booking_amount, 
@@ -346,7 +343,6 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer '.$token)); //setting custom header
 
         $curl_post_data = array(
-
           'BusinessShortCode' => env("SHORT_CODE"),
           'Password' => env("SHORT_CODE"),
           'Timestamp' => date('YmdHis'),
