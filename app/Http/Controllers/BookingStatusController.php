@@ -6,6 +6,7 @@ use App\Events\BookingStatusChanged;
 use App\Http\Requests\BookingStatusRequest;
 use App\User;
 use App\Utilities\DBStatus;
+use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 
@@ -30,7 +31,7 @@ class BookingStatusController extends BaseBookingController
         // Update booking
         $updated = DB::table('bookings')
             ->where(['id' => $bookingId = $request->get('booking_id')])
-            ->update(['status' => $status]);
+            ->update(['status_id' => $status]);
         if (!$updated) {
             return [
                 'success' => false,
@@ -42,17 +43,21 @@ class BookingStatusController extends BaseBookingController
         broadcast(new BookingStatusChanged([
             'booking_id' => $bookingId,
             'user_id'    => $userId = $request->get('user_id'),
-        ], $status, [
-            new User(['id' => $userId])
-        ]));
+        ], $status, User::query()->findOrFail($userId, ['id', 'first_name', 'last_name', 'email'])));
 
+        $sql = "select id, description from statuses where id=$status";
+        $results = RawQuery::query($sql);
+        $status_description = "Uknown";
+        if($results){
+           $status_description = $results[0]->description;
+        }
         return [
             'success' => true,
             'id'      => $request->get('booking_id'),
             'message' => 'Bookings updated OK',
             'data'    => [
                 'status_id'          => $status,
-                'status_description' => 'Description Here'
+                'status_description' => $status_description
             ]
         ];
     }

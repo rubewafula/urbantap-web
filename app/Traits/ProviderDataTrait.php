@@ -53,11 +53,24 @@ trait ProviderDataTrait
     /**
      * Get provider data
      *
-     * @param User $user
      * @param array $data
      * @return array
+     * @throws Exception
      */
-    abstract protected function getServiceProviderNotificationData(User $user, array $data): array;
+    protected function getServiceProviderNotificationData(array $data): array
+    {
+        $sp = $this->queryData($data);
+        return [
+            array_merge(
+                $data,
+                [
+                    'provider' => (array)$sp
+                ]
+            ),
+            new User(['id' => $sp->user_id]),
+            $this->getNotificationMessage($data)
+        ];
+    }
 
     /**
      * @param $data
@@ -75,4 +88,6 @@ trait ProviderDataTrait
         }
         throw new Exception("Failed to execute query");
     }
+
+    abstract protected function getNotificationMessage(array $data): string;
 }

@@ -9,7 +9,7 @@ use App\Notifications\BookingCreatedNotification;
 use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
-use App\User;
+use App\Traits\UserDataTrait;
 use Illuminate\Support\Arr;
 
 /**
@@ -18,7 +18,7 @@ use Illuminate\Support\Arr;
  */
 class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
 {
-    use SendSMSTrait, SendEmailTrait, ProviderDataTrait;
+    use SendSMSTrait, SendEmailTrait, ProviderDataTrait, UserDataTrait;
 
     /**
      * @var string
@@ -44,6 +44,7 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
      *
      * @param BookingCreated $event
      * @return void
+     * @throws \Exception
      */
     public function handle(BookingCreated $event)
     {
@@ -57,7 +58,7 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
             $data,
             $serviceProvider,
             $notification
-        ] = $this->getServiceProviderNotificationData($event->user, $data);
+        ] = $this->getServiceProviderNotificationData($data);
         // Send SP mail
         $this->send($data, $this->serviceProviderMailTemplate);
         // Notify SP
@@ -82,44 +83,11 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
     }
 
     /**
-     * User notification data
-     *
-     * @param User $user
      * @param array $data
-     * @return array
+     * @return string
      */
-    private function getUserNotificationData(User $user, array $data)
+    protected function getNotificationMessage(array $data): string
     {
-        return array_merge(
-            $data,
-            [
-                'to'                  => $user->email,
-                'subject'             => Arr::get($data, 'subject'),
-                'reference'           => Arr::get($data, 'booking_id'),
-                'user_id'             => $user->id,
-                'service_provider_id' => Arr::get($data, 'request.service_provider_id'),
-            ]
-        );
-    }
-
-    /**
-     * @param User $user
-     * @param array $data
-     * @return array
-     * @throws \Exception
-     */
-    protected function getServiceProviderNotificationData(User $user, array $data): array
-    {
-        $sp = $this->queryData($data);
-        return [
-            array_merge(
-                $data,
-                [
-                    'provider' => (array)$sp
-                ]
-            ),
-            new User(['id' => $sp->user_id]),
-            sprintf("BOOKING Request received from %s FOR %s Service ", $user->first_name, $sp->service_name)
-        ];
+        return sprintf("BOOKING Request received from %s FOR %s Service ", Arr::get($data, 'user.first_name'), Arr::get($data, 'provider.service_name'));
     }
 }
