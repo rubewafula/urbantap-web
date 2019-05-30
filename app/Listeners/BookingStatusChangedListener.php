@@ -10,9 +10,8 @@ use App\Notifications\BookingRejectedNotification;
 use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
-use App\User;
+use App\Traits\UserDataTrait;
 use App\Utilities\DBStatus;
-use Illuminate\Support\Facades\Notification;
 
 /**
  * Class BookingStatusChangedListener
@@ -20,15 +19,15 @@ use Illuminate\Support\Facades\Notification;
  */
 class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
 {
-    use SendEmailTrait, SendSMSTrait, ProviderDataTrait;
+    use SendEmailTrait, SendSMSTrait, ProviderDataTrait, UserDataTrait;
     /**
      * @var string
      */
-    private $userMailTemplate = "";
+    private $userMailTemplate = "booking.email.blade.html";
     /**
      * @var string
      */
-    private $serviceProviderMailTemplate = "";
+    private $serviceProviderMailTemplate = "booking.email.blade.html";
 
     /**
      * Create the event listener.
@@ -45,31 +44,56 @@ class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
      *
      * @param BookingStatusChanged $event
      * @return void
+     * @throws \Exception
      */
     public function handle(BookingStatusChanged $event)
     {
-        switch ($event->status) {
-            case DBStatus::BOOKING_ACCEPTED:
-                Notification::send($event->notifiable, new BookingAcceptedNotification($event->data));
-                break;
-            case DBStatus::BOOKING_REJECTED:
-                Notification::send($event->notifiable, new BookingRejectedNotification($event->data));
-                break;
+        // Send provider notification
+        if (in_array($event->status, [DBStatus::BOOKING_ACCEPTED, DBStatus::BOOKING_REJECTED])) {
+            $data = $this->getUserNotificationData($event->user, $event->data);
+            switch ($event->status) {
+                case DBStatus::BOOKING_ACCEPTED:
+                    $event->user->notify(new BookingAcceptedNotification($event->data));
+                    break;
+                case DBStatus::BOOKING_REJECTED:
+                    $event->user->notify(new BookingRejectedNotification($event->data));
+                    break;
+            }
+            $this->send($data, $this->userMailTemplate);
         }
     }
 
-
-
+    /**
+     * @return string
+     */
+    protected function getProviderFromClause()
+    {
+        return " from service_providers sp inner join provider_services ps on "
+            . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
+            . " inner join bookings b on b.provider_service_id = ps.id "
+            . "  where b.id = :booking_id ";
+    }
 
     /**
-     * Get provider data
+     * Query bindings
      *
-     * @param User $user
      * @param array $data
      * @return array
      */
-    protected function getServiceProviderNotificationData(User $user, array $data): array
+    protected function getProviderBindings(array $data): array
     {
-        // TODO: Implement getServiceProviderNotificationData() method.
+        return [
+            'booking_id' => $data['booking_id']
+        ];
+    }
+
+
+    /**
+     * @param array $data
+     * @return string
+     */
+    protected function getNotificationMessage(array $data): string
+    {
+        return "Booking status changed";
     }
 }

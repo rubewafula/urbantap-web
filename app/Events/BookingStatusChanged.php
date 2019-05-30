@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\User;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -22,22 +23,19 @@ class BookingStatusChanged
      */
     public $status;
 
-    /**
-     * @var array
-     */
-    public $notifiable = [];
+    public $user;
 
     /**
      * Create a new event instance.
      *
      * @param array $data
      * @param int $status
-     * @param array $notifiable
+     * @param User $user
      */
-    public function __construct(array $data, int $status, array $notifiable)
+    public function __construct(array $data, int $status, User $user)
     {
         $this->data = $data;
         $this->status = $status;
-        $this->notifiable = $notifiable;
+        $this->user = $user;
     }
 }
