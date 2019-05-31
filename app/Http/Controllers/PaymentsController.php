@@ -106,9 +106,11 @@ class PaymentsController extends Controller
                         . " from users u left join user_balance ub u.id =ub.user_id  "
                         . " where phone_no='" . $msisdn . "'"));
                 $running_balance = 0;
+                $email = null;
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
+                    $email = $user[0]->email;
                 } else {
                     $user_id = DB::table('users')->insertGetId(
                         ["name"       => $name,
@@ -194,7 +196,7 @@ class PaymentsController extends Controller
                             'transaction_id'  => $transaction_id,
                             'booking_time'    => $booking_time
                         ],
-                        new User(['id' => $user_id])
+                        new User(['id' => $user_id, 'email' => $email, 'phone_no' => $msisdn])
                     )
                 );
                 DB::commit();

@@ -26,12 +26,17 @@ trait UserDataTrait
         return array_merge(
             $data,
             [
-                'to'                  => $user->email,
+                'to'                  => $email = $user->email,
+                'msisdn'              => $msisdn = $user->phone_no,
                 'subject'             => Arr::get($data, 'subject'),
                 'reference'           => Arr::get($data, 'booking_id'),
                 'user_id'             => $user->id,
                 'service_provider_id' => Arr::get($data, 'request.service_provider_id', null),
-                'message'             => $this->getUserNotificationMessage($user, $data)
+                'message'             => $message = $this->getUserNotificationMessage($user, $data),
+                'sms'                 => [
+                    'recipients' => [$msisdn],
+                    'message'    => $message
+                ]
             ]
         );
     }

@@ -68,15 +68,19 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
         ]));
         // Send SMS
         if (!is_null($data['business_phone'])) {
-            $this->sms([
-                'recipients'          => [$data['business_phone']],
-                'message'             => "Booking Request. " . $data['service_name']
-                    . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
-                    . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
-                'reference'           => $data['booking_id'],
-                'user_id'             => $data['request']['user_id'],
-                'service_provider_id' => $data['request']['service_provider_id']
-            ]);
+            $this->sms(
+                array_merge(
+                    Arr::get($data, 'sms', ['recipients' => [$data['business_phone']]]),
+                    [
+                        'message'             => "Booking Request. " . $data['service_name']
+                            . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
+                            . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
+                        'reference'           => $data['booking_id'],
+                        'user_id'             => $data['request']['user_id'],
+                        'service_provider_id' => $data['request']['service_provider_id']
+                    ]
+                )
+            );
         }
     }
 

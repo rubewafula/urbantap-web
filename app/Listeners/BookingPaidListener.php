@@ -21,6 +21,7 @@ class BookingPaidListener extends BookingBaseListener
      * @var string
      */
     private $serviceProviderMailTemplate = "booking.email.blade.html";
+
     /**
      * Create the event listener.
      *
@@ -56,7 +57,7 @@ class BookingPaidListener extends BookingBaseListener
         ] = $this->getServiceProviderNotificationData($data);
         $serviceProvider->notify(new BookingPaidNotification($data));
         $this->send($data, $this->serviceProviderMailTemplate);
-        $this->sms($data);
+        $this->sms(Arr::get($data, 'sms'));
 
     }
 
@@ -122,6 +123,11 @@ class BookingPaidListener extends BookingBaseListener
         $userData = $this->getUserNotificationData($user, $data);
         $user->notify(new BookingPaidNotification($userData));
         $this->send($userData, $this->userMailTemplate);
-        $this->sms($data);
+        $this->sms(
+            array_merge(
+                Arr::get($userData, 'sms'),
+                Arr::only($userData, ['booking_id'])
+            )
+        );
     }
 }

@@ -65,7 +65,16 @@ trait ProviderDataTrait
                 $data,
                 [
                     'provider' => (array)$sp,
-                    'message'  => $this->getNotificationMessage($data)
+                    'message'  => $this->getNotificationMessage($data),
+                    'msisdn'   => $msisdn = $sp->{'business_phone'},
+                    'email'    => $sp->{'business_email'},
+                    'sms'      => array_merge(
+                        [
+                            'recipients' => [$msisdn],
+                            'message'    => $this->getNotificationMessage($data),
+                        ],
+                        $this->getProviderBindings($data)
+                    )
                 ]
             ),
             new User(['id' => $sp->user_id]),
