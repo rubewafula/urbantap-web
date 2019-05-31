@@ -103,7 +103,7 @@ class PaymentsController extends Controller
                 );
                 $user = DB::select(
                     DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance "
-                        . " from users u left join user_balance ub u.id =ub.user_id  "
+                        . " from users u left join user_balance ub on u.id =ub.user_id  "
                         . " where phone_no='" . $msisdn . "'"));
                 $running_balance = 0;
                 if (!empty($user)) {
