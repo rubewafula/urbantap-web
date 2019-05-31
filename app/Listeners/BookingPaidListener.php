@@ -89,8 +89,8 @@ class BookingPaidListener extends BookingBaseListener
         // Name, transaction amount, transaction id, amount to booking.
         $halfAmount = $this->getHalfAmount($data);
         $amountToBooking = $halfAmount - ($amount = Arr::get($data, 'amount'));
-        $message = "Dear %s, you have successfully paid KSh. %s for your booking, reference %s. Please pay at least KSh. %s to reserve your booking. Thank you.";
-        return sprintf($message, Arr::get($data, 'name'), $amount, Arr::get($data, 'transaction_id'), $amountToBooking);
+        $message = "Dear %s, Confirmed payment KSh. %s for booking, REF %s. Pay at least KSh. %s to reserve your booking. Thank you.";
+        return sprintf($message, Arr::get($data, 'first_name'), $amount, Arr::get($data, 'transaction_id'), $amountToBooking);
     }
 
 
