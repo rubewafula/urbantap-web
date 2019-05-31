@@ -1,35 +1,36 @@
-<?php  
+<?php
 namespace App\Utilities;
 
 use Illuminate\Support\Facades\Log;
 
-class Utils {
+class Utils
+{
 
-    static function loadTemplateData($template_data, $data){
+    static function loadTemplateData($template_data, $data)
+    {
 
-        Log::info("Data to Load ". print_r($data, 1) );
+        Log::info("Data to Load " . print_r($data, 1));
         $dd = [];
-        array_walk($data, function($value,$key) use (&$dd) {
-           Log::info("Last ITEM -Walk $key ==> " . print_r($value, 1));
-           if(is_array($value)){
-               array_walk($value, function($val,$k) use (&$dd) {
-                  $dd[$k] = $val;   
-               });
-           }else{
-             $dd[$key] = $value;
-           }
+        array_walk($data, function ($value, $key) use (&$dd) {
+            Log::info("Last ITEM -Walk $key ==> " . print_r($value, 1));
+            if (is_array($value)) {
+                array_walk($value, function ($val, $k) use (&$dd) {
+                    $dd[$k] = $val;
+                });
+            } else {
+                $dd[$key] = $value;
+            }
         });
-        Log::info("Last after walking  ". print_r($dd, 1));
+        Log::info("Last after walking  " . print_r($dd, 1));
 
 
         $patterns = array_keys($dd);
-        $keys=[];
-        array_walk($patterns, function($v, $k) use(&$keys){
+        $keys = [];
+        array_walk($patterns, function ($v, $k) use (&$keys) {
             $keys[] = '/\[\[(\s+)?' . $v . '(\s+)?\]\]/';
         });
 
-        return preg_replace($keys, 
-            array_values($dd), $template_data);
+        return preg_replace($keys, array_values($dd), $template_data);
 
 
     }

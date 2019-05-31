@@ -101,6 +101,13 @@ class PaymentsController extends Controller
 		if( $postData != null){
 
 			$rabbitMQ = new RabbitMQ();
+			$decoded = json_decode($postData);
+
+			if($decoded->BusinessShortCode == env("TIPS_TILL_NO")){
+
+				$publishResult = $rabbitMQ->publish($postData,  env("TIPS_QUEUE"));
+			}
+
 			$publishResult = $rabbitMQ->publish($postData,  env("RABBIT_MPESA_QUEUE"));
 
 			echo("Publishing OK ".$publishResult);
@@ -123,22 +130,17 @@ class PaymentsController extends Controller
 	        Log::info(print_r($payload,1));
 		$data = json_encode($payload);
 
-        	$httpRequest = curl_init('http://139.162.142.202:9000/confirm');
-	        //curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-        	//curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-	        //curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	        //curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data)));
+        $httpRequest = curl_init('http://139.162.142.202:9000/confirm');
 
 		curl_setopt($httpRequest, CURLOPT_NOBODY, true);
-	        curl_setopt($httpRequest, CURLOPT_POST, true);
-        	curl_setopt($httpRequest, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
-       		curl_setopt($httpRequest, CURLOPT_RETURNTRANSFER, 1);
-        	curl_setopt($httpRequest, CURLOPT_POSTFIELDS, "$data");
+	    curl_setopt($httpRequest, CURLOPT_POST, true);
+        curl_setopt($httpRequest, CURLOPT_TIMEOUT, 30); //timeout after 30 seconds
+       	curl_setopt($httpRequest, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($httpRequest, CURLOPT_POSTFIELDS, "$data");
 		curl_setopt($httpRequest, CURLOPT_HTTPHEADER, array('Content-Type: application/json','Content-Length: ' . strlen($data)));
-        	curl_setopt($httpRequest, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
+        curl_setopt($httpRequest, CURLOPT_USERAGENT, 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; .NET CLR 1.0.3705; .NET CLR 1.1.4322)');
 
         	$result = curl_exec($httpRequest);
-		//Log::info($result);
 		
 		Log::info("Got results from BAE Payment");
 
@@ -184,7 +186,7 @@ class PaymentsController extends Controller
 
 			Log::info("Now preparing the query to insert the MPESA Transaction");
 
-                        DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
+            DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
 				amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
 				VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
 				:mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,0)",
@@ -269,25 +271,24 @@ class PaymentsController extends Controller
 
 				Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
 				$out = [
-                   			 'status' => 421,
-                    			'success' => false,
-                    			'message' => 'Booking Not Found'
-                		];
+                   			'status' => 421,
+                    		'success' => false,
+                    		'message' => 'Booking Not Found'
+                	   ];
 
-				$customerMessage = "Dear $name, you have successfully topped up KSh. $transaction_amount to your URBANTAP account, reference $bill_ref_no. Your can book for any of our service using the float in your account. Thank you.";
+
+				$customerMessage = "Dear $name, you have topped up KSh. $transaction_amount to your URBANTAP account. Your can now book for any of our services. Thank you.";
 	
 				$sms->sendSMSMessage($msisdn, $customerMessage, $bill_ref_no);
 
-		                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+		        return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
 				
-
 			}
 
 			DB::insert("insert into payments(reference, date_received, booking_id, 
 		                payment_method, paid_by_name, paid_by_msisdn, amount, 
                                 received_payment, balance, status_id, created_at) 
-				values(:reference, now(), :booking_id, 
-                    		'MPESA', :paid_by_name, :paid_by_msisdn, :amount, 
+				values(:reference, now(), :booking_id, 'MPESA', :paid_by_name, :paid_by_msisdn, :amount, 
                     		:received_payment, :balance, :status_id, now())",['reference'=>$transaction_id,
 				'booking_id'=>$booking_id,'paid_by_name'=>$name,
 				'paid_by_msisdn'=>$msisdn,'amount'=>$booking_amount, 
@@ -374,7 +375,6 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer '.$token)); //setting custom header
 
         $curl_post_data = array(
-
           'BusinessShortCode' => env("SHORT_CODE"),
           'Password' => env("SHORT_CODE"),
           'Timestamp' => date('YmdHis'),
