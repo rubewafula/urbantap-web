@@ -433,7 +433,7 @@ class AuthController extends Controller
                 $tokenResult->token->expires_at
             )->toDateTimeString(),
             'user' => $user,
-	    'user_details' => $user->details
+	          'user_details' => $user->details
         ]);
     }
 

@@ -106,18 +106,11 @@ class BookingsController extends Controller
      * curl -i -XGET -H "content-type:application/json" -d '{"id":3}'
      * 'http://127.0.0.1:8000/api/bookings/user/booking-with-details/2'
      **/
-    public function getUserBookingWithDetails($user_id)
+    public function getUserBookingWithDetails(Request $request)
     {
-        $validator = Validator::make(['user_id' => $user_id],
-            ['user_id' => 'integer|exists:users,id|nullable']
-        );
-        if ($validator->fails()) {
-            $out = [
-                'success' => false,
-                'message' => $validator->messages()
-            ];
-            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-        }
+        $user = $request->user();
+        $user_id = $user_id;
+
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
         $query = "select b.id, b.service_provider_id, b.user_id, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
@@ -183,6 +176,7 @@ class BookingsController extends Controller
      **/
     public function getBookingDetails($id)
     {
+
         $validator = Validator::make(['id' => $id],
             ['id' => 'integer|exists:bookings,id|nullable']
         );
@@ -193,6 +187,7 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
+        
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
         $query = "select b.id, b.service_provider_id, b.user_id, "
