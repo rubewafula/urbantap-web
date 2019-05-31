@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\User;
 use App\Utilities\RawQuery;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
@@ -61,6 +62,7 @@ trait ProviderDataTrait
     protected function getServiceProviderNotificationData(array $data): array
     {
         $sp = $this->queryData($data);
+        Log::info("Found provider data", $data);
         return [
             array_merge(
                 $data,
@@ -89,14 +91,20 @@ trait ProviderDataTrait
      */
     protected function queryData($data): \stdClass
     {
-        $data = RawQuery::query(
-            $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
-            $this->getProviderBindings($data)
+        Log::info("Begin fetching provider information", $data);
+        $bindings = $this->getProviderBindings($data);
+        $query = $this->getProviderDataSelectStatement() . $this->getProviderFromClause();
+        Log::info("Query bindings", $bindings);
+        Log::info("Provider raw query", compact('query'));
+        $data = DB::select(
+            $query,
+            $bindings
         );
+        Log::info("Query result", $data);
         if (count($data)) {
             return $data[0];
         }
-        Log::error("No provider found", $this->getProviderBindings($data));
+        Log::error("No provider found", $bindings);
         throw new Exception("Failed to execute query");
     }
 

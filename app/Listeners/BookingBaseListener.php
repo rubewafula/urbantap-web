@@ -10,6 +10,7 @@ use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingBaseListener
@@ -38,6 +39,7 @@ abstract class BookingBaseListener implements ShouldSendMail, ShouldSendSMS
      */
     protected function getProviderBindings(array $data): array
     {
+        Log::info("Event data for bindings", $data);
         return [
             'booking_id' => $data['booking_id']
         ];
