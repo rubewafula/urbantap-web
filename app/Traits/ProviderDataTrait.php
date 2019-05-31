@@ -91,14 +91,16 @@ trait ProviderDataTrait
     protected function queryData($data): \stdClass
     {
         Log::info("Begin fetching provider information", $data);
+        $bindings = $this->getProviderBindings($data);
+        Log::info("Query bindings", $bindings);
         $data = RawQuery::query(
             $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
-            $this->getProviderBindings($data)
+            $bindings
         );
         if (count($data)) {
             return $data[0];
         }
-        Log::error("No provider found", $this->getProviderBindings($data));
+        Log::error("No provider found", $bindings);
         throw new Exception("Failed to execute query");
     }
 
