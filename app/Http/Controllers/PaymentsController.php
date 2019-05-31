@@ -3,23 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Events\BookingPaid;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Response;
-use Illuminate\Http\Request;
-
-
-use App\Utilities\RabbitMQ;
-use App\MpesaTransaction;
+use App\ServiceProvider;
 use App\Transaction;
 use App\User;
-use App\ServiceProvider;
-use App\Booking;
-use App\Status;
 use App\Utilities\DBStatus;
 use App\Utilities\HTTPCodes;
-use App\Utilities\SMS;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Response;
+
 
 class PaymentsController extends Controller
 {
@@ -102,8 +96,8 @@ class PaymentsController extends Controller
                     ]
                 );
                 $user = DB::select(
-                    DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance,email "
-                        . " from users u left join user_balance ub u.id =ub.user_id  "
+                    DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance, email "
+                        . " from users u left join user_balance ub on u.id =ub.user_id  "
                         . " where phone_no='" . $msisdn . "'"));
                 $running_balance = 0;
                 $email = null;
@@ -170,15 +164,15 @@ class PaymentsController extends Controller
                     return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
                 }
 
-                DB::insert("insert into payments (reference='" . $transaction_id . "', date_received=now(),
+                DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
 					booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
 					paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
 					received_payment='" . $transaction_amount . "', balance='" . $balance . "',
-					status_id='" . DBStatus::COMPLETE . "', created_at=now())");
+					status_id='" . DBStatus::COMPLETE . "', created_at=now()");
 
-                DB::insert("insert into booking_trails (booking_id='" . $bill_ref_no . "', 
+                DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
 					    status_id='" . DBStatus::BOOKING_PAID . "', 
-					    description='MPESA TRANSACTION', originator='MPESA', created_at=now())");
+					    description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
 
                 DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
 				 where id = '" . $bill_ref_no . "'");
