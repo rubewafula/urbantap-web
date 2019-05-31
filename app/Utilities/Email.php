@@ -28,35 +28,20 @@ class Email {
 
 	public function sendEmail($to, $bcc, $cc, $subject, $email, $attachments){
 
-		Log::info("Email Endpoint Called");
+		Log::info("Email Endpoint Called ");
 
         try{
 
             $this->mail->setFrom(env("MAIL_FROM_ADDRESS"), env("MAIL_FROM_NAME"));
 
-            if(!is_array($to)){
-
-                $to = [$to];
-            }
-
             foreach ($to as $recipient) {
-                $this->mail->addAddress($recipient["email"], $recipient["name"]);
-            }
-
-            if(!is_array($bcc)){
-
-                $bcc = [$bcc];
+                $this->mail->addAddress($recipient["email_address"], $recipient["name"]);
             }
             foreach ($bcc as $bcced) {
-                $this->mail->addBCC($bcced["email"]);
-            }
-
-            if(!is_array($cc)){
-
-                $cc = [$cc];
+                $this->mail->addBCC($bcced["email_address"]);
             }
             foreach ($cc as $cced) {
-                $this->mail->addCC($bcced["email"]);
+                $this->mail->addCC($bcced["email_address"]);
             }
 
             foreach ($attachments as $attachment) {

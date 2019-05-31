@@ -13,7 +13,7 @@ class EmailController extends Controller
 
 	public function sendEmail(Request $request){
 
-		$to = ["address"=>$request->to];
+		$to = ["email_address"=>$request->email_address];
 		$subject = $request->subject;
 		$email = $request->email;
 		$bcc = [];
