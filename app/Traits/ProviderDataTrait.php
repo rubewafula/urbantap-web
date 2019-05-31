@@ -61,6 +61,7 @@ trait ProviderDataTrait
     protected function getServiceProviderNotificationData(array $data): array
     {
         $sp = $this->queryData($data);
+        Log::info("Found provider data", $data);
         return [
             array_merge(
                 $data,
@@ -89,6 +90,7 @@ trait ProviderDataTrait
      */
     protected function queryData($data): \stdClass
     {
+        Log::info("Begin fetching provider information", $data);
         $data = RawQuery::query(
             $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
             $this->getProviderBindings($data)
