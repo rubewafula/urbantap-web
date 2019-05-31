@@ -15,14 +15,14 @@ class Email {
 
         $this->mail = new PHPMailer(true);
 
-        $mail->SMTPDebug = 2;                                      
-        $mail->isSMTP();                                            
-        $mail->Host       = env("MAIL_HOST");  
-        $mail->SMTPAuth   = true;                                   
-        $mail->Username   = env("MAIL_USERNAME");                     
-        $mail->Password   = env("MAIL_PASSWORD");                               
-        $mail->SMTPSecure = env("MAIL_ENCRYPTION");                                  
-        $mail->Port       = env("MAIL_PORT");
+        $this->mail->SMTPDebug = 2;                                      
+        $this->mail->isSMTP();                                            
+        $this->mail->Host       = env("MAIL_HOST");  
+        $this->mail->SMTPAuth   = true;                                   
+        $this->mail->Username   = env("MAIL_USERNAME");                     
+        $this->mail->Password   = env("MAIL_PASSWORD");                               
+        $this->mail->SMTPSecure = env("MAIL_ENCRYPTION");                                  
+        $this->mail->Port       = env("MAIL_PORT");
 	}
 
 
@@ -32,32 +32,32 @@ class Email {
 
         try{
 
-            $mail->setFrom(env("MAIL_FROM_ADDRESS"), env("MAIL_FROM_NAME"));
+            $this->mail->setFrom(env("MAIL_FROM_ADDRESS"), env("MAIL_FROM_NAME"));
 
             foreach ($to as $recipient) {
-                $mail->addAddress($recipient["address"], $recipient["name"]);
+                $this->mail->addAddress($recipient["address"], $recipient["name"]);
             }
 
             foreach ($bcc as $bcced) {
-                $mail->addBCC($bcced["address"]);
+                $this->mail->addBCC($bcced["address"]);
             }
 
             foreach ($cc as $cced) {
-                $mail->addCC($bcced["address"]);
+                $this->mail->addCC($bcced["address"]);
             }
 
             foreach ($attachments as $attachment) {
-                $mail->addAttachment($attachment["filename"]);
+                $this->mail->addAttachment($attachment["filename"]);
             }
 
-    		$mail->isHTML(true);                                 
-            $mail->Subject = $subject;
-            $mail->Body    = $email;
+    		$this->mail->isHTML(true);                                 
+            $this->mail->Subject = $subject;
+            $this->mail->Body    = $email;
 
-            $mail->send();
+            $this->mail->send();
 
         }catch (Exception $e) {
-            Log::info("Message could not be sent. Mailer Error: {$mail->ErrorInfo}");
+            Log::info("Message could not be sent. Mailer Error: {$this->mail->ErrorInfo}");
         }
 	}
 }
