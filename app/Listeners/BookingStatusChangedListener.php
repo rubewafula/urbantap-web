@@ -6,6 +6,7 @@ use App\Contracts\ShouldSendMail;
 use App\Contracts\ShouldSendSMS;
 use App\Events\BookingStatusChanged;
 use App\Notifications\BookingAcceptedNotification;
+use App\Notifications\BookingCancelledNotification;
 use App\Notifications\BookingRejectedNotification;
 use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
@@ -60,6 +61,13 @@ class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
                     break;
             }
             $this->send($data, $this->userMailTemplate);
+        } else {
+            [
+                $data,
+                $serviceProvider,
+                $notificationMessage
+            ] = $this->getServiceProviderNotificationData($event->data);
+            $serviceProvider->notify(new BookingCancelledNotification($data));
         }
     }
 
