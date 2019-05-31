@@ -52,14 +52,18 @@ class BookingPaidListener extends BookingBaseListener
         $this->sendUserNotification($event, $data);
 
         // Send service provider notifications
-        Log::info("Fetching provider information.", $data);
-        [
-            $data,
-            $serviceProvider,
-        ] = $this->getServiceProviderNotificationData($data);
-        $serviceProvider->notify(new BookingPaidNotification($data));
-        $this->send($data, $this->serviceProviderMailTemplate);
-        $this->sms(Arr::get($data, 'sms'));
+        try {
+            Log::info("Fetching provider information.", $data);
+            [
+                $data,
+                $serviceProvider,
+            ] = $this->getServiceProviderNotificationData($data);
+            $serviceProvider->notify(new BookingPaidNotification($data));
+            $this->send($data, $this->serviceProviderMailTemplate);
+            $this->sms(Arr::get($data, 'sms'));
+        } catch (\Exception $e) {
+            Log::info("Error", [$e->getMessage()]);
+        }
 
     }
 
