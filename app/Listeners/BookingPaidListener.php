@@ -6,6 +6,7 @@ use App\Events\BookingPaid;
 use App\Notifications\BookingPaidNotification;
 use App\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingPaidListener
@@ -51,6 +52,7 @@ class BookingPaidListener extends BookingBaseListener
         $this->sendUserNotification($event, $data);
 
         // Send service provider notifications
+        Log::info("Fetching provider information.", $data);
         [
             $data,
             $serviceProvider,
