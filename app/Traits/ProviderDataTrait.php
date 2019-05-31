@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\User;
 use App\Utilities\RawQuery;
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
@@ -93,7 +94,7 @@ trait ProviderDataTrait
         Log::info("Begin fetching provider information", $data);
         $bindings = $this->getProviderBindings($data);
         Log::info("Query bindings", $bindings);
-        $data = RawQuery::query(
+        $data = DB::select(
             $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
             $bindings
         );
