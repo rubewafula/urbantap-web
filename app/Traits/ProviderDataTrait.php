@@ -70,7 +70,7 @@ trait ProviderDataTrait
                     'provider' => (array)$sp,
                     'message'  => $this->getNotificationMessage($data),
                     'msisdn'   => $msisdn = $sp->{'business_phone'},
-                    'email'    => $sp->{'business_email'},
+                    'email_address'    => $sp->{'business_email'},
                     'sms'      => array_merge(
                         [
                             'recipients' => [$msisdn],
