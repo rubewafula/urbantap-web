@@ -64,11 +64,11 @@ trait ProviderDataTrait
             array_merge(
                 $data,
                 [
-                    'provider' => (array)$sp
+                    'provider' => (array)$sp,
+                    'message'  => $this->getNotificationMessage($data)
                 ]
             ),
             new User(['id' => $sp->user_id]),
-            $this->getNotificationMessage($data)
         ];
     }
 
@@ -89,5 +89,5 @@ trait ProviderDataTrait
         throw new Exception("Failed to execute query");
     }
 
-    abstract protected function getNotificationMessage(array $data): string;
+    abstract protected function getNotificationMessage(array $data): ?string;
 }
