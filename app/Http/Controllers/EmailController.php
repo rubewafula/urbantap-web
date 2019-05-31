@@ -13,6 +13,10 @@ class EmailController extends Controller
 
 	public function sendEmail(Request $request){
 
+		if(strlen($request->email_address) < 1){
+
+			return;
+		}
 		$to = ["email_address"=>$request->email_address];
 		$subject = $request->subject;
 		$email = $request->email;
