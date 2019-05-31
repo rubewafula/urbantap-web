@@ -13,7 +13,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
-
+use Exception;
 
 class PaymentsController extends Controller
 {
@@ -71,6 +71,15 @@ class PaymentsController extends Controller
             $last_name = $request->LastName;
 
             $name = $first_name . " " . $middle_name . " " . $last_name;
+
+            $transactionCheck = DB::select(
+             			DB::raw("select mpesa_code from mpesa_transactions 
+             				where mpesa_code='" . $transaction_id . "'"));
+
+            if (!empty($transactionCheck)) {
+
+            	throw new Exception("Duplicate Transaction reference");
+            }
 
             Log::info("Now preparing the query to insert the MPESA Transaction");
 
