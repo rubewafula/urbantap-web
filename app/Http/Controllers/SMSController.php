@@ -35,7 +35,7 @@ class SMSController extends Controller
         $outbox->save();
 
         $sms = new SMS();
-        $smsSent = $sms->sendSMSMessage($recipients, $message, $outbox->id);
+        $smsSent = $sms->sendSMSMessage($recipients, $message, "UT".$outbox->id);
 
         if($smsSent){
 
