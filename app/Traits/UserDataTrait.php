@@ -28,6 +28,7 @@ trait UserDataTrait
             $user->toArray(),
             [
                 'to'                  => $email = $user->email,
+                'email'               => $email,
                 'msisdn'              => $msisdn = $user->phone_no,
                 'subject'             => Arr::get($data, 'subject'),
                 'reference'           => Arr::get($data, 'booking_id'),
