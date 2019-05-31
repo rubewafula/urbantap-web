@@ -93,9 +93,11 @@ trait ProviderDataTrait
     {
         Log::info("Begin fetching provider information", $data);
         $bindings = $this->getProviderBindings($data);
+        $query = $this->getProviderDataSelectStatement() . $this->getProviderFromClause();
         Log::info("Query bindings", $bindings);
+        Log::info("Provider raw query", $query);
         $data = DB::select(
-            $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
+            $query,
             $bindings
         );
         Log::info("Query result", $data);
