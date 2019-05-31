@@ -38,7 +38,7 @@ class EmailController extends Controller
 
 		$mailerDaemon->sendEmail($to, $bcc, $cc, $subject, $email, $attachments);
 
-		Log::info("Email sent successfully to".$to." subject ".$subject);
+		Log::info("Email sent successfully to ".$request->email_address." subject ".$subject);
 	}
 }
 ?>
