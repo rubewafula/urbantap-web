@@ -97,6 +97,7 @@ trait ProviderDataTrait
             $this->getProviderDataSelectStatement() . $this->getProviderFromClause(),
             $bindings
         );
+        Log::info("Query result", $data);
         if (count($data)) {
             return $data[0];
         }
