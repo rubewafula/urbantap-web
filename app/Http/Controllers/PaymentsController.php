@@ -191,7 +191,16 @@ class PaymentsController extends Controller
                             'transaction_id'  => $transaction_id,
                             'booking_time'    => $booking_time
                         ],
-                        new User(['id' => $user_id, 'email' => $email, 'phone_no' => $msisdn])
+                        new User(
+                            array_merge(
+                                [
+                                    'id'       => $user_id,
+                                    'email'    => $email,
+                                    'phone_no' => $msisdn,
+                                ],
+                                compact('first_name', 'last_name', 'middle_name')
+                            )
+                        )
                     )
                 );
                 DB::commit();

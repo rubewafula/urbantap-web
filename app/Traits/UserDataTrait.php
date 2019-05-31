@@ -25,6 +25,7 @@ trait UserDataTrait
     {
         return array_merge(
             $data,
+            $user->toArray(),
             [
                 'to'                  => $email = $user->email,
                 'msisdn'              => $msisdn = $user->phone_no,
