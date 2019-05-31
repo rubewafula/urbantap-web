@@ -182,6 +182,7 @@ class BookingsController extends Controller
      **/
     public function getBookingDetails($id)
     {
+
         $validator = Validator::make(['id' => $id],
             ['id' => 'integer|exists:bookings,id|nullable']
         );
@@ -192,6 +193,7 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
+        
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
         $query = "select b.id, b.service_provider_id, b.user_id, "
