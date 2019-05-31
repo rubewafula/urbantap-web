@@ -202,42 +202,46 @@ class PaymentsController extends Controller
             } catch (\Exception $exception) {
                 Log::info("Exception", $exception->getTrace());
                 DB::rollBack();
+
+                return Response::json([
+                    'status'  => 500,
+                    'success' => false,
+                    'message' => 'Failed to process payment'
+                ], HTTPCodes::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            $customerMessage = "";
-            $serviceProviderMessage = "";
+//            $customerMessage = "";
+//            $serviceProviderMessage = "";
+//
+//            $smsReference = $invoice_number;
+//            $customerMsisdn = $msisdn;
+//
+//            $halfAmount = ceil($booking_amount / 2);
+//
+//            $sms = new SMS();
+//
+//            if ($balance <= $halfAmount) {
+//
+//                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $transaction_id. Your slot has been reserved for $booking_time. Thank you.";
+//
+//                $serviceProviderMessage = "Dear Service Provider, Booking reference number, $invoice_number has been reserved. Please note the booking time is $booking_time for this request.";
+//
+//                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
+//                $sms->sendSMSMessage($providerMsisdn, $serviceProviderMessage, $smsReference);
+//
+//            } else {
+//
+//                $amountToBooking = $halfAmount - $transaction_amount;
+//                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $invoice_number. Please pay at least KSh. $amountToBooking to reserve your booking. Thank you.";
+//
+//                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
+//            }
 
-            $smsReference = $invoice_number;
-            $customerMsisdn = $msisdn;
-
-            $halfAmount = ceil($booking_amount / 2);
-
-            $sms = new SMS();
-
-            if ($balance <= $halfAmount) {
-
-                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $transaction_id. Your slot has been reserved for $booking_time. Thank you.";
-
-                $serviceProviderMessage = "Dear Service Provider, Booking reference number, $invoice_number has been reserved. Please note the booking time is $booking_time for this request.";
-
-                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
-                $sms->sendSMSMessage($providerMsisdn, $serviceProviderMessage, $smsReference);
-
-            } else {
-
-                $amountToBooking = $halfAmount - $transaction_amount;
-                $customerMessage = "Dear $name, you have successfully paid KSh. $transaction_amount for your booking, reference $invoice_number. Please pay at least KSh. $amountToBooking to reserve your booking. Thank you.";
-
-                $sms->sendSMSMessage($customerMsisdn, $customerMessage, $smsReference);
-            }
-
-            $out = [
+            return Response::json([
                 'status'  => 201,
                 'success' => true,
                 'message' => 'MPESA Payment Received Successfully'
-            ];
-
-            return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+            ], HTTPCodes::HTTP_ACCEPTED);
 
         }
 
