@@ -243,9 +243,9 @@ class BookingsController extends Controller
     }
 
 
-    public function getUserBookings($user_id = null)
+    public function getUserBookings(Request $request)
     {
-        return $this->get($service_provider_id = null, $user_id = $user_id);
+        return $this->get($request, 1);
     }
 
 
@@ -258,7 +258,7 @@ class BookingsController extends Controller
      *
      * @return JSON
      */
-    public function get(Request $request)
+    public function get(Request $request, $client=false)
     {
 
         $user = $request->user();
@@ -269,10 +269,13 @@ class BookingsController extends Controller
         if (!is_numeric($page)) {
             $page = 1;
         }
+
+        $filter_col = $client == false ? " sp.user_id " : " u.id ";
+
         $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
-            . " b.booking_type, b.location, "
+            . " b.booking_type, b.location, sp.service_provider_name, "
             . " s.description as status_description, ps.description as "
             . " provider_service_description, ps.cost, ps.duration "
             . " from bookings b inner join statuses s on "
@@ -281,7 +284,7 @@ class BookingsController extends Controller
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id  where  sp.user_id = '" . $user_id . "' order by b.id desc";
+            . " u.id = b.user_id  where  $filter_col = '" . $user_id . "' order by b.id desc";
 
 
         $results = RawQuery::paginate($query, $page = $page);

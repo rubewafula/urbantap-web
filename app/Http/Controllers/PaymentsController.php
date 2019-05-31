@@ -103,13 +103,15 @@ class PaymentsController extends Controller
 			$rabbitMQ = new RabbitMQ();
 			$decoded = json_decode($postData);
 
-			if($decoded->BusinessShortCode == env("TIPS_TILL_NO")){
+			Log::info("Got request from business number ".$decoded->BusinessShortCode);
 
-				$publishResult = $rabbitMQ->publish($postData,  env("TIPS_QUEUE"));
+			if($decoded->BusinessShortCode == "731351"){
+
+				$publishResult = $rabbitMQ->publish($postData,  env("TIPS_MPESA_QUEUE"));
 			}
-
-			$publishResult = $rabbitMQ->publish($postData,  env("RABBIT_MPESA_QUEUE"));
-
+			else{
+				$publishResult = $rabbitMQ->publish($postData,  env("RABBIT_MPESA_QUEUE"));
+			}
 			echo("Publishing OK ".$publishResult);
 
 			Log::info("Message published to the queue successfully");
@@ -118,7 +120,6 @@ class PaymentsController extends Controller
 		}
 
 		echo '{"ResultCode": 0, "ResultDesc": "Accepted"}';
-
 	}
 
 

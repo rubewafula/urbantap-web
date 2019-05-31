@@ -174,9 +174,9 @@ Route::group([
 ], function () {
     Route::get('all', 'BookingsController@get');
     Route::get('service-providers/all/{id}', 'BookingsController@get');
-    Route::get('users/all/{id}', 'BookingsController@getUserBookings');
+    Route::get('user/all', 'BookingsController@getUserBookings');
     Route::get('details/{id}', 'BookingsController@getBookingDetails');
-    Route::get('user/booking-with-details',
+    Route::get('user/booking-with-details/{id}',
         'BookingsController@getUserBookingWithDetails');
     Route::get('provider/booking-with-details/{id}',
         'BookingsController@getProviderBookingWithDetails');
