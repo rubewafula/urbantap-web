@@ -34,16 +34,29 @@ class Email {
 
             $this->mail->setFrom(env("MAIL_FROM_ADDRESS"), env("MAIL_FROM_NAME"));
 
+            if(!is_array($to)){
+
+                $to = [$to];
+            }
+
             foreach ($to as $recipient) {
-                $this->mail->addAddress($recipient["address"], $recipient["name"]);
+                $this->mail->addAddress($recipient["email"], $recipient["name"]);
             }
 
+            if(!is_array($bcc)){
+
+                $bcc = [$bcc];
+            }
             foreach ($bcc as $bcced) {
-                $this->mail->addBCC($bcced["address"]);
+                $this->mail->addBCC($bcced["email"]);
             }
 
+            if(!is_array($cc)){
+
+                $cc = [$cc];
+            }
             foreach ($cc as $cced) {
-                $this->mail->addCC($bcced["address"]);
+                $this->mail->addCC($bcced["email"]);
             }
 
             foreach ($attachments as $attachment) {
