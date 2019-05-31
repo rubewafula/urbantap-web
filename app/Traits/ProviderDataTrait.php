@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\User;
 use App\Utilities\RawQuery;
 use Exception;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 /**
@@ -95,6 +96,7 @@ trait ProviderDataTrait
         if (count($data)) {
             return $data[0];
         }
+        Log::error("No provider found", $this->getProviderBindings($data));
         throw new Exception("Failed to execute query");
     }
 
