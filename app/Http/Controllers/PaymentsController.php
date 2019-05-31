@@ -176,33 +176,6 @@ class PaymentsController extends Controller
 
                 DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
 				 where id = '" . $bill_ref_no . "'");
-
-                // Notify user / service provider
-                broadcast(
-                    new BookingPaid(
-                        [
-                            'booking_id'      => $bill_ref_no,
-                            'amount'          => $transaction_amount,
-                            'running_balance' => $running_balance,
-                            'balance'         => $balance,
-                            'name'            => $name,
-                            'first_name'      => $first_name,
-                            'booking_amount'  => $booking_amount,
-                            'transaction_id'  => $transaction_id,
-                            'booking_time'    => $booking_time
-                        ],
-                        new User(
-                            array_merge(
-                                [
-                                    'id'       => $user_id,
-                                    'email'    => $email,
-                                    'phone_no' => $msisdn,
-                                ],
-                                compact('first_name', 'last_name', 'middle_name')
-                            )
-                        )
-                    )
-                );
                 DB::commit();
             } catch (\Exception $exception) {
                 Log::info("Error message", ['error' => $exception->getMessage()]);
@@ -214,6 +187,33 @@ class PaymentsController extends Controller
                     'message' => 'Failed to process payment'
                 ], HTTPCodes::HTTP_INTERNAL_SERVER_ERROR);
             }
+
+            // Notify user / service provider
+            broadcast(
+                new BookingPaid(
+                    [
+                        'booking_id'      => $bill_ref_no,
+                        'amount'          => $transaction_amount,
+                        'running_balance' => $running_balance,
+                        'balance'         => $balance,
+                        'name'            => $name,
+                        'first_name'      => $first_name,
+                        'booking_amount'  => $booking_amount,
+                        'transaction_id'  => $transaction_id,
+                        'booking_time'    => $booking_time
+                    ],
+                    new User(
+                        array_merge(
+                            [
+                                'id'       => $user_id,
+                                'email'    => $email,
+                                'phone_no' => $msisdn,
+                            ],
+                            compact('first_name', 'last_name', 'middle_name')
+                        )
+                    )
+                )
+            );
 
             return Response::json([
                 'status'  => 201,
