@@ -21,7 +21,9 @@ class SMSController extends Controller
 
         $service_provider_id = $request->service_provider_id;
         $user_id = $request->user_id;
-
+        if(empty($recipients)){
+            return json_encode(["status" => 400, "message" => 'Missing recipients ']);
+        }
         $outbox = new Outbox();
         $outbox->user_id = $user_id;
         $outbox->status_id = 0;
