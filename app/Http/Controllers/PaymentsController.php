@@ -199,7 +199,7 @@ class PaymentsController extends Controller
                 );
                 DB::commit();
             } catch (\Exception $exception) {
-                Log::info("Exception", $exception->getTrace());
+                Log::info("Error message", ['error' => $exception->getMessage()]);
                 DB::rollBack();
 
                 return Response::json([
