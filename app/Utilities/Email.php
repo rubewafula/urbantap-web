@@ -22,7 +22,7 @@ class Email {
         $mail->Username   = env("MAIL_USERNAME");                     
         $mail->Password   = env("MAIL_PASSWORD");                               
         $mail->SMTPSecure = env("MAIL_ENCRYPTION");                                  
-        $mail->Port       = env("MAIL_PORT")
+        $mail->Port       = env("MAIL_PORT");
 	}
 
 
