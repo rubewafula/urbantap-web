@@ -186,6 +186,7 @@ class PaymentsController extends Controller
                             'running_balance' => $running_balance,
                             'balance'         => $balance,
                             'name'            => $name,
+                            'first_name'      => $first_name,
                             'booking_amount'  => $booking_amount,
                             'transaction_id'  => $transaction_id,
                             'booking_time'    => $booking_time
