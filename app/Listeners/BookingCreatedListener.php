@@ -57,13 +57,11 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
         [
             $data,
             $serviceProvider,
-            $notification
         ] = $this->getServiceProviderNotificationData($data);
         // Send SP mail
         $this->send($data, $this->serviceProviderMailTemplate);
         // Notify SP
         $serviceProvider->notify(new BookingCreatedNotification([
-            'message'          => $notification,
             'user'             => $event->user->toArray(),
             'booking_id'       => $data['booking_id'],
             'service_provider' => $serviceProvider->toArray(),
@@ -86,7 +84,7 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
      * @param array $data
      * @return string
      */
-    protected function getNotificationMessage(array $data): string
+    protected function getNotificationMessage(array $data): ?string
     {
         return sprintf("BOOKING Request received from %s FOR %s Service ", Arr::get($data, 'user.first_name'), Arr::get($data, 'provider.service_name'));
     }

@@ -2,25 +2,18 @@
 
 namespace App\Listeners;
 
-use App\Contracts\ShouldSendMail;
-use App\Contracts\ShouldSendSMS;
 use App\Events\BookingStatusChanged;
 use App\Notifications\BookingAcceptedNotification;
 use App\Notifications\BookingCancelledNotification;
 use App\Notifications\BookingRejectedNotification;
-use App\Traits\ProviderDataTrait;
-use App\Traits\SendEmailTrait;
-use App\Traits\SendSMSTrait;
-use App\Traits\UserDataTrait;
 use App\Utilities\DBStatus;
 
 /**
  * Class BookingStatusChangedListener
  * @package App\Listeners
  */
-class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
+class BookingStatusChangedListener extends BookingBaseListener
 {
-    use SendEmailTrait, SendSMSTrait, ProviderDataTrait, UserDataTrait;
     /**
      * @var string
      */
@@ -65,34 +58,9 @@ class BookingStatusChangedListener implements ShouldSendMail, ShouldSendSMS
             [
                 $data,
                 $serviceProvider,
-                $notificationMessage
             ] = $this->getServiceProviderNotificationData($event->data);
             $serviceProvider->notify(new BookingCancelledNotification($data));
         }
-    }
-
-    /**
-     * @return string
-     */
-    protected function getProviderFromClause()
-    {
-        return " from service_providers sp inner join provider_services ps on "
-            . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
-            . " inner join bookings b on b.provider_service_id = ps.id "
-            . "  where b.id = :booking_id ";
-    }
-
-    /**
-     * Query bindings
-     *
-     * @param array $data
-     * @return array
-     */
-    protected function getProviderBindings(array $data): array
-    {
-        return [
-            'booking_id' => $data['booking_id']
-        ];
     }
 
 
