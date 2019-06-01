@@ -130,7 +130,6 @@ class PaymentsController extends Controller
                         . " from users u inner join bookings b on u.id = b.user_id  "
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
-
                 $email = null;
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
@@ -149,7 +148,7 @@ class PaymentsController extends Controller
                     }
                 } else {
                     Log::error("Booking not found", $request->all());
-                    throw new Exception("Booking not found.")
+                    throw new Exception("Booking not found.");
                 }
                 $balance = $running_balance + $transaction_amount;
 

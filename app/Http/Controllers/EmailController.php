@@ -13,6 +13,10 @@ class EmailController extends Controller
 
 	public function sendEmail(Request $request){
 
+		if(strlen($request->email_address) < 1){
+
+			return;
+		}
 		$to = ["email_address"=>$request->email_address];
 		$subject = $request->subject;
 		$email = $request->email;
@@ -38,7 +42,7 @@ class EmailController extends Controller
 
 		$mailerDaemon->sendEmail($to, $bcc, $cc, $subject, $email, $attachments);
 
-		Log::info("Email sent successfully to".$to." subject ".$subject);
+		Log::info("Email sent successfully to ".$request->email_address." subject ".$subject);
 	}
 }
 ?>
