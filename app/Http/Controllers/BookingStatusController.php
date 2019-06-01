@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\BookingStatusChanged;
 use App\Http\Requests\BookingStatusRequest;
+use App\Status;
 use App\User;
 use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
@@ -45,19 +46,13 @@ class BookingStatusController extends BaseBookingController
             'user_id'    => $userId = $request->get('user_id'),
         ], $status, User::query()->findOrFail($userId, ['id', 'first_name', 'last_name', 'email'])));
 
-        $sql = "select id, description from statuses where id=$status";
-        $results = RawQuery::query($sql);
-        $status_description = "Uknown";
-        if($results){
-           $status_description = $results[0]->description;
-        }
         return [
             'success' => true,
             'id'      => $request->get('booking_id'),
             'message' => 'Bookings updated OK',
             'data'    => [
                 'status_id'          => $status,
-                'status_description' => $status_description
+                'status_description' => Status::getDescription($status)
             ]
         ];
     }

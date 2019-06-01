@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\BookingPaid;
 use App\ServiceProvider;
+use App\Status;
 use App\Transaction;
 use App\User;
 use App\Utilities\DBStatus;
@@ -181,12 +182,6 @@ class PaymentsController extends Controller
                     $balance = $booking_amount - $transaction_amount;
                     $booking_time = $bookingRs[0]->booking_time;
 
-                    $serviceProvider = ServiceProvider::find($bookingRs[0]->service_provider_id);
-
-                    Log::info("Service Provider ID is " . $bookingRs[0]->service_provider_id);
-                    Log::info("User ID  for the Provider is " . $serviceProvider->user_id);
-
-                    $providerMsisdn = User::find($serviceProvider->user_id)->phone_no;
                 } else {
 
                     Log::info("Booking called back by MPESA Number $invoice_number NOT FOUND");
@@ -228,15 +223,17 @@ class PaymentsController extends Controller
             broadcast(
                 new BookingPaid(
                     [
-                        'booking_id'      => $bill_ref_no,
-                        'amount'          => $transaction_amount,
-                        'running_balance' => $running_balance,
-                        'balance'         => $balance,
-                        'name'            => $name,
-                        'first_name'      => $first_name,
-                        'booking_amount'  => $booking_amount,
-                        'transaction_id'  => $transaction_id,
-                        'booking_time'    => $booking_time
+                        'booking_id'         => $bill_ref_no,
+                        'amount'             => $transaction_amount,
+                        'running_balance'    => $running_balance,
+                        'balance'            => $balance,
+                        'name'               => $name,
+                        'first_name'         => $first_name,
+                        'booking_amount'     => $booking_amount,
+                        'transaction_id'     => $transaction_id,
+                        'booking_time'       => $booking_time,
+                        'status'             => DBStatus::BOOKING_PAID,
+                        'status_description' => Status::getDescription(DBStatus::BOOKING_PAID)
                     ],
                     new User(
                         array_merge(
