@@ -15,13 +15,29 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Response;
 use Exception;
 
+/**
+ * Class PaymentsController
+ * @package App\Http\Controllers
+ */
 class PaymentsController extends Controller
 {
 
+    /**
+     * @var
+     */
     private $rabbitMQConnection;
+    /**
+     * @var
+     */
     private $connection;
+    /**
+     * @var
+     */
     private $channel;
 
+    /**
+     * @param Request $request
+     */
     public function baeKopokopo(Request $request)
     {
 
@@ -46,6 +62,11 @@ class PaymentsController extends Controller
 
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws Exception
+     */
     public function MpesaPayment(Request $request)
     {
 
@@ -73,19 +94,19 @@ class PaymentsController extends Controller
             $name = $first_name . " " . $middle_name . " " . $last_name;
 
             $transactionCheck = DB::select(
-             			DB::raw("select mpesa_code from mpesa_transactions 
+                DB::raw("select mpesa_code from mpesa_transactions 
              				where mpesa_code='" . $transaction_id . "'"));
 
             if (!empty($transactionCheck)) {
 
-            	throw new Exception("Duplicate Transaction reference");
+                throw new Exception("Duplicate Transaction reference");
             }
 
             Log::info("Now preparing the query to insert the MPESA Transaction");
 
             //Run this in transaction :P
             try {
-
+                DB::beginTransaction();
                 DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
 					amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
 					VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
@@ -105,24 +126,30 @@ class PaymentsController extends Controller
                     ]
                 );
                 $user = DB::select(
-                    DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance, email "
-                        . " from users u left join user_balance ub on u.id =ub.user_id  "
-                        . " where phone_no='" . $msisdn . "'"));
-                
-                $running_balance = 0;
+                    DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance, email, phone_no "
+                        . " from users u inner join bookings b on u.id = b.user_id  "
+                        . " left join user_balance ub on u.id =ub.user_id  "
+                        . " where b.id = ?"), [$bill_ref_no]);
+
                 $email = null;
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
                     $email = $user[0]->email;
+                    if ($user[0]->phone_no !== $msisdn) {
+                        DB::table('users')->insert(
+                            [
+                                "name"       => $name,
+                                "user_group" => 4,
+                                "phone_no"   => $msisdn,
+                                "email"      => $msisdn . "@urbantap.co.ke",
+                                "password"   => Hash::make($msisdn)
+                            ]
+                        );
+                    }
                 } else {
-                    $user_id = DB::table('users')->insertGetId(
-                        ["name"       => $name,
-                         "user_group" => 4,
-                         "phone_no"   => $msisdn,
-                         "email"      => $msisdn . "@urbantap.co.ke",
-                         "password"   => Hash::make($msisdn)]
-                    );
+                    Log::error("Booking not found", $request->all());
+                    throw new Exception("Booking not found.")
                 }
                 $balance = $running_balance + $transaction_amount;
 
