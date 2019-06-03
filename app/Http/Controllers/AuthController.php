@@ -63,7 +63,7 @@ class AuthController extends Controller
         $phone = $valid_phone == 1 ? '254' . $p_matches[1] : null;
 
         $code = $this->generate_code();
-        $token_hash = substr(md5(uniqid(rand(), true)), 128, 128);
+        $token_hash = substr(md5(uniqid(rand(), true)), 0, 128);
 
         $user = User::Create([
             'first_name'         => $request->get('name'),

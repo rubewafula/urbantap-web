@@ -12,9 +12,10 @@ class EmailController extends Controller
 {
 
 	public function sendEmail(Request $request){
-
+		
+		Log::info("Got called from email consumer queue");
 		if(strlen($request->email_address) < 1){
-
+			Log::info("Request has no valid email addresses");
 			return;
 		}
 		$to = ["email_address"=>$request->email_address];
