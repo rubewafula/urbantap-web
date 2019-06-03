@@ -2,50 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Utilities\HTTPCodes;
-use App\Utilities\DBStatus;
-use Illuminate\Support\Facades\Validator;
-
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-use App\User;
-use App\Notifications\SignupActivate;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Response;    
-use  App\Rules\UserTelephone;
-use  App\Outbox;
-use GuzzleHttp\Client;
-use Exception;
-use App\UserPersonalDetail;
+use App\Events\UserRegistered;
+use App\Outbox;
 use App\ServiceProvider;
+use App\User;
+use App\UserPersonalDetail;
+use App\Utilities\DBStatus;
+use App\Utilities\HTTPCodes;
+use Carbon\Carbon;
+use Exception;
+use GuzzleHttp\Client;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Response;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
     public function signup(Request $request)
     {
-        
-        $validator = Validator::make($request->all(),[
-            'name' => 'required|string',
+        $validator = Validator::make($request->all(), [
+            'name'     => 'required|string',
             'username' => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
                 $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
                 //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if($valid_phone != 1 && $valid_email != 1){
-                 
+                if ($valid_phone != 1 && $valid_email != 1) {
+
                     $fail(':attribute should be valid email of phone number!');
                 }
 
-                $exists = $user= User::where('phone_no',$value)
-                  ->orWhere('email', $value)->first();
+                $exists = $user = User::where('phone_no', $value)
+                    ->orWhere('email', $value)->first();
 
-                if($exists){
-                  $fail(':attribute already taking kindly use a different value!');
+                if ($exists) {
+                    $fail(':attribute already taking kindly use a different value!');
                 }
-              }],
+            }],
             // 'required|string|email|unique:users',
             'password' => 'required|string|min:6',
         ]);
@@ -59,120 +54,79 @@ class AuthController extends Controller
         }
 
 
-        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username') , $p_matches);
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
 
-        $username =  $valid_phone != 1 ? $request->get('username') : '254' .$p_matches[1];
+        $username = $valid_phone != 1 ? $request->get('username') : '254' . $p_matches[1];
 
 
         $email = $valid_phone != 1 ? $request->get('username') : null;
-        $phone = $valid_phone == 1 ?  '254' .$p_matches[1] : null;
-        
+        $phone = $valid_phone == 1 ? '254' . $p_matches[1] : null;
+
         $code = $this->generate_code();
-        $token_hash = substr(md5(uniqid(rand(), true)), 128, 128); 
+        $token_hash = substr(md5(uniqid(rand(), true)), 128, 128);
 
         $user = User::Create([
-            'first_name' => $request->get('name'),
-            'email' => $email,
-            'phone_no' => $phone,
-            'password' => bcrypt($request->get('password')),
-            'verification_code'=> $code,
-            'confirmation_token'=> $token_hash,
-            'verification_sends'=>1,
-            
+            'first_name'         => $request->get('name'),
+            'email'              => $email,
+            'phone_no'           => $phone,
+            'password'           => bcrypt($request->get('password')),
+            'verification_code'  => $code,
+            'confirmation_token' => $token_hash,
+            'verification_sends' => 1,
+
 
         ]);
 
         $user->save();
 
-        $sms_message = "Dear " . $request->get('name') . "," . PHP_EOL . " Use $code to verify your URBANTAP account. STOP *456*9*5#";
-
-        $base_url = env('APP_URL', 'http:127.0.0.1:8000/');
-
-        $email_message = "Dear " . $request->get('name') . "," . PHP_EOL . PHP_EOL
-          . " Thank you for signing up with URBANTAP. From now on you will be able to order for our services on the fly. Feel free to peruse through the profiles on URBANTAP and identify the best service providers you can order from. " . PHP_EOL . PHP_EOL
-          . " Click on the below link to get your account verified and start tapping to freedom " . PHP_EOL
-          .  $base_url ."/account/verify/".$token_hash ." " . PHP_EOL . PHP_EOL
-          . " Cheers " .  PHP_EOL
-          . " URBANTAP - Tap to Freedom ";
-
-        $message = is_null($phone) ? $email_message : $sms_message;
-        $recipients = is_null($phone) ? $email : $phone;
-
-        //  Send  SMS  to verify  phone  number 
-        $outbox = Outbox::Create([
-          'user_id'=>$user->id,
-          'msisdn'=>$phone,
-          'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
-          'message'=> $message,
-          'status_id'=>DBStatus::SMS_NEW
-        ]);
-
-        //Send message over API
-        $payload = array(
-          'reference' => $outbox->id,
-          'message' => $message,
-          'recipients' => [$recipients]
-        );
-        $sms_url = env('SEND_SMS_URL', 'http://172.104.224.221:9173/api/sms/sendsms');
-        $email_url = env('SEND_EMAIL_URL', 'http://172.104.224.221:9173/api/sms/sendemail');
-
-        // Send Email/SMS via urbantap API
-        $api_url = is_null($phone) ? $email_url : $sms_url;
-        try{
-          $client = new Client();
-
-          $res = $client->request('POST', $api_url, [
-              'form_params' => $payload
-          ]);
-
-          if ($res->getStatusCode() == 200) { // 200 OK
-              $response_data = $res->getBody()->getContents();
-          }
-        }catch(Exception $ex){
-           //Do nothing until titus bring it on
-
-        }
+        // Fire event
+        broadcast(new UserRegistered(array_merge(
+            compact('token_hash', 'code', 'request'),
+            [
+                'message' => "Dear " . $request->get('name') . "," . PHP_EOL . " Use $code to verify your URBANTAP account. STOP *456*9*5#"
+            ]
+        ), $user));
 
         $out = [
-            'success' => TRUE,
+            'success'   => TRUE,
             'is_mobile' => !is_null($phone),
-            'user_id' => $user->id,
-            'message' => 'Registration successful'
+            'user_id'   => $user->id,
+            'message'   => 'Registration successful'
         ];
         return Response::json($out, HTTPCodes::HTTP_CREATED);
 
     }
 
-    public function checkLoginStatus(){
+    public function checkLoginStatus()
+    {
 
         $user = Auth::user();
         $results = [];
-        if($user == null){
-           $results = ["status"=>0];
-        }else{
-           $results = ["status"=>1, "user_id"=>$user->id];
+        if ($user == null) {
+            $results = ["status" => 0];
+        } else {
+            $results = ["status" => 1, "user_id" => $user->id];
         }
 
         return Response::json($results, HTTPCodes::HTTP_OK);
     }
 
 
-    public  function  resend_verification(Request  $request)
-          {
+    public function resend_verification(Request $request)
+    {
 
-        $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'username' => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
                 $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
                 //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if($valid_phone != 1 && $valid_email != 1){
-                 
+                if ($valid_phone != 1 && $valid_email != 1) {
+
                     $fail(':attribute should be valid email of phone number!');
                 }
-              }],
+            }],
         ]);
 
         if ($validator->fails()) {
@@ -183,145 +137,143 @@ class AuthController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
-        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username') , $p_matches);
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
 
-        $username =  $valid_phone != 1 ? $request->get('username') : '254' .$p_matches[1];
+        $username = $valid_phone != 1 ? $request->get('username') : '254' . $p_matches[1];
 
-        $user = User::where('phone_no',$username)->orWhere('email', $username)->first();
+        $user = User::where('phone_no', $username)->orWhere('email', $username)->first();
 
-        if(!$user){
+        if (!$user) {
             return response()->json([
-                    'message' => 'User not found',
-                    'success' => false,
+                'message' => 'User not found',
+                'success' => false,
 
-                  ], HTTPCodes::HTTP_NOT_FOUND);
+            ], HTTPCodes::HTTP_NOT_FOUND);
         }
 
 
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
 
-        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username') , $p_matches);
-
-        $username =  $valid_phone != 1 ? $request->get('username') : '254' .$p_matches[1];
+        $username = $valid_phone != 1 ? $request->get('username') : '254' . $p_matches[1];
 
 
         $email = $valid_phone != 1 ? $request->get('username') : null;
-        $phone = $valid_phone == 1 ?  '254' .$p_matches[1] : null;
-       
-       
-        $sms_message = "Dear " . $user->first_name . "," . PHP_EOL . " Use ". $user->verification_code . " to verify your URBANTAP account. STOP *456*9*5#";
+        $phone = $valid_phone == 1 ? '254' . $p_matches[1] : null;
+
+
+        $sms_message = "Dear " . $user->first_name . "," . PHP_EOL . " Use " . $user->verification_code . " to verify your URBANTAP account. STOP *456*9*5#";
 
         $base_url = env('APP_URL', 'http:127.0.0.1:8000/');
 
         $email_message = "Dear " . $user->first_name . "," . PHP_EOL . PHP_EOL
-          . " Thank you for signing up with URBANTAP. From now on you will be able to order for our services on the fly. Feel free to peruse through the profiles on URBANTAP and identify the best service providers you can order from. " . PHP_EOL . PHP_EOL
-          . " Click on the below link to get your account verified and start tapping to freedom " . PHP_EOL
-          .  $base_url ."auth/account/verify/".$user->confirmation_token ." " . PHP_EOL . PHP_EOL
-          . " Cheers " .  PHP_EOL
-          . " URBANTAP - Tap to Freedom ";
+            . " Thank you for signing up with URBANTAP. From now on you will be able to order for our services on the fly. Feel free to peruse through the profiles on URBANTAP and identify the best service providers you can order from. " . PHP_EOL . PHP_EOL
+            . " Click on the below link to get your account verified and start tapping to freedom " . PHP_EOL
+            . $base_url . "auth/account/verify/" . $user->confirmation_token . " " . PHP_EOL . PHP_EOL
+            . " Cheers " . PHP_EOL
+            . " URBANTAP - Tap to Freedom ";
 
         $message = is_null($phone) ? $email_message : $sms_message;
         $recipients = is_null($phone) ? $email : $phone;
 
         //  Send  SMS  to verify  phone  number 
         $outbox = Outbox::Create([
-          'user_id'=>$user->id,
-          'msisdn'=>$phone,
-          'email' =>$email,
-          'network' => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
-          'message'=> $message,
-          'status_id'=>DBStatus::SMS_NEW
+            'user_id'   => $user->id,
+            'msisdn'    => $phone,
+            'email'     => $email,
+            'network'   => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
+            'message'   => $message,
+            'status_id' => DBStatus::SMS_NEW
         ]);
 
         //Send message over API
         $payload = array(
-          'reference' => $outbox->id,
-          'message' => $message,
-          'recipients' => [$recipients]
+            'reference'  => $outbox->id,
+            'message'    => $message,
+            'recipients' => [$recipients]
         );
         $sms_url = env('SEND_SMS_URL', 'http://172.104.224.221:9173/api/sms/sendsms');
         $email_url = env('SEND_EMAIL_URL', 'http://172.104.224.221:9173/api/sms/sendemail');
 
         // Send Email/SMS via urbantap API
         $api_url = is_null($phone) ? $email_url : $sms_url;
-        try{
-          $client = new Client();
+        try {
+            $client = new Client();
 
-          $res = $client->request('POST', $api_url, [
-              'form_params' => $payload
-          ]);
+            $res = $client->request('POST', $api_url, [
+                'form_params' => $payload
+            ]);
 
-          if ($res->getStatusCode() == 200) { // 200 OK
-              $response_data = $res->getBody()->getContents();
-          }
-        }catch(Exception $ex){
-           //Do nothing until titus bring it on
+            if ($res->getStatusCode() == 200) { // 200 OK
+                $response_data = $res->getBody()->getContents();
+            }
+        } catch (Exception $ex) {
+            //Do nothing until titus bring it on
 
         }
 
         $out = [
-            'success' => TRUE,
+            'success'   => TRUE,
             'is_mobile' => !is_null($phone),
-            'user_id' => $user->id,
-            'message' => 'Verification resend success'
+            'user_id'   => $user->id,
+            'message'   => 'Verification resend success'
         ];
         return Response::json($out, HTTPCodes::HTTP_CREATED);
 
     }
 
 
-    public  function  verify_code($hash=null, Request  $request)
+    public function verify_code($hash = null, Request $request)
     {
-      $validator = Validator::make($request->all(),[
+        $validator = Validator::make($request->all(), [
             'verification_code' => 'string|min:4|max:12',
-            'username' => [function ($attribute, $value, $fail) {
+            'username'          => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
                 $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
                 //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if($valid_phone != 1 && $valid_email != 1){
-                 
+                if ($valid_phone != 1 && $valid_email != 1) {
+
                     $fail(':attribute should be valid email of phone number!');
                 }
-              }],
-      ]);
+            }],
+        ]);
 
 
-      if ($validator->fails()) {
+        if ($validator->fails()) {
             $out = [
                 'success' => false,
                 'message' => $validator->messages()
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-      }
+        }
 
-      $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
-      $phone = -1;
-      if($valid_phone == 1){
-        $phone = '254'. $p_matches[1];
-      }
-
-
-
-      $user= User::where('phone_no',$phone)
-          ->orWhere('email', $request->get('username'))->first();
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
+        $phone = -1;
+        if ($valid_phone == 1) {
+            $phone = '254' . $p_matches[1];
+        }
 
 
-      if(!empty($user) && ($user->verification_code == $request->get('verification_code') || 
-          $user->confirmation_token == $hash) ) {
-            $user->phone_verified=1;
-            $user->status_id= DBStatus::USER_ACTIVE;
+        $user = User::where('phone_no', $phone)
+            ->orWhere('email', $request->get('username'))->first();
+
+
+        if (!empty($user) && ($user->verification_code == $request->get('verification_code') ||
+                $user->confirmation_token == $hash)) {
+            $user->phone_verified = 1;
+            $user->status_id = DBStatus::USER_ACTIVE;
             #$user->verification_code= NULL;
             $user->save();
 
             $user->details = UserPersonalDetail::where('user_id', $user->id)->first();
 
-            if($user->details &&  $user->details->passport_photo == null){
-              $user->details->passport_photo = 
-              [
-                'media_type' => 'image',
-                'media_url'=>env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
-              ];
+            if ($user->details && $user->details->passport_photo == null) {
+                $user->details->passport_photo =
+                    [
+                        'media_type' => 'image',
+                        'media_url'  => env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
+                    ];
             }
 
             $tokenResult = $user->createToken('Personal Access Token');
@@ -329,43 +281,41 @@ class AuthController extends Controller
             $token->save();
 
             $out = [
-                'success'=>TRUE,
+                'success'      => TRUE,
                 'access_token' => $tokenResult->accessToken,
-                'token_type' => 'Bearer',
-                'expires_at' => Carbon::parse(
+                'token_type'   => 'Bearer',
+                'expires_at'   => Carbon::parse(
                     $tokenResult->token->expires_at
                 )->toDateTimeString(),
-                'user' => $user
+                'user'         => $user
             ];
 
             return Response::json($out, HTTPCodes::HTTP_OK);
 
-      } else{
+        } else {
 
-             $out = [
+            $out = [
                 'success' => FALSE,
-                'message' =>'Verification failed, please check supplied hash/code'
+                'message' => 'Verification failed, please check supplied hash/code'
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-      }
+        }
 
-      
 
     }
 
 
-    public  function  generate_code()
+    public function generate_code()
     {
-      $number =  rand(1000,9999);
+        $number = rand(1000, 9999);
 
-        if(User::where('verification_code',$number)->exists())
-        {
-            while (User::where('verification_code',$number)->exists() == TRUE) {
-                $number= rand(1000,9999);
-            } 
-          return  $number;
-        }else{
-         return  $number;
+        if (User::where('verification_code', $number)->exists()) {
+            while (User::where('verification_code', $number)->exists() == TRUE) {
+                $number = rand(1000, 9999);
+            }
+            return $number;
+        } else {
+            return $number;
         }
 
     }
@@ -373,67 +323,67 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => [function ($attribute, $value, $fail) {
+            'username'    => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
                 $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
                 //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if($valid_phone != 1 && $valid_email != 1){
-                 
+                if ($valid_phone != 1 && $valid_email != 1) {
+
                     $fail(':attribute should be valid email of phone number!');
                 }
-              }],
-            'password' => 'required|string',
-            'remember_me'=>'nullable|boolean'
+            }],
+            'password'    => 'required|string',
+            'remember_me' => 'nullable|boolean'
         ]);
 
-        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username') , $p_matches);
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
 
-        if($valid_phone != 1 ){
-            $credentials = ['email' =>$request->get('username'), 'password' => $request->get('password')];
+        if ($valid_phone != 1) {
+            $credentials = ['email' => $request->get('username'), 'password' => $request->get('password')];
 
         } else {
-          $phone = '254' .$p_matches[1];
-           $credentials = ['phone_no' =>$phone, 'password' => $request->get('password')];
+            $phone = '254' . $p_matches[1];
+            $credentials = ['phone_no' => $phone, 'password' => $request->get('password')];
         }
 
-        if(!Auth::attempt($credentials)){
+        if (!Auth::attempt($credentials)) {
             return response()->json([
-                'success' =>false,
+                'success' => false,
                 'message' => 'Invalid credentials, please check your username and password'
             ], HTTPCodes::HTTP_UNAUTHORIZED);
         }
 
-        $user = Auth::user(); 
+        $user = Auth::user();
         $user->details = UserPersonalDetail::where('user_id', $user->id)->first();
 
-        if($user->details &&  $user->details->passport_photo == null){
-          $user->details->passport_photo = 
-          [
-            'media_type' => 'image',
-            'media_url'=>env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
-          ];
+        if ($user->details && $user->details->passport_photo == null) {
+            $user->details->passport_photo =
+                [
+                    'media_type' => 'image',
+                    'media_url'  => env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
+                ];
         }
 
         $user->service_provider = ServiceProvider::where('user_id', $user->id)->first();
 
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
-        if ($request->remember_me){
-           $token->expires_at = Carbon::now()->addWeeks(1);
+        if ($request->remember_me) {
+            $token->expires_at = Carbon::now()->addWeeks(1);
         }
         $token->save();
 
         return response()->json([
-            'success'=>true,
+            'success'      => true,
             'access_token' => $tokenResult->accessToken,
-            'token_type' => 'Bearer',
-            'expires_at' => Carbon::parse(
+            'token_type'   => 'Bearer',
+            'expires_at'   => Carbon::parse(
                 $tokenResult->token->expires_at
             )->toDateTimeString(),
-            'user' => $user,
-	          'user_details' => $user->details
+            'user'         => $user,
+            'user_details' => $user->details
         ]);
     }
 

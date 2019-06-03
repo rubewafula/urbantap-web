@@ -21,6 +21,9 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\BookingPaid'          => [
             'App\Listeners\BookingPaidListener',
         ],
+        'App\Events\UserRegistered'          => [
+            'App\Listeners\UserRegisteredListener',
+        ],
     ];
 
     /**
