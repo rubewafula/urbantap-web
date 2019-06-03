@@ -83,7 +83,8 @@ class AuthController extends Controller
         broadcast(new UserRegistered(array_merge(
             compact('token_hash', 'code'),
             [
-                'message' => "Dear " . $request->get('name') . "," . PHP_EOL . " Use $code to verify your URBANTAP account. STOP *456*9*5#"
+                'message' => "Dear " . $request->get('name') . "," . PHP_EOL . " Use $code to verify your URBANTAP account. STOP *456*9*5#",
+                'subject' => sprintf('Welcome to %s', config('app.name'))
             ]
         ), $user));
 
