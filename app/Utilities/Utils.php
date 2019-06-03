@@ -2,6 +2,7 @@
 namespace App\Utilities;
 
 use Illuminate\Support\Facades\Log;
+use \Exception;
 
 class Utils
 {
@@ -30,8 +31,15 @@ class Utils
             $keys[] = '/\[\[(\s+)?' . $v . '(\s+)?\]\]/';
         });
 
-        return preg_replace($keys, array_values($dd), $template_data);
+        $html= preg_replace($keys, array_values($dd), $template_data);
 
+        $confirm_rex = "/\[\[(\s\+)?[\w-]+(\s\+)?\]\]/";
+        
+        if(preg_match_all($confirm_rex, $html)){
+           throw new Exception('Email template not properly completed. ');
+        }
+
+        return $html;
 
     }
 
