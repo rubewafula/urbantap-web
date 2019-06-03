@@ -38,7 +38,7 @@ class AuthController extends Controller
                     ->orWhere('email', $value)->first();
 
                 if ($exists) {
-                    $fail(':attribute already taking kindly use a different value!');
+                    $fail(':attribute already taken, kindly use a different value!');
                 }
             }],
             // 'required|string|email|unique:users',
