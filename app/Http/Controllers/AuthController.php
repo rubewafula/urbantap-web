@@ -81,7 +81,7 @@ class AuthController extends Controller
 
         // Fire event
         broadcast(new UserRegistered(array_merge(
-            compact('token_hash', 'code', 'request'),
+            compact('token_hash', 'code'),
             [
                 'message' => "Dear " . $request->get('name') . "," . PHP_EOL . " Use $code to verify your URBANTAP account. STOP *456*9*5#"
             ]
