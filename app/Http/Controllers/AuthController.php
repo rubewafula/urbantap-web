@@ -113,7 +113,6 @@ class AuthController extends Controller
 
     public function resend_verification(Request $request)
     {
-
         $validator = Validator::make($request->all(), [
             'username' => [function ($attribute, $value, $fail) {
                 //valid phone
@@ -355,15 +354,6 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-        $user->details = UserPersonalDetail::where('user_id', $user->id)->first();
-
-        if ($user->details && $user->details->passport_photo == null) {
-            $user->details->passport_photo =
-                [
-                    'media_type' => 'image',
-                    'media_url'  => env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
-                ];
-        }
 
         $user->service_provider = ServiceProvider::where('user_id', $user->id)->first();
 

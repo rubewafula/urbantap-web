@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\User;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -39,12 +40,26 @@ class FacebookAuthController extends Controller
 
     /**
      * @param Request $request
+     * @return array
      */
     public function store(Request $request)
     {
         Log::info("Facebook auth body", $request->toArray());
         $token = $this->getAccessToken($request->code);
-        $profile = $this->getUserProfile(Arr::get($token,'access_token'));
+        $profile = $this->getUserProfile(Arr::get($token, 'access_token'));
+
+        $user = User::query()->firstOrCreate(Arr::except($profile, ['id', 'name']), [
+            'password' => ''
+        ]);
+        if (!$user->verified) {
+            $user->update(['verified' => true]);
+        }
+        return [
+            'access_token' => $user->createToken("Personal")->accessToken,
+            'success'      => true,
+            'user'         => $user,
+            'user_details' => $user->details
+        ];
     }
 
     /**
