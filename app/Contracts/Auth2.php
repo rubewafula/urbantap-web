@@ -26,5 +26,5 @@ interface Auth2
      * @param string $token
      * @return array
      */
-    public function getUserProfile(string $token): array;
+    public function getUserProfile(string $token = null): array;
 }

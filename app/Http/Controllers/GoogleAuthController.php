@@ -19,18 +19,17 @@ class GoogleAuthController extends Auth2Controller
      */
     protected $accessTokenUrl = 'https://www.googleapis.com/oauth2/v4/token';
 
-    /**
-     * @var string
-     */
-    protected $profileUrl = 'https://www.googleapis.com/plus/v1/people/me/openIdConnect';
+    private $googleClient;
 
     /**
      * GoogleAuthController constructor.
      * @param Client $client
+     * @throws \Google_Exception
      */
     public function __construct(Client $client)
     {
         parent::__construct($client);
+        $this->googleClient = $this->getGoogleClient();
     }
 
     /**
@@ -43,12 +42,9 @@ class GoogleAuthController extends Auth2Controller
     public function getAccessToken(Request $request): array
     {
         Log::info("Google auth request", $request->toArray());
-        $client = $this->getGoogleClient();
-        $client->setRedirectUri($request->input('redirectUri'));
-        $token = $client->fetchAccessTokenWithAuthCode($request->input('code'));
+        $this->googleClient->setRedirectUri($request->input('redirectUri'));
+        $token = $this->googleClient->fetchAccessTokenWithAuthCode($request->input('code'));
         Log::info("Access token Result", $token);
-        $idToken = $client->verifyIdToken();
-        Log::info("ID Token", compact('idToken'));
         return $token;
     }
 
@@ -57,17 +53,18 @@ class GoogleAuthController extends Auth2Controller
      *
      * @param string $token
      * @return array
-     * @throws \GuzzleHttp\Exception\GuzzleException
+     * @throws \Exception
      */
-    public function getUserProfile(string $token): array
+    public function getUserProfile(string $token = null): array
     {
-        $profileResponse = $this->client->request('GET', $this->profileUrl, [
-            'headers' => array('Authorization' => 'Bearer ' . $token)
-        ]);
-        $profile = json_decode($profileResponse->getBody(), true);
+        $profile = $this->googleClient->verifyIdToken();
+        if (!$profile)
+            throw new \Exception("User profile not found");
         Log::info("Google profile", $profile);
         return [
-            'first_name' => Arr::get($profile, 'name'),
+            'first_name' => Arr::get($profile, 'given_name'),
+            'last_name'  => Arr::get($profile, 'family_name'),
+            'picture'    => Arr::get($profile, 'picture'),
             'email'      => Arr::get($profile, 'email')
         ];
     }

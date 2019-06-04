@@ -25,7 +25,7 @@ class FacebookAuthController extends Auth2Controller
      * @param string $token
      * @return array
      */
-    public function getUserProfile(string $token): array
+    public function getUserProfile(string $token = null): array
     {
         $fields = 'id,email,first_name,last_name,link,name';
         $response = $this->client->get($this->profileUrl, [
