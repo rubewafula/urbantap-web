@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Google_Client;
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -16,7 +17,7 @@ class GoogleAuthController extends Auth2Controller
     /**
      * @var string
      */
-    protected $accessTokenUrl = 'https://accounts.google.com/o/oauth2/token';
+    protected $accessTokenUrl = 'https://www.googleapis.com/oauth2/v4/token';
 
     /**
      * @var string
@@ -37,23 +38,16 @@ class GoogleAuthController extends Auth2Controller
      *
      * @param Request $request
      * @return array
+     * @throws \Google_Exception
      */
     public function getAccessToken(Request $request): array
     {
         Log::info("Google auth request", $request->toArray());
-        $params = [
-            'code'          => $request->input('code'),
-            'client_id'     => $request->input('clientId'),
-            'client_secret' => config('services.google.secret'),
-            'redirect_uri'  => $request->input('redirectUri'),
-            'grant_type'    => 'authorization_code',
-        ];
-        Log::info("Google auth form params", $params);
-        $response = $this->client->post($this->accessTokenUrl, ['form_params' => $params]);
-        $accessReponse = json_decode($response->getBody(), true);
-        Log::info("Access token response", $accessReponse);
-        return $accessReponse;
-
+        $client = $this->getGoogleClient();
+        $client->setRedirectUri($request->input('redirectUri'));
+        $token = $client->fetchAccessTokenWithAuthCode($request->input('code'));
+        Log::info("Access token Result", $token);
+        return $token;
     }
 
     /**
@@ -74,5 +68,16 @@ class GoogleAuthController extends Auth2Controller
             'first_name' => Arr::get($profile, 'name'),
             'email'      => Arr::get($profile, 'email')
         ];
+    }
+
+    /**
+     * @throws \Google_Exception
+     */
+    private function getGoogleClient()
+    {
+        $client = new Google_Client();
+        $client->setAuthConfig(storage_path('google-credentials.json'));
+        $client->setScopes('email');
+        return $client;
     }
 }
