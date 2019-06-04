@@ -45,7 +45,7 @@ class FacebookAuthController extends Controller
     public function store(Request $request)
     {
         Log::info("Facebook auth body", $request->toArray());
-        $token = $this->getAccessToken($request->code);
+        $token = $this->getAccessToken($request);
         $profile = $this->getUserProfile(Arr::get($token, 'access_token'));
         $user = User::query()->firstOrCreate(Arr::only($profile, ['email']), array_merge(
             Arr::except($profile, ['id', 'name']),
@@ -84,15 +84,15 @@ class FacebookAuthController extends Controller
     }
 
     /**
-     * @param string $code
+     * @param Request $request
      * @return array
      */
-    private function getAccessToken(string $code): array
+    private function getAccessToken(Request $request): array
     {
         $query = [
-            'code'          => $code,
-            'client_id'     => config('services.facebook.client_id'),
-            'redirect_uri'  => config('services.facebook.redirect_uri'),
+            'code'          => $request->code,
+            'client_id'     => $request->clientId,
+            'redirect_uri'  => $request->redirectUri,
             'client_secret' => config('services.facebook.secret')
         ];
         Log::info("Computed params for authorisation token", $query);
