@@ -42,7 +42,9 @@ class FacebookAuthController extends Controller
     public function store(Request $request)
     {
         Log::info("Facebook auth body", $request->toArray());
-        $this->getUserProfile($request->code);
+        if ($request->has('code')) {
+            $this->getAccessToken($request->code);
+        }
     }
 
     /**
