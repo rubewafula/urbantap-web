@@ -37,6 +37,10 @@ return [
     'facebook' => [
         'client_id' => env('FACEBOOK_CLIENT_ID', '339418636721296'),
         'secret'    => env('FACEBOOK_SECRET', 'ff836a9cba72cd8fd58cbf011a739ae5'),
+    ],
+    'google'   => [
+        'client_id' => env('GOOGLE_CLIENT_ID', '787559627869-cun3uirfqe1jfnll87ard849190fo2l3.apps.googleusercontent.com'),
+        'secret'    => env('GOOGLE_SECRET', 'sf4anpcBADzlGUYtn9EyLC39'),
     ]
 
 ];
