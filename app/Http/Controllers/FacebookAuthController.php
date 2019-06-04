@@ -47,11 +47,12 @@ class FacebookAuthController extends Controller
         Log::info("Facebook auth body", $request->toArray());
         $token = $this->getAccessToken($request->code);
         $profile = $this->getUserProfile(Arr::get($token, 'access_token'));
-        $params = Arr::except($profile, ['id', 'name']);
-        Log::info("Values to run against", $params);
-        $user = User::query()->firstOrCreate($params, [
-            'password' => ''
-        ]);
+        $user = User::query()->firstOrCreate(Arr::only($profile, ['email']), array_merge(
+            Arr::except($profile, ['id', 'name']),
+            [
+                'password' => ''
+            ]
+        ));
         if (!$user->verified) {
             $user->update(['verified' => true]);
         }
