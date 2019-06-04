@@ -54,6 +54,7 @@ class FacebookAuthController extends Controller
             ]
         ));
         if (!$user->verified) {
+            Log::info("Verify account", $user->toArray());
             $user->update(['verified' => true]);
         }
         return [

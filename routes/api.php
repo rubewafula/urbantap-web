@@ -28,7 +28,7 @@ Route::group([
     });
 
     // Facebook Auth
-    Route::get('facebook', 'FacebookAuthController@store');
+    Route::post('facebook', 'FacebookAuthController@store');
 });
 
 /** crude before service request can be done **/
