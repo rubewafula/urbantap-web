@@ -47,6 +47,8 @@ class GoogleAuthController extends Auth2Controller
         $client->setRedirectUri($request->input('redirectUri'));
         $token = $client->fetchAccessTokenWithAuthCode($request->input('code'));
         Log::info("Access token Result", $token);
+        $idToken = $client->verifyIdToken();
+        Log::info("ID Token", compact('idToken'));
         return $token;
     }
 
