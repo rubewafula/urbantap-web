@@ -21,7 +21,7 @@ class UserRegisteredListener implements ShouldSendMail, ShouldSendSMS
     /**
      * @var string
      */
-    private $userMailTemplate = "booking.email.blade.html";
+    private $userMailTemplate = "general.email.blade.html";
 
     /**
      * Create the event listener.
