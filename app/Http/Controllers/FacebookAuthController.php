@@ -21,6 +21,10 @@ class FacebookAuthController extends Controller
      * @var string
      */
     private $accessTokenUrl = 'https://graph.facebook.com/v3.3/oauth/access_token';
+    /**
+     * @var string
+     */
+    private $profileUrl = 'https://graph.facebook.com/v3.3/me';
 
     /**
      * FacebookAuthController constructor.
@@ -38,10 +42,23 @@ class FacebookAuthController extends Controller
     public function store(Request $request)
     {
         Log::info("Facebook auth body", $request->toArray());
-        if ($request->has('code')) {
-            $this->getAccessToken($request);
-        } else
-            Log::info("Facebook Redirect info", $request->all());
+        $this->getUserProfile($request->code);
+    }
+
+    /**
+     * @param string $token
+     */
+    private function getUserProfile(string $token)
+    {
+        $fields = 'id,email,first_name,last_name,link,name';
+        $response = $this->client->get($this->profileUrl, [
+            'query' => [
+                'access_token' => $token,
+                'fields'       => $fields
+            ]
+        ]);
+        $profile = json_decode($response->getBody(), true);
+        Log::info("Facebook user profile", $profile);
     }
 
     /**
