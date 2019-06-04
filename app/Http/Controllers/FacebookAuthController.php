@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use GuzzleHttp\Client;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -42,9 +43,8 @@ class FacebookAuthController extends Controller
     public function store(Request $request)
     {
         Log::info("Facebook auth body", $request->toArray());
-        if ($request->has('code')) {
-            $this->getAccessToken($request->code);
-        }
+        $token = $this->getAccessToken($request->code);
+        $profile = $this->getUserProfile(Arr::get($token,'access_token'));
     }
 
     /**
@@ -65,8 +65,9 @@ class FacebookAuthController extends Controller
 
     /**
      * @param string $code
+     * @return array
      */
-    private function getAccessToken(string $code)
+    private function getAccessToken(string $code): array
     {
         $query = [
             'code'          => $code,
@@ -77,6 +78,7 @@ class FacebookAuthController extends Controller
         Log::info("Computed params for authorisation token", $query);
         $response = $this->client->get($this->accessTokenUrl, compact('query'));
         $accessToken = json_decode($response->getBody(), true);
-        Log::info("Facebook Response", compact('accessToken'));
+        Log::info("Facebook Response", $accessToken);
+        return $accessToken;
     }
 }
