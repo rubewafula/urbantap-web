@@ -73,8 +73,6 @@ class AuthController extends Controller
             'verification_code'  => $code,
             'confirmation_token' => $token_hash,
             'verification_sends' => 1,
-
-
         ]);
 
         $user->save();

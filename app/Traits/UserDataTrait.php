@@ -36,7 +36,7 @@ trait UserDataTrait
                 'service_provider_id' => Arr::get($data, 'request.service_provider_id', null),
                 'message'             => $message = $this->getUserNotificationMessage($user, $data),
                 'sms'                 => [
-                    'recipients' => [$msisdn],
+                    'recipients' => $msisdn ? [$msisdn] : [],
                     'message'    => $message
                 ]
             ]

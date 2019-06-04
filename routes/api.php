@@ -26,6 +26,9 @@ Route::group([
         Route::get('logout', 'AuthController@logout');
         Route::get('user', 'AuthController@user');
     });
+
+    // Facebook Auth
+    Route::get('facebook', 'FacebookAuthController@store');
 });
 
 /** crude before service request can be done **/

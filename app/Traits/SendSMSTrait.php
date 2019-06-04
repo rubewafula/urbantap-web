@@ -5,6 +5,7 @@ namespace App\Traits;
 
 
 use App\Utilities\RabbitMQ;
+use Illuminate\Support\Arr;
 
 /**
  * Trait SendSMSTrait
@@ -17,6 +18,7 @@ trait SendSMSTrait
      */
     public function sms(array $data)
     {
-        (new RabbitMQ())->publish($data, env('SMS_MESSAGE_QUEUE'), env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
+        if (count(Arr::get($data, 'recipients', [])) )
+            (new RabbitMQ())->publish($data, env('SMS_MESSAGE_QUEUE'), env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
     }
 }
