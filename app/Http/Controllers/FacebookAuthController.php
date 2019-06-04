@@ -64,8 +64,9 @@ class FacebookAuthController extends Controller
 
     /**
      * @param string $token
+     * @return array
      */
-    private function getUserProfile(string $token)
+    private function getUserProfile(string $token): array
     {
         $fields = 'id,email,first_name,last_name,link,name';
         $response = $this->client->get($this->profileUrl, [
@@ -76,6 +77,7 @@ class FacebookAuthController extends Controller
         ]);
         $profile = json_decode($response->getBody(), true);
         Log::info("Facebook user profile", $profile);
+        return $profile;
     }
 
     /**
