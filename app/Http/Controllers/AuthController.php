@@ -16,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use App\Events\PassswordResetEvent;
 
 class AuthController extends Controller
 {
@@ -389,4 +390,49 @@ class AuthController extends Controller
         return response()->json($request->user());
     }
 
+
+    public function forgot_password(Request $request){
+
+       $validator = Validator::make($request->all(),
+          ['username'    => [function ($attribute, $value, $fail) {
+                //valid phone
+                $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
+                //Valid email
+                $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
+                //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
+                if ($valid_phone != 1 && $valid_email != 1) {
+
+                    $fail(':attribute should be valid email of phone number!');
+                }
+            }]]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $token_hash = substr(md5(uniqid(rand(), true)), 0, 128);
+
+        DB::table('password_resets')->insert(
+            ['email' => $request->username, 'token' => $token_hash, 'created_at'=> new \Date()]
+        );
+
+
+
+        $user = User::where('email', $request->username)->orWhere('phone_no', $request->username )->first();
+
+        broadcast(new PassswordResetEvent($user, ['username'=>$username, 'token'=>$token_hash]));
+
+        $out  = [
+                'success' => true,
+                'message' => ['username' => 'User reset account notification send to '. $request->username]
+            ];
+
+        return Response::json($out, HTTPCodes::HTTP_OK);
+
+
+    }
 }
