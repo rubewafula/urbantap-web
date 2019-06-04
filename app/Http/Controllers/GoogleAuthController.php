@@ -49,7 +49,7 @@ class GoogleAuthController extends Auth2Controller
             'grant_type'    => 'authorization_code',
         ];
         Log::info("Google auth form params", $params);
-        $response = $this->client->post($this->accessTokenUrl . ['form_params' => $params]);
+        $response = $this->client->post($this->accessTokenUrl, ['form_params' => $params]);
         $accessReponse = json_decode($response->getBody(), true);
         Log::info("Access token response", $accessReponse);
         return $accessReponse;
