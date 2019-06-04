@@ -35,8 +35,9 @@ return [
         'secret' => env('STRIPE_SECRET'),
     ],
     'facebook' => [
-        'client_id' => env('FACEBOOK_CLIENT_ID'),
-        'secret'    => env('FACEBOOK_SECRET')
+        'client_id' => env('FACEBOOK_CLIENT_ID', '339418636721296'),
+        'secret'    => env('FACEBOOK_SECRET', 'ad98d629dc499589ffabb78283caaf61'),
+        'redirect_uri' => env('FACEBOOK_REDIRECT_URI', 'https://urbantap.co.ke/api/auth/facebook')
     ]
 
 ];

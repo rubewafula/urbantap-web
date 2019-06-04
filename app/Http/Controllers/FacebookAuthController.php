@@ -37,19 +37,22 @@ class FacebookAuthController extends Controller
      */
     public function store(Request $request)
     {
-        $this->getAccessToken($request);
+        Log::info("Facebook auth body", $request->toArray());
+        if ($request->has('code')) {
+            $this->getAccessToken($request);
+        } else
+            Log::info("Facebook Redirect info", $request->all());
     }
 
     /**
-     * @param Request $request
+     * @param string $code
      */
-    private function getAccessToken(Request $request)
+    private function getAccessToken(string $code)
     {
-        Log::info("Facebook auth body", $request->toArray());
         $query = [
-            'code'          => $request->get('code'),
-            'client_id'     => $request->get('clientId'),
-            'redirect_uri'  => $request->get('redirectId'),
+            'code'          => $code,
+            'client_id'     => config('services.facebook.client_id'),
+            'redirect_uri'  => config('services.facebook.redirect_uri'),
             'client_secret' => config('services.facebook.secret')
         ];
         Log::info("Computed params for authorisation token", $query);
