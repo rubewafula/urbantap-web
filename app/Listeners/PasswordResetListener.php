@@ -44,7 +44,7 @@ class PasswordResetListener implements ShouldSendSMS, ShouldSendMail
     {
         $data = $this->getUserNotificationData($event->user, $event->data);
         $this->send($data, $this->userMailTemplate);
-        $this->sms(array_merge(Arr::get($data, 'sms'), Arr::only($data, 'message')));
+        $this->sms(Arr::get($data, 'sms'));
     }
 
 
