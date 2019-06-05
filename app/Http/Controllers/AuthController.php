@@ -516,8 +516,14 @@ class AuthController extends Controller
             ['email' => $request->username, 'token' => $token_hash, 'created_at' => new Carbon()]
         );
 
-
-        $user = User::where('email', $request->username)->orWhere('phone_no', $request->username)->first();
+        $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->username, $p_matches);
+        if ($valid_phone == 1) {
+            $phone = '254' . $p_matches[1];
+            $user = User::where('phone_no', $phone)->first();
+        }else{
+             $user = User::where('email', $request->username)->first();
+        }
+               
 
         if ($user) {
             $sms = "Use code %s to reset your password";
