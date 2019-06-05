@@ -532,6 +532,9 @@ class ServiceProvidersController extends Controller{
     }
 
 
+
+
+
     /**
      * curl -i -XPOST -H "content-type:application/json" 
      * --data '{"category_id":1, "provider_name":"Golden PAP",
@@ -545,8 +548,8 @@ class ServiceProvidersController extends Controller{
 
 
 
-public  function  upload_coverphoto($request)
-{
+    public  function  upload_coverphoto($request)
+    {
 
         $file = $request->file('cover_photo');
         if(is_null($file)){
@@ -599,11 +602,11 @@ public  function  upload_coverphoto($request)
 
 
 
-}
+    }
 
 
 
- private function getType($ext)
+    private function getType($ext)
     {
         if (in_array($ext, $this->image_ext)) {
             return 'image';
@@ -942,6 +945,29 @@ public  function  upload_coverphoto($request)
        return Response::json($service_providers, HTTPCodes::HTTP_OK);
 
         
+   }
+
+   public function transactions(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'service_provider_id' => 'required|exists:service_providers,id',
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $transactions =  RawQuery::paginate( "select created_at, reference, "
+            . " description, if(transaction_type='CREDIT', amount,-amount), "
+            . " running_balance  from transactions where service_provider_id =:spid ",
+            ['spid' => $request->service_provider_id]);
+
+        return Response::json($transactions, HTTPCodes::HTTP_OK);
+
    }
 
 }

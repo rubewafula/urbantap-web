@@ -42,9 +42,13 @@ Route::group([
 ], function () {
     Route::get('all', 'StatusCategoriesController@get');
     Route::get('get/{id}', 'StatusCategoriesController@get');
-    Route::post('create', 'StatusCategoriesController@create');
-    Route::put('update', 'StatusCategoriesController@update');
-    Route::delete('del', 'StatusCategoriesController@delete');
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'StatusCategoriesController@create');
+        Route::put('update', 'StatusCategoriesController@update');
+        Route::delete('del', 'StatusCategoriesController@delete');
+    });
 
 });
 
@@ -54,9 +58,13 @@ Route::group([
 ], function () {
     Route::get('all', 'StatusesController@get');
     Route::get('get/{id}', 'StatusesController@get');
-    Route::post('create', 'StatusesController@create');
-    Route::put('update', 'StatusesController@update');
-    Route::delete('del', 'StatusesController@delete');
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'StatusesController@create');
+        Route::put('update', 'StatusesController@update');
+        Route::delete('del', 'StatusesController@delete');
+    });
 
 });
 
@@ -66,9 +74,14 @@ Route::group([
 ], function () {
     Route::get('all', 'ServiceCategoryController@get');
     Route::get('get/{id}', 'ServiceCategoryController@get');
-    Route::post('create', 'ServiceCategoryController@create');
-    Route::put('update', 'ServiceCategoryController@update');
-    Route::delete('del', 'ServiceCategoryController@delete');
+
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServiceCategoryController@create');
+        Route::put('update', 'ServiceCategoryController@update');
+        Route::delete('del', 'ServiceCategoryController@delete');
+    });
 });
 
 Route::group([
@@ -76,10 +89,13 @@ Route::group([
 ], function () {
     Route::get('all', 'ServicePackagesController@get');
     Route::get('get/{category_id}', 'ServicePackagesController@get');
-    Route::post('create', 'ServicePackagesController@create');
-    Route::put('update', 'ServicePackagesController@update');
-    Route::delete('del', 'ServicePackagesController@delete');
-
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServicePackagesController@create');
+        Route::put('update', 'ServicePackagesController@update');
+        Route::delete('del', 'ServicePackagesController@delete');
+     });
 });
 
 Route::group([
@@ -87,11 +103,14 @@ Route::group([
 ], function () {
     Route::get('all', 'ServicePackageDetailsController@get');
     Route::get('get/{package_id}', 'ServicePackageDetailsController@get');
-    Route::post('create', 'ServicePackageDetailsController@create');
-    Route::put('update', 'ServicePackageDetailsController@update');
-    Route::post('update', 'ServicePackageDetailsController@update');
-    Route::delete('del', 'ServicePackageDetailsController@delete');
-
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServicePackageDetailsController@create');
+        Route::put('update', 'ServicePackageDetailsController@update');
+        Route::post('update', 'ServicePackageDetailsController@update');
+        Route::delete('del', 'ServicePackageDetailsController@delete');
+     });
 });
 
 Route::group([
@@ -99,9 +118,14 @@ Route::group([
 ], function () {
     Route::get('all', 'ServicesController@get');
     Route::get('get/{category_id}', 'ServicesController@get');
-    Route::post('create', 'ServicesController@create');
-    Route::put('update', 'ServicesController@update');
-    Route::delete('del', 'ServicesController@delete');
+
+      Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServicesController@create');
+        Route::put('update', 'ServicesController@update');
+        Route::delete('del', 'ServicesController@delete');
+     });
 
 });
 
@@ -111,9 +135,14 @@ Route::group([
     Route::get('all', 'ProviderServicesController@get');
     Route::post('all', 'ProviderServicesController@get');
     Route::get('get/{id}', 'ProviderServicesController@get');
-    Route::post('create', 'ProviderServicesController@create');
-    Route::put('update', 'ProviderServicesController@update');
-    Route::delete('del', 'ProviderServicesController@delete');
+
+     Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ProviderServicesController@create');
+        Route::put('update', 'ProviderServicesController@update');
+        Route::delete('del', 'ProviderServicesController@delete');
+     });
 });
 
 Route::group([
@@ -124,12 +153,19 @@ Route::group([
     Route::get('get/{id}', 'ServiceProvidersController@get');
     Route::get('services/{id}', 'ServiceProvidersController@getwithserviceid');
     Route::get('details/{id}', 'ServiceProvidersController@details');
-    Route::post('create', 'ServiceProvidersController@create');
-    Route::post('update', 'ServiceProvidersController@update');
     Route::post('time-slots', 'ServiceProvidersController@timeslots');
-    Route::put('update', 'ServiceProvidersController@update');
-    Route::delete('del', 'ServiceProvidersController@delete');
     Route::get('location_service', 'ServiceProvidersController@search_by_location_service');
+
+    Route::group([
+        'middleware' => 'auth:api'
+    ], function () {
+        Route::post('create', 'ServiceProvidersController@create');
+        Route::post('update', 'ServiceProvidersController@update');
+        Route::delete('del', 'ServiceProvidersController@delete');
+        Route::put('update', 'ServiceProvidersController@update');
+        Route::put('transactions', 'ServiceProvidersController@transactions');
+
+    });
 
 });
 
@@ -140,9 +176,15 @@ Route::group([
 ], function () {
     Route::get('all', 'UserPersonalDetailsController@get');
     Route::get('get/{id}', 'UserPersonalDetailsController@get');
-    Route::post('create', 'UserPersonalDetailsController@create');
-    Route::post('update', 'UserPersonalDetailsController@update');
-    Route::delete('del', 'UserPersonalDetailsController@delete');
+
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('transactions', 'UserPersonalDetailsController@transactions');
+        Route::post('create', 'UserPersonalDetailsController@create');
+        Route::post('update', 'UserPersonalDetailsController@update');
+        Route::delete('del', 'UserPersonalDetailsController@delete');
+     });
 });
 
 Route::group([
@@ -150,8 +192,12 @@ Route::group([
 ], function () {
     Route::get('all', 'ServiceProviderPortfoliosController@get');
     Route::get('get/{id}', 'ServiceProviderPortfoliosController@get');
-    Route::post('create', 'ServiceProviderPortfoliosController@create');
-    Route::delete('del', 'ServiceProviderPortfoliosController@delete');
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServiceProviderPortfoliosController@create');
+        Route::delete('del', 'ServiceProviderPortfoliosController@delete');
+     });
 });
 
 
@@ -160,9 +206,13 @@ Route::group([
 ], function () {
     Route::get('all', 'OperatingHoursController@get');
     Route::get('get/{id}', 'OperatingHoursController@get');
-    Route::post('create', 'OperatingHoursController@create');
-    Route::put('update', 'OperatingHoursController@update');
-    Route::delete('del', 'OperatingHoursController@delete');
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'OperatingHoursController@create');
+        Route::put('update', 'OperatingHoursController@update');
+        Route::delete('del', 'OperatingHoursController@delete');
+     });
 });
 
 
@@ -171,8 +221,12 @@ Route::group([
 ], function () {
     Route::get('all', 'ServiceProviderReviewsController@get');
     Route::get('get/{id}', 'ServiceProviderReviewsController@get');
-    Route::post('create', 'ServiceProviderReviewsController@create');
-    Route::delete('del', 'ServiceProviderReviewsController@delete');
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::post('create', 'ServiceProviderReviewsController@create');
+        Route::delete('del', 'ServiceProviderReviewsController@delete');
+     });
 });
 
 

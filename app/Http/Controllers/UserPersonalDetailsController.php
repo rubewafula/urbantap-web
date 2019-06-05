@@ -158,6 +158,33 @@ class UserPersonalDetailsController extends Controller{
     	}
     }
 
+
+    /**
+     * List all transactions by this user
+     */
+    public function transactions(Request $request){
+
+        $validator = Validator::make($request->all(),[
+            'user_id' => 'required|exists:users,id',
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $transactions =  RawQuery::paginate( "select created_at, reference, "
+            . " description, if(transaction_type='CREDIT', amount,-amount), "
+            . " running_balance  from transactions where user_id =:uid ",
+            ['uid' => $request->user_id]);
+
+        return Response::json($transactions, HTTPCodes::HTTP_OK);
+
+    }
+
     /**
      * curl -i -XPOST -H "content-type:application/json" 
      * --data '{"user_id":1, "id_number":"66373773",
