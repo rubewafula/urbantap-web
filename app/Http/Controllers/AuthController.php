@@ -517,7 +517,8 @@ class AuthController extends Controller
             broadcast(new PasswordResetEvent($user, [
                 'username' => $request->username,
                 'token'    => $token_hash,
-                'message'  => sprintf($sms, $token_hash)
+                'message'  => sprintf($sms, $token_hash),
+                'subject'  => 'Password reset request'
             ]));
 
             $out = [
