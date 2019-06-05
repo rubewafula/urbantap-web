@@ -247,9 +247,12 @@ class AuthController extends Controller
     public function verify_code($hash = null, Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'verification_code' => 'string|min:4|max:12',
-            'username'          => [function ($attribute, $value, $fail) {
+            'verification_code' => 'string|min:4|max:128',
+            'username'          => [function ($attribute, $value, $fail) use($request){
                 //valid phone
+                if(empty($value) && strlen($request->verification_code  > 4)){
+                  return true;
+                }
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
                 $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
