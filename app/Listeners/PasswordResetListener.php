@@ -9,6 +9,7 @@ use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
 use App\User;
+use Illuminate\Support\Arr;
 
 /**
  * Class PasswordResetListener
