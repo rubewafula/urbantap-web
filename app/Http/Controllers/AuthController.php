@@ -280,7 +280,7 @@ class AuthController extends Controller
                 $phone = '254' . $p_matches[1];
             }
             $user = User::where('phone_no', $phone)
-              ->andWhere('verification_code', $request->verification_code)->first();
+              ->where('verification_code', $request->verification_code)->first();
         }else{
 
             $user = User::where('confirmation_token', $request->verification_code)->first();
