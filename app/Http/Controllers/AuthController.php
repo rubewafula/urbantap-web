@@ -294,7 +294,7 @@ class AuthController extends Controller
                 $user->details->passport_photo =
                     [
                         'media_type' => 'image',
-                        'media_url'  => env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
+                        'media_url'  => env('API_URL', 'https://urbantap.co.ke') . '/static/images/avatar/default-avatar.jpg'
                     ];
             }
 
