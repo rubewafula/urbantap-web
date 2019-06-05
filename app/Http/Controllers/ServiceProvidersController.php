@@ -267,7 +267,13 @@ class ServiceProvidersController extends Controller{
             . " p.description  FROM  portfolios p "
             . " where service_provider_id = '" . $service_provider_id. "'" ;
 
-        $results['portfolios'] = RawQuery::query($portfolios_sql);
+        $pflios = RawQuery::query($portfolios_sql);
+
+        if(empty($pflios)){
+            $pflios = [$p_services_url . '/2.jpg'];
+        }
+
+        $results['portfolios'] = $pflios ;
 
         
         $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
