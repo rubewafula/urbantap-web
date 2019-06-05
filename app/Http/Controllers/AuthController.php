@@ -511,18 +511,25 @@ class AuthController extends Controller
 
 
         $user = User::where('email', $request->username)->orWhere('phone_no', $request->username)->first();
-        $sms = "Use code %s to reset your password";
 
-        broadcast(new PasswordResetEvent($user, [
-            'username' => $request->username,
-            'token'    => $token_hash,
-            'message'  => sprintf($sms, $token_hash)
-        ]));
+        if ($user) {
+            $sms = "Use code %s to reset your password";
+            broadcast(new PasswordResetEvent($user, [
+                'username' => $request->username,
+                'token'    => $token_hash,
+                'message'  => sprintf($sms, $token_hash)
+            ]));
 
-        $out = [
-            'success' => true,
-            'message' => ['username' => 'User reset account notification send to ' . $request->username]
-        ];
+            $out = [
+                'success' => true,
+                'message' => ['username' => 'User reset account notification send to ' . $request->username]
+            ];
+        } else {
+            $out = [
+                'success' => false,
+                'message' => ['username' => "Username not found"]
+            ];
+        }
 
         return Response::json($out, HTTPCodes::HTTP_OK);
 
