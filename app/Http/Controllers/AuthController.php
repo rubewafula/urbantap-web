@@ -467,9 +467,11 @@ class AuthController extends Controller
         $results = DB::select(
             DB::raw("select email from password_resets where token=:token order by created_at desc "),
             ['token' => $request->verification_code]);
-        $email = "";
+
+
+        $username = "";
         if (!empty($results)) {
-            $email = $results[0]->email;
+            $username = $results[0]->email;
         } else {
             return Response::json(
                 [
@@ -479,7 +481,7 @@ class AuthController extends Controller
 
         }
 
-        $user = User::where('email', $email)->first();
+        $user = User::where('email', $username)->orWhere('phone_no', $username)->first();
 
         if (!$user) {
             return Response::json(
@@ -511,18 +513,19 @@ class AuthController extends Controller
     public function forgot_password(ForgotPasswordRequest $request)
     {
         $token_hash = random_int(pow(10, 3), pow(10, 4) - 1);
-
-        DB::table('password_resets')->insert(
-            ['email' => $request->username, 'token' => $token_hash, 'created_at' => new Carbon()]
-        );
+        $username = $request->username;
 
         $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->username, $p_matches);
         if ($valid_phone == 1) {
-            $phone = '254' . $p_matches[1];
-            $user = User::where('phone_no', $phone)->first();
+            $username = '254' . $p_matches[1];
+            $user = User::where('phone_no', $username)->first();
         }else{
-             $user = User::where('email', $request->username)->first();
+             $user = User::where('email', $username)->first();
         }
+
+        DB::table('password_resets')->insert(
+            ['email' => $username, 'token' => $token_hash, 'created_at' => new Carbon()]
+        );
                
 
         if ($user) {
