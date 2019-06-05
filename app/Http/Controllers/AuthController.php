@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\PasswordResetEvent;
 use App\Events\UserRegistered;
+use App\Http\Requests\ForgotPasswordRequest;
 use App\Outbox;
 use App\ServiceProvider;
 use App\User;
@@ -423,7 +424,7 @@ class AuthController extends Controller
     {
         $request->user()->token()->revoke();
         return response()->json([
-            'success'=>true,
+            'success' => true,
             'message' => 'Successfully logged out'
         ]);
     }
@@ -438,14 +439,15 @@ class AuthController extends Controller
     }
 
 
-    public function reset_password(Request $request){
+    public function reset_password(Request $request)
+    {
 
         $validator = Validator::make($request->all(),
-          [
-            'verification_code'    => 'required|integer',
-            'password' => 'required|string|min:6',
-            'confirm_password' => 'required|string|min:6',
-        ]);
+            [
+                'verification_code' => 'required|integer',
+                'password'          => 'required|string|min:6',
+                'confirm_password'  => 'required|string|min:6',
+            ]);
 
         if ($validator->fails()) {
             $out = [
@@ -455,39 +457,39 @@ class AuthController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
-        $results =  DB::select( 
-          DB::raw("select email from password_resets where token=:token order by created_at desc "), 
-          ['token' =>$request->verification_code]);
+        $results = DB::select(
+            DB::raw("select email from password_resets where token=:token order by created_at desc "),
+            ['token' => $request->verification_code]);
         $email = "";
-        if (!empty($results)){
-          $email = $results[0]->email;
-        }else {
-          return Response::json(
-            [
-                'success' => false, 
-                'message'=> ['token' => 'Invalid verification code']
-            ], HTTPCodes::HTTP_PRECONDITION_FAILED);
+        if (!empty($results)) {
+            $email = $results[0]->email;
+        } else {
+            return Response::json(
+                [
+                    'success' => false,
+                    'message' => ['token' => 'Invalid verification code']
+                ], HTTPCodes::HTTP_PRECONDITION_FAILED);
 
         }
 
         $user = User::where('email', $email)->first();
 
-        if(!$user){
-          return Response::json(
-            [
-                'success' => false, 
-                'message'=> ['token' => 'Invalid verification code']
-            ], HTTPCodes::HTTP_PRECONDITION_FAILED);
+        if (!$user) {
+            return Response::json(
+                [
+                    'success' => false,
+                    'message' => ['token' => 'Invalid verification code']
+                ], HTTPCodes::HTTP_PRECONDITION_FAILED);
 
         }
 
         $user->password = bcrypt($request->get('password'));
         $user->save();
 
-        $out  = [
-                'success' => true,
-                'message' => 'User password rest success'
-            ];
+        $out = [
+            'success' => true,
+            'message' => 'User password rest success'
+        ];
 
         return Response::json($out, HTTPCodes::HTTP_OK);
 
@@ -495,33 +497,12 @@ class AuthController extends Controller
 
 
     /**
-     * @param Request $request
+     * @param ForgotPasswordRequest $request
      * @return \Illuminate\Http\JsonResponse
      * @throws Exception
      */
-    public function forgot_password(Request $request)
+    public function forgot_password(ForgotPasswordRequest $request)
     {
-        $validator = Validator::make($request->all(),
-            ['username' => [function ($attribute, $value, $fail) {
-                //valid phone
-                $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
-                //Valid email
-                $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
-                //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if ($valid_phone != 1 && $valid_email != 1) {
-
-                    $fail(':attribute should be valid email of phone number!');
-                }
-            }]]);
-
-        if ($validator->fails()) {
-            $out = [
-                'success' => false,
-                'message' => $validator->messages()
-            ];
-            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-        }
-
         $token_hash = random_int(pow(10, 3), pow(10, 4) - 1);
 
         DB::table('password_resets')->insert(
