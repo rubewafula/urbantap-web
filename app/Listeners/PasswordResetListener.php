@@ -58,12 +58,11 @@ class PasswordResetListener implements ShouldSendSMS, ShouldSendMail
         return "Hello " . $user->first_name . "," . "\n" . "\n"
             . " We have received request to reset your password " . "\n"
             . " Click on the below link to reset you password " . "\n"
-            . env('APP_URL', 'https:urbantap.co.ke/') . "/account/verify/" . Arr::get($data, 'token_hash')
+            . env('APP_URL', 'https:urbantap.co.ke/') . "/reset-password \n"
+            . "Use the code " . Arr::get($data, 'token')
             . "\n"
             . " If you did not request for passwrod reset please ignore this email. " . "\n" . "\n"
             . " Cheers " . "\n"
-            . " URBANTAP - Tap to Freedom ";
+            . config('app.name') . " - Tap to Freedom ";
     }
-
-
 }
