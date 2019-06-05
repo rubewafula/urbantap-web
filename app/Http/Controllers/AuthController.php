@@ -288,7 +288,7 @@ class AuthController extends Controller
 
         
         if (!empty($user) && ($user->verification_code == $request->get('verification_code') ||
-                $user->confirmation_token == $hash)) {
+                $user->confirmation_token == $request->get('verification_code')) ) {
             $user->phone_verified = 1;
             $user->status_id = DBStatus::USER_ACTIVE;
             #$user->verification_code= NULL;
