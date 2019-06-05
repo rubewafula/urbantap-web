@@ -283,7 +283,7 @@ class AuthController extends Controller
               ->andWhere('verification_code', $request->verification_code)->first();
         }else{
 
-            $user = User::where('verification_code', $request->verification_code)->first();
+            $user = User::where('confirmation_token', $request->verification_code)->first();
         }
 
         
