@@ -8,6 +8,7 @@ use App\Events\PasswordResetEvent;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
+use App\User;
 
 /**
  * Class PasswordResetListener
