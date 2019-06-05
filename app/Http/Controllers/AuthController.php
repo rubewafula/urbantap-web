@@ -250,16 +250,16 @@ class AuthController extends Controller
             'verification_code' => 'string|min:4|max:128',
             'username'          => [function ($attribute, $value, $fail) use($request){
                 //valid phone
-                if(empty($value) && strlen($request->verification_code  > 4)){
-                  return true;
-                }
-                $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
-                //Valid email
-                $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
-                //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
-                if ($valid_phone != 1 && $valid_email != 1) {
+                if(!empty($value) && strlen($request->verification_code  <= 5)){
+                 
+                  $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
+                  //Valid email
+                  $valid_email = preg_match("/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/", $value, $e_matches);
+                  //preg_match() returns 1 if the pattern matches given subject, 0 if it does not, or FALSE if an error occurred. 
+                  if ($valid_phone != 1 && $valid_email != 1) {
 
-                    $fail(':attribute should be valid email of phone number!');
+                      $fail(':attribute should be valid email of phone number!');
+                  }
                 }
             }],
         ]);
