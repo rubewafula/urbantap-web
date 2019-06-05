@@ -55,14 +55,14 @@ class PasswordResetListener implements ShouldSendSMS, ShouldSendMail
      */
     protected function getUserNotificationMessage(User $user, array $data): string
     {
-        return "Hello " . $user->first_name . "," . "\n" . "\n"
-            . " We have received request to reset your password " . "\n"
-            . " Click on the below link to reset you password " . "\n"
-            . env('APP_URL', 'https:urbantap.co.ke/') . "/reset-password \n"
+        return "Hello " . $user->first_name . "," . "<br/>" . "<br/>"
+            . " We have received request to reset your password " . "<br/>"
+            . " Click on the below link to reset you password " . "<br/>"
+            . env('APP_URL', 'https:urbantap.co.ke/') . "/reset-password <br/>"
             . "Use the code " . Arr::get($data, 'token')
-            . "\n"
-            . " If you did not request for passwrod reset please ignore this email. " . "\n" . "\n"
-            . " Cheers " . "\n"
+            . "<br/>"
+            . " If you did not request for passwrod reset please ignore this email. " . "<br/>" . "<br/>"
+            . " Cheers " . "<br/>"
             . config('app.name') . " - Tap to Freedom ";
     }
 }
