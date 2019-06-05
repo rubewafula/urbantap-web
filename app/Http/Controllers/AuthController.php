@@ -351,7 +351,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $validator = $request->validate([
+        $validator = Validator::make($request->all(), [
             'username'    => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
