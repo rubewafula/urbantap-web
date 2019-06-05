@@ -270,7 +270,7 @@ class ServiceProvidersController extends Controller{
         $pflios = RawQuery::query($portfolios_sql);
 
         if(empty($pflios)){
-            $pflios = [$p_services_url . '/2.jpg'];
+            $pflios = ['media_photo' => $p_services_url . '/2.jpg'];
         }
 
         $results['portfolios'] = $pflios ;
