@@ -28,16 +28,16 @@ trait UserDataTrait
             $user->toArray(),
             [
                 'to'                  => $email = $user->email,
-                'email_address'               => $email,
+                'email_address'       => $email,
                 'msisdn'              => $msisdn = $user->phone_no,
                 'subject'             => Arr::get($data, 'subject'),
                 'reference'           => Arr::get($data, 'booking_id'),
                 'user_id'             => $user->id,
                 'service_provider_id' => Arr::get($data, 'request.service_provider_id', null),
-                'message'             => $message = $this->getUserNotificationMessage($user, $data),
+                'message'             => $this->getUserNotificationMessage($user, $data),
                 'sms'                 => [
                     'recipients' => $msisdn ? [$msisdn] : [],
-                    'message'    => $message
+                    'message'    => Arr::get($data, 'message')
                 ]
             ]
         );

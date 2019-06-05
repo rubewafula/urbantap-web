@@ -7,6 +7,7 @@ namespace App\Traits;
 use App\User;
 use App\Utilities\RawQuery;
 use Exception;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
@@ -67,14 +68,14 @@ trait ProviderDataTrait
             array_merge(
                 $data,
                 [
-                    'provider' => (array)$sp,
-                    'message'  => $this->getNotificationMessage($data),
-                    'msisdn'   => $msisdn = $sp->{'business_phone'},
-                    'email_address'    => $sp->{'business_email'},
-                    'sms'      => array_merge(
+                    'provider'      => (array)$sp,
+                    'message'       => $this->getNotificationMessage($data),
+                    'msisdn'        => $msisdn = $sp->{'business_phone'},
+                    'email_address' => $sp->{'business_email'},
+                    'sms'           => array_merge(
                         [
                             'recipients' => [$msisdn],
-                            'message'    => $this->getNotificationMessage($data),
+                            'message'    => Arr::get($data, 'message'),
                         ],
                         $this->getProviderBindings($data)
                     )
