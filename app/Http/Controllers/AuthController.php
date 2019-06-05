@@ -312,6 +312,7 @@ class AuthController extends Controller
                 'success'      => TRUE,
                 'access_token' => $tokenResult->accessToken,
                 'token_type'   => 'Bearer',
+                'message'      => 'Account verified Successfully',
                 'expires_at'   => Carbon::parse(
                     $tokenResult->token->expires_at
                 )->toDateTimeString(),
