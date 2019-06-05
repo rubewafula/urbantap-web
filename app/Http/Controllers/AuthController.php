@@ -349,7 +349,7 @@ class AuthController extends Controller
      */
     public function login(Request $request)
     {
-        $request->validate([
+        $validator = $request->validate([
             'username'    => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
@@ -364,6 +364,15 @@ class AuthController extends Controller
             'password'    => 'required|string',
             'remember_me' => 'nullable|boolean'
         ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
 
         $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $request->get('username'), $p_matches);
 
@@ -413,6 +422,7 @@ class AuthController extends Controller
     {
         $request->user()->token()->revoke();
         return response()->json([
+            'success'=>true,
             'message' => 'Successfully logged out'
         ]);
     }
@@ -424,6 +434,62 @@ class AuthController extends Controller
     public function user(Request $request)
     {
         return response()->json($request->user());
+    }
+
+
+    public function reset_password(Request $request){
+
+        $validator = Validator::make($request->all(),
+          [
+            'verification_code'    => 'required|integer',
+            'password' => 'required|string|min:6',
+            'confirm_password' => 'required|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+        $results =  DB::select( 
+          DB::raw("select email from password_resets where token=:token order by created_at desc "), 
+          ['token' =>$request->verification_code]);
+        $email = "";
+        if (!empty($results)){
+          $email = $results[0]->email;
+        }else {
+          return Response::json(
+            [
+                'success' => false, 
+                'message'=> ['token' => 'Invalid verification code']
+            ], HTTPCodes::HTTP_PRECONDITION_FAILED);
+
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if(!$user){
+          return Response::json(
+            [
+                'success' => false, 
+                'message'=> ['token' => 'Invalid verification code']
+            ], HTTPCodes::HTTP_PRECONDITION_FAILED);
+
+        }
+
+        $user->password = bcrypt($request->get('password'));
+        $user->save();
+
+        $out  = [
+                'success' => true,
+                'message' => 'User password rest success'
+            ];
+
+        return Response::json($out, HTTPCodes::HTTP_OK);
+
     }
 
 
