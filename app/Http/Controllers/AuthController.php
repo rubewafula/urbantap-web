@@ -524,14 +524,16 @@ class AuthController extends Controller
                 'success' => true,
                 'message' => ['username' => 'User reset account notification send to ' . $request->username]
             ];
+
+            return Response::json($out, HTTPCodes::HTTP_OK);
         } else {
             $out = [
                 'success' => false,
                 'message' => ['username' => "Username not found"]
             ];
-        }
 
-        return Response::json($out, HTTPCodes::HTTP_OK);
+            return Response::json($out, HTTPCodes::HTTP_BAD_REQUEST);
+        }
 
 
     }
