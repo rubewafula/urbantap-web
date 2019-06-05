@@ -2,33 +2,38 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Queue\SerializesModels;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Broadcasting\PresenceChannel;
+use App\User;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Queue\SerializesModels;
 
+/**
+ * Class PasswordResetEvent
+ * @package App\Events
+ */
 class PasswordResetEvent
 {
     use Dispatchable, SerializesModels;
 
+    /**
+     * @var array
+     */
     public $data;
+    /**
+     * @var User
+     */
     public $user;
 
     /**
      * Create a new event instance.
      *
-     * @return void
+     * @param User $user
+     * @param array $data
      */
-    public function __construct($user, $data)
+    public function __construct(User $user, array $data)
     {
-        
         $this->user = $user;
         $this->data = $data;
     }
 
 
- 
 }

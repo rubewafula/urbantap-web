@@ -19,6 +19,9 @@ Route::group([
     Route::post('verify_code', 'AuthController@verify_code');
     Route::get('account/verify/{code}', 'AuthController@verify_code');
 
+    Route::post('forgot-password', 'AuthController@forgot_password');
+    Route::post('reset-password', 'AuthController@reset_password');
+
 
     Route::group([
         'middleware' => 'auth:api'

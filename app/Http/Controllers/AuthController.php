@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\PasswordResetEvent;
 use App\Events\UserRegistered;
 use App\Outbox;
 use App\ServiceProvider;
@@ -16,10 +17,17 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
-use App\Events\PassswordResetEvent;
 
+/**
+ * Class AuthController
+ * @package App\Http\Controllers
+ */
 class AuthController extends Controller
 {
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function signup(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -97,6 +105,9 @@ class AuthController extends Controller
 
     }
 
+    /**
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function checkLoginStatus()
     {
 
@@ -112,6 +123,11 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws \GuzzleHttp\Exception\GuzzleException
+     */
     public function resend_verification(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -221,6 +237,11 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * @param null $hash
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function verify_code($hash = null, Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -304,6 +325,9 @@ class AuthController extends Controller
     }
 
 
+    /**
+     * @return int
+     */
     public function generate_code()
     {
         $number = rand(1000, 9999);
@@ -319,6 +343,10 @@ class AuthController extends Controller
 
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function login(Request $request)
     {
         $request->validate([
@@ -377,6 +405,10 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function logout(Request $request)
     {
         $request->user()->token()->revoke();
@@ -385,16 +417,25 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
     public function user(Request $request)
     {
         return response()->json($request->user());
     }
 
 
-    public function forgot_password(Request $request){
-
-       $validator = Validator::make($request->all(),
-          ['username'    => [function ($attribute, $value, $fail) {
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     * @throws Exception
+     */
+    public function forgot_password(Request $request)
+    {
+        $validator = Validator::make($request->all(),
+            ['username' => [function ($attribute, $value, $fail) {
                 //valid phone
                 $valid_phone = preg_match("/^(?:\+?254|0)?(7\d{8})/", $value, $p_matches);
                 //Valid email
@@ -414,22 +455,26 @@ class AuthController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
-        $token_hash = substr(md5(uniqid(rand(), true)), 0, 128);
+        $token_hash = random_int(pow(10, 3), pow(10, 4) - 1);
 
         DB::table('password_resets')->insert(
-            ['email' => $request->username, 'token' => $token_hash, 'created_at'=> new \Date()]
+            ['email' => $request->username, 'token' => $token_hash, 'created_at' => new \Date()]
         );
 
 
+        $user = User::where('email', $request->username)->orWhere('phone_no', $request->username)->first();
+        $sms = "Use code %s to reset your password";
 
-        $user = User::where('email', $request->username)->orWhere('phone_no', $request->username )->first();
+        broadcast(new PasswordResetEvent($user, [
+            'username' => $request->username,
+            'token'    => $token_hash,
+            'message'  => sprintf($sms, $token_hash)
+        ]));
 
-        broadcast(new PassswordResetEvent($user, ['username'=>$username, 'token'=>$token_hash]));
-
-        $out  = [
-                'success' => true,
-                'message' => ['username' => 'User reset account notification send to '. $request->username]
-            ];
+        $out = [
+            'success' => true,
+            'message' => ['username' => 'User reset account notification send to ' . $request->username]
+        ];
 
         return Response::json($out, HTTPCodes::HTTP_OK);
 
