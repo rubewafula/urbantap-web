@@ -525,7 +525,7 @@ class AuthController extends Controller
         $token_hash = random_int(pow(10, 3), pow(10, 4) - 1);
 
         DB::table('password_resets')->insert(
-            ['email' => $request->username, 'token' => $token_hash, 'created_at' => new \Date()]
+            ['email' => $request->username, 'token' => $token_hash, 'created_at' => new Carbon()]
         );
 
 
