@@ -497,7 +497,7 @@ class AuthController extends Controller
 
         $out = [
             'success' => true,
-            'message' => 'User password rest success'
+            'message' => 'User password reset success'
         ];
 
         return Response::json($out, HTTPCodes::HTTP_OK);
