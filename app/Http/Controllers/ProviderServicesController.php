@@ -60,7 +60,10 @@ class ProviderServicesController extends Controller
         
         $filter = '';
         if(!is_null($id)){
-            $filter = " and ps.service_provider_id = '" .$id . "' ";
+            $filter = " and ps.id = '" .$id . "' ";
+        }else {
+            $filter  = " and s.service_name like  :service "
+            . " and (work_location like :location or work_location_city like :location2) ";
         }
 
         $image_url = URL::to('/storage/static/image/avatar/');
@@ -71,21 +74,21 @@ class ProviderServicesController extends Controller
         // $image_url = URL::to('/storage/image/avatar/');
         // $sp_providers_url =  URL::to('/storage/image/service-providers/');
         // $p_services_url =  URL::to('/storage/image/provider-services/');
-          
+       
+
          if(empty($request->get('service_time')) )
          {
             $request->service_time= date('Y-m-d H:i');
          } 
-     
-          
          $params =[
-                'service_date'=>$request->service_time,
-                'service_date2'=>$request->service_time,
+                #'service_date'=>$request->service_time,
+                #'service_date2'=>$request->service_time,
                 'service'=>'%'.$request->service.'%',
                 'location'=>'%'.$request->location.'%',
                 'location2'=>'%'.$request->location.'%'
             ];
         //echo print_r($params, 1);
+
 
          $query = "select sp.id, sp.type, s.service_name, sp.service_provider_name,sp.work_location, "
             . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, sp.service_provider_name, "
@@ -98,19 +101,23 @@ class ProviderServicesController extends Controller
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from service_providers sp  left  join "
-            . " user_personal_details  d using(user_id)  inner join operating_hours op "
-            . " on sp.id = op.service_provider_id inner join provider_services ps on "
-            . " ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id "
-            . " where 1=1 ". $filter . " and op.service_day = date_format(:service_date, '%W') "
-            . " and time(:service_date2) between time_from and time_to and s.service_name like  :service "
-            . " and (work_location like :location or work_location_city like :location2) ";
+            . " from provider_services ps inner join service_providers sp on "
+            . " ps.service_provider_id = sp.id  inner join services s on s.id = ps.service_id left  join "
+            . " user_personal_details  d using(user_id)  "
+            . " where 1=1 ". $filter ;
 
-         $provider_services =  RawQuery::paginate(
-             $query,
-             $page = null, $limit = null, 
-             $params=$params
-        );
+        if(!is_null($id)){
+            $results = RawQuery::query( $query, $params=$params);
+            if(!empty($results)){
+                $results = $results[0];
+            }
+        }else{
+            $results =  RawQuery::paginate(
+                 $query,
+                 $page = null, $limit = null, 
+                 $params=$params
+            );
+        }
 
 
         // $query = "select s.id as service_id, s.service_name, ps.description, "
@@ -123,12 +130,12 @@ class ProviderServicesController extends Controller
         //echo   $query;
 
         //dd(HTTPCodes);
-        Log::info('Extracted statuses results : ' . var_export($provider_services, 1));
+        Log::info('Extracted statuses results : ' . var_export($results, 1));
 
-        if(empty($provider_services)){
+        if(empty($results)){
             return Response::json([], HTTPCodes::HTTP_OK );
         }
-        return Response::json($provider_services, HTTPCodes::HTTP_OK);
+        return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
 
