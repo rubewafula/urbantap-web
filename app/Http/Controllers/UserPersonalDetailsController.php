@@ -166,6 +166,7 @@ class UserPersonalDetailsController extends Controller{
 
         $validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:users,id',
+            'page' => 'integer|nullable'
         ]);
 
         if ($validator->fails()) {
@@ -179,7 +180,7 @@ class UserPersonalDetailsController extends Controller{
         $transactions =  RawQuery::paginate( "select created_at, reference, "
             . " description, if(transaction_type='CREDIT', amount,-amount), "
             . " running_balance  from transactions where user_id =:uid ",
-            ['uid' => $request->user_id]);
+            $page=$request->page, $limit=null , $params=['uid' => $request->user_id]);
 
         return Response::json($transactions, HTTPCodes::HTTP_OK);
 

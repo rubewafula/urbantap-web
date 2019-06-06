@@ -180,7 +180,7 @@ Route::group([
     Route::group([
         'middleware' => 'auth:api'
         ], function () {
-        Route::post('transactions', 'UserPersonalDetailsController@transactions');
+        Route::get('transactions', 'UserPersonalDetailsController@transactions');
         Route::post('create', 'UserPersonalDetailsController@create');
         Route::post('update', 'UserPersonalDetailsController@update');
         Route::delete('del', 'UserPersonalDetailsController@delete');

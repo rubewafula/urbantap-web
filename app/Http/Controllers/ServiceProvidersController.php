@@ -963,7 +963,7 @@ class ServiceProvidersController extends Controller{
         $transactions =  RawQuery::paginate( "select created_at, reference, "
             . " description, if(transaction_type='CREDIT', amount,-amount), "
             . " running_balance  from transactions where service_provider_id =:spid ",
-            ['spid' => $request->service_provider_id]);
+            $page=$page, $limit=$limit, $params=['spid' => $request->service_provider_id]);
 
         return Response::json($transactions, HTTPCodes::HTTP_OK);
 
