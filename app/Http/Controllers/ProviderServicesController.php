@@ -63,7 +63,7 @@ class ProviderServicesController extends Controller
             $filter = " and ps.provider_service_id = '" .$id . "' ";
         }else {
             $filter  = " and s.service_name like  :service "
-            . " and (work_location like :location or work_location_city like :location2) ";
+            . " and (work_location like :location or work_location_city like :location2) group by sp.id ";
         }
 
         $image_url = URL::to('/storage/static/image/avatar/');
@@ -99,10 +99,11 @@ class ProviderServicesController extends Controller
         //echo print_r($params, 1);
 
 
-         $query = "select sp.id, sp.type, s.service_name, sp.service_provider_name,sp.work_location, "
-            . " sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, sp.service_provider_name, "
-            . " sp.overall_likes, sp.overall_dislikes, sp.created_at, sp.updated_at, "
-            . " d.id_number, d.date_of_birth, d.gender, "
+         $query = "select sp.id as service_provider_id, sp.type, group_conact(s.id) as service_id, "
+            . " group_conact(s.service_name) as service_name, sp.service_provider_name, "
+            . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+            . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
             . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
