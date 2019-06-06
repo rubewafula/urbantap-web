@@ -58,12 +58,12 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         
-        $filter = '';
+        $filter = $service_filter = '';
         if(!is_null($id)){
             $filter = " and ps.provider_service_id = '" .$id . "' ";
         }else {
-            $filter  = " and s.service_name like  :service "
-            . " and (work_location like :location or work_location_city like :location2) group by sp.id ";
+            $service_filter = " and s.service_name like  :service "
+            $filter  = " and (work_location like :location or work_location_city like :location2) ";
         }
 
         $image_url = URL::to('/storage/static/image/avatar/');
@@ -87,20 +87,18 @@ class ProviderServicesController extends Controller
             $request->location= 'Nairobi';
          }
 
+         $service_params = [ 'service'=>'%'.$request->service.'%',];
+        
+         $date_params = ['service_date'=>$request->service_time,
+          'service_date2'=>$request->service_time,]
+
+         $location_params =[
+             'location'=>'%'.$request->location.'%',
+             'location2'=>'%'.$request->location.'%'
+         ];
 
 
-         $params =[
-                'service_date'=>$request->service_time,
-                'service_date2'=>$request->service_time,
-                'service'=>'%'.$request->service.'%',
-                'location'=>'%'.$request->location.'%',
-                'location2'=>'%'.$request->location.'%'
-            ];
-        //echo print_r($params, 1);
-
-
-         $query = "select sp.id as service_provider_id, sp.type, group_conact(s.id) as service_id, "
-            . " group_conact(s.service_name) as service_name, sp.service_provider_name, "
+        $provideQ = "select sp.id as service_provider_id, sp.type, sp.service_provider_name, "
             . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
@@ -111,33 +109,31 @@ class ProviderServicesController extends Controller
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from provider_services ps inner join service_providers sp on "
-            . " ps.service_provider_id = sp.id  inner join services s on s.id = ps.service_id left  join "
-            . " user_personal_details  d using(user_id)  "
+            . " from service_providers sp  inner join  provider_services ps on "
+            . " ps.service_provider_id = sp.id  left  join user_personal_details  d using(user_id)  "
             . " where 1=1 ". $filter ;
 
-        if(!is_null($id)){
-            $results = RawQuery::query( $query, $params=$params)
-        }else{}
-            $results =  RawQuery::paginate(
-                 $query,
-                 $page = null, $limit = null, 
-                 $params=$params
-            );
+        //echo print_r($params, 1);
+        $provider_data =  RawQuery::paginate( $provideQ, $page = null, $limit = null, 
+            $params=$location_params);
+
+        $results = [];
+        foreach ($provider_data as $key => $provider) {
+
+            $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
+                . " s.service_name, ps.cost, ps.description, ps.duration, ps.created_at,"
+                . " ps.updated_at from provider_services ps inner join services s "
+                . " on s.id = ps.service_id  where  ps.id = :pid ". $service_filter ;
+
+            $service_params['pid'] = $provider['service_provider_id'];
+
+            $service_results = RawQuery::query( $serviceQ, $params=$service_params);
+            $provider->services = $service_results;
+
+            array_push($results, $provider);
         }
 
-
-        // $query = "select s.id as service_id, s.service_name, ps.description, "
-        //     . " c.category_name, ps.cost, ps.duration, ps.rating from provider_services "
-        //     . " ps inner join services s on s.id=ps.service_id inner join categories "
-        //     . "c on c.id =s.category_id where 1=1 ". $filter;
-
-        // $provider_services = RawQuery::paginate($query);
-
-        //echo   $query;
-
-        //dd(HTTPCodes);
-        Log::info('Extracted statuses results : ' . var_export($provider_services, 1));
+        Log::info('Extracted statuses results : ' . var_export($results, 1));
 
         if(empty($results)){
             return Response::json([], HTTPCodes::HTTP_OK );
