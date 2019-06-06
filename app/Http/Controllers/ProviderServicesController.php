@@ -90,8 +90,8 @@ class ProviderServicesController extends Controller
         //echo print_r($params, 1);
 
 
-         $query = "select sp.id as service_provider_id, sp.type, group_conact(s.id) as service_id, "
-            . " group_conact(s.service_name) as service_name, sp.service_provider_name, "
+         $query = "select sp.id as service_provider_id, sp.type, group_concat(s.id) as service_id, "
+            . " group_concat(s.service_name) as service_name, sp.service_provider_name, "
             . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
