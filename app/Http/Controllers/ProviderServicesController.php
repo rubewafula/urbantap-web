@@ -35,7 +35,7 @@ class ProviderServicesController extends Controller
         );
 
         //die(print_r($request->all()));
-
+        Log::info("Provider services search req", $request->all());
         if ($validator->fails()) {
             $out = [
                 'success' => false,
@@ -71,17 +71,13 @@ class ProviderServicesController extends Controller
         // $image_url = URL::to('/storage/image/avatar/');
         // $sp_providers_url =  URL::to('/storage/image/service-providers/');
         // $p_services_url =  URL::to('/storage/image/provider-services/');
-
-
+          
          if(empty($request->get('service_time')) )
          {
             $request->service_time= date('Y-m-d H:i');
          } 
-      
-         if(empty($request->get('location')))
-         {
-            $request->location= 'Nairobi';
-         }
+     
+          
          $params =[
                 'service_date'=>$request->service_time,
                 'service_date2'=>$request->service_time,

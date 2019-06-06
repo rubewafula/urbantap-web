@@ -405,7 +405,6 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         $sort = null;
-
         // $image_url = URL::to('/storage/image/avatar/');
         // $sp_providers_url =  URL::to('/storage/image/service-providers/');
 
