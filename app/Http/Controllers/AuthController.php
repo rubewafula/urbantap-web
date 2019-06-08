@@ -352,6 +352,65 @@ class AuthController extends Controller
 
     }
 
+
+    /**
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function change_password(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'current_password'    => 'required|string',
+            'new_password'    => 'required|string',
+            'conf_password' => 'required|string'
+        ]);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+        
+
+        if ($request->new_password != $request->conf_password) {
+            $out = [
+                'success' => false,
+                'message' => ['new_password' => 'Password does not match confirm password']
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+
+        $user = $request->user();
+        if($user->email){
+            $credentials = ['email' =>$user->email, 'password' => $request->get('current_password')];
+        }else{
+            $credentials = ['phone_no' =>$user->phone_no, 'password' => $request->get('current_password')];
+        }
+
+        if (!Auth::attempt($credentials)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invalid credentials, please provide valid current password'
+            ], HTTPCodes::HTTP_UNAUTHORIZED);
+        }
+
+        $user->password = bcrypt($request->new_password);
+        $user->save();
+
+        return response()->json([
+            'success'      => true,
+            'user'         => $user,
+            'message' => "Password reset success"
+        ]);
+    }
+
+
+
+
+
     /**
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
