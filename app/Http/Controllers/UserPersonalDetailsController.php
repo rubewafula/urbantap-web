@@ -67,7 +67,7 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $rawQuery = "SELECT d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no, "
+            . " d.home_location, work_phone_no, "
             . " concat(if(u.first_name is null, '', u.first_name), '', " 
             . " if(u.last_name is null, '', u.last_name)) as name, u.phone_no, u.email, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "

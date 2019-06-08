@@ -163,7 +163,7 @@ Route::group([
         Route::post('update', 'ServiceProvidersController@update');
         Route::delete('del', 'ServiceProvidersController@delete');
         Route::put('update', 'ServiceProvidersController@update');
-        Route::put('transactions', 'ServiceProvidersController@transactions');
+        Route::get('transactions', 'ServiceProvidersController@transactions');
 
     });
 
