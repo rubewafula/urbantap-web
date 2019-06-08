@@ -178,7 +178,7 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $transactions =  RawQuery::paginate( "select created_at, reference, "
-            . " description, if(transaction_type='CREDIT', amount,-amount), "
+            . " description, if(transaction_type='CREDIT', amount,-amount) as amount, "
             . " running_balance  from transactions where user_id =:uid ",
             $page=$request->page, $limit=null , $params=['uid' => $request->user_id]);
 
