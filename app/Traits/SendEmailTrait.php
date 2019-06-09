@@ -29,7 +29,7 @@ trait SendEmailTrait
     public function send(array $data, string $template)
     {
         $mailContents = file_get_contents(storage_path(sprintf('%s%s', $this->path, $template)));
-        if ($data['to']) {
+        if ($data['email_address']) {
             (new RabbitMQ())->publish(
                 array_merge(
                     $data,

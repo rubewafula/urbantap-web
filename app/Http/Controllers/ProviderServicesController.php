@@ -35,7 +35,7 @@ class ProviderServicesController extends Controller
         );
 
         //die(print_r($request->all()));
-
+        Log::info("Provider services search req", $request->all());
         if ($validator->fails()) {
             $out = [
                 'success' => false,
@@ -47,7 +47,7 @@ class ProviderServicesController extends Controller
         $validator = Validator::make($request->all(),[
             'service' => 'nullable|string',
             'service_time' =>'nullable|date_format:Y-m-d H:i',
-            'location' =>'nullable'
+            'location' =>'nullable|string'
         ]);
 
         if ($validator->fails()) {
@@ -58,12 +58,14 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         
+ 
+
         $filter = $service_filter = '';
         if(!is_null($id)){
-            $filter = " and ps.provider_service_id = '" .$id . "' ";
+            $filter = " and ps.id = '" .$id . "' ";
         }else {
-            $service_filter = " and s.service_name like  :service "
-            $filter  = " and (work_location like :location or work_location_city like :location2) ";
+            $service_filter = " and s.service_name like  :service ";
+            $filter  = " and (work_location like :location or work_location_city like :location2) group by sp.id ";
         }
 
         $image_url = URL::to('/storage/static/image/avatar/');
@@ -71,34 +73,28 @@ class ProviderServicesController extends Controller
         $icon_url = URL::to('/storage/static/image/icons/');
         $profile_url =  URL::to('/storage/static/image/profiles/');
         
-        // $image_url = URL::to('/storage/image/avatar/');
-        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        // $p_services_url =  URL::to('/storage/image/provider-services/');
-
-       
 
          if(empty($request->get('service_time')) )
          {
             $request->service_time= date('Y-m-d H:i');
          } 
-      
-         if(empty($request->get('location')))
-         {
-            $request->location= 'Nairobi';
-         }
 
-         $service_params = [ 'service'=>'%'.$request->service.'%',];
-        
-         $date_params = ['service_date'=>$request->service_time,
-          'service_date2'=>$request->service_time,]
+
+         $service_params = [];
+         if($service_filter){
+             $service_params = [ 'service'=>'%'.$request->service ?: "" .'%',];
+         }
+         $date_params = ['service_date'=>$request->service_time ?: "" ,
+          'service_date2'=>$request->service_time ?: "" ,];
 
          $location_params =[
-             'location'=>'%'.$request->location.'%',
-             'location2'=>'%'.$request->location.'%'
+             'location'=>'%'.$request->location ?: "" .'%',
+             'location2'=>'%'.$request->location ?: "" .'%'
          ];
 
 
-        $provideQ = "select sp.id as service_provider_id, sp.type, sp.service_provider_name, "
+        $provideQ = "select sp.id as service_provider_id, sp.id as id, "
+            . " sp.type, sp.service_provider_name, "
             . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
@@ -118,17 +114,17 @@ class ProviderServicesController extends Controller
             $params=$location_params);
 
         $results = [];
-        foreach ($provider_data as $key => $provider) {
+        foreach ($provider_data['result'] as $key => $provider) {
 
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
-                . " s.service_name, ps.cost, ps.description, ps.duration, ps.created_at,"
+                . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
                 . " ps.updated_at from provider_services ps inner join services s "
-                . " on s.id = ps.service_id  where  ps.id = :pid ". $service_filter ;
-
-            $service_params['pid'] = $provider['service_provider_id'];
-
-            $service_results = RawQuery::query( $serviceQ, $params=$service_params);
-            $provider->services = $service_results;
+                . " on s.id = ps.service_id  where  ps.service_provider_id = :pid ". $service_filter ;
+            Log::info("Provider data form service fetch " . $provider->service_provider_id);
+            $service_params['pid'] = $provider->service_provider_id;
+            Log::info("Service params ==> " . print_r($service_params, 1));
+            $service_results = RawQuery::query( $serviceQ, $service_params);
+            $provider->services= $service_results;
 
             array_push($results, $provider);
         }

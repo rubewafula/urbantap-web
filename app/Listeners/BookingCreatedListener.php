@@ -67,10 +67,10 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
             'service_provider' => $serviceProvider->toArray(),
         ]));
         // Send SMS
-        if (!is_null($data['business_phone'])) {
+        if (!is_null($data['msisdn'])) {
             $this->sms(
                 array_merge(
-                    Arr::get($data, 'sms', ['recipients' => [$data['business_phone']]]),
+                    Arr::get($data, 'sms'),
                     [
                         'message'             => "Booking Request. " . $data['service_name']
                             . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']

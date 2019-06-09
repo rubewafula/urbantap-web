@@ -38,7 +38,7 @@ trait ProviderDataTrait
     {
         return " from service_providers sp inner join provider_services ps on "
             . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
-            . "  where sp.id=:sp_id  and s.id =:service_id ";
+            . "  where sp.id=:sp_id  and ps.id =:service_id ";
     }
 
     /**

@@ -28,6 +28,7 @@ Route::group([
         'middleware' => 'auth:api'
     ], function () {
         Route::get('logout', 'AuthController@logout');
+        Route::post('change-password', 'AuthController@change_password');
         Route::get('user', 'AuthController@user');
     });
 
@@ -163,7 +164,7 @@ Route::group([
         Route::post('update', 'ServiceProvidersController@update');
         Route::delete('del', 'ServiceProvidersController@delete');
         Route::put('update', 'ServiceProvidersController@update');
-        Route::put('transactions', 'ServiceProvidersController@transactions');
+        Route::get('transactions', 'ServiceProvidersController@transactions');
 
     });
 
@@ -180,7 +181,7 @@ Route::group([
     Route::group([
         'middleware' => 'auth:api'
         ], function () {
-        Route::post('transactions', 'UserPersonalDetailsController@transactions');
+        Route::get('transactions', 'UserPersonalDetailsController@transactions');
         Route::post('create', 'UserPersonalDetailsController@create');
         Route::post('update', 'UserPersonalDetailsController@update');
         Route::delete('del', 'UserPersonalDetailsController@delete');

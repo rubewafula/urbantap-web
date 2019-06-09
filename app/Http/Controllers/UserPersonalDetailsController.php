@@ -67,7 +67,7 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $rawQuery = "SELECT d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location work_phone_no, "
+            . " d.home_location, work_phone_no, "
             . " concat(if(u.first_name is null, '', u.first_name), '', " 
             . " if(u.last_name is null, '', u.last_name)) as name, u.phone_no, u.email, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
@@ -166,6 +166,7 @@ class UserPersonalDetailsController extends Controller{
 
         $validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:users,id',
+            'page' => 'integer|nullable'
         ]);
 
         if ($validator->fails()) {
@@ -177,9 +178,9 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $transactions =  RawQuery::paginate( "select created_at, reference, "
-            . " description, if(transaction_type='CREDIT', amount,-amount), "
+            . " description, if(transaction_type='CREDIT', amount,-amount) as amount, "
             . " running_balance  from transactions where user_id =:uid ",
-            ['uid' => $request->user_id]);
+            $page=$request->page, $limit=null , $params=['uid' => $request->user_id]);
 
         return Response::json($transactions, HTTPCodes::HTTP_OK);
 
