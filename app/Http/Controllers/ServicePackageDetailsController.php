@@ -53,7 +53,7 @@ class ServicePackageDetailsController extends Controller{
         }
 
         $results = DB::select( 
-        	DB::raw("SELECT spd.id, sp.package_name, spd.description, spd.media_data,  sp.created_at, sp.updated_at FROM service_package_details spd inner join service_packages sp on sp.id = spd.service_package_id where spd.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100") 
+        	DB::raw("SELECT spd.id, sp.package_name, spd.description, spd.media_data,  sp.created_at, sp.updated_at FROM service_package_details spd inner join service_packages sp on sp.id = spd.service_package_id where spd.status_id not in (" . DBStatus::TRANSACTION_DELETED . ") " . $filter . " limit 100") 
         );
         //dd(HTTPCodes);
         Log::info('Extracted service service_packages results : '.var_export($results, 1));

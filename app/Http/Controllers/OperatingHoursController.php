@@ -45,7 +45,7 @@ class OperatingHoursController extends Controller
          
 
         $query = "select id, service_day, time_from, time_to from operating_hours op "
-            . " where 1=1 ". $filter . " and status_id = ".DBStatus::RECORD_ACTIVE;
+            . " where 1=1 ". $filter . " and status_id = ".DBStatus::TRANSACTION_ACTIVE;
 
         $operating_hours = RawQuery::paginate($query);
 
@@ -185,7 +185,7 @@ class OperatingHoursController extends Controller
            
             DB::table('operating_hours')
                 ->where('id', $request->get('id'))
-                ->update(['status_id' => DBStatus::RECORD_DELETED]);
+                ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
             $out = [
                 'success' => true,
