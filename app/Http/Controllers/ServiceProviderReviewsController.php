@@ -128,7 +128,7 @@ class ServiceProviderReviewsController extends Controller{
                         'provider_service_id'=>$request->get('provider_service_id'),
                         'rating'=>$request->get('rating'),
                         'review'=>$request->get('review'),
-                        'status_id'=>DBStatus::RECORD_PENDING
+                        'status_id'=>DBStatus::TRANSACTION_PENDING
                     ]
         	    );
 

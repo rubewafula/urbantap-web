@@ -46,7 +46,7 @@ class ServicePackagesController extends Controller{
         }
 
         $results = DB::select( 
-        	DB::raw("SELECT sp.id, c.id as category_id, c.category_name, sp.package_name, sp.description, sp.created_at, sp.updated_at FROM service_packages sp inner join categories c on c.id = sp.category_id where sp.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100") 
+        	DB::raw("SELECT sp.id, c.id as category_id, c.category_name, sp.package_name, sp.description, sp.created_at, sp.updated_at FROM service_packages sp inner join categories c on c.id = sp.category_id where sp.status_id not in (" . DBStatus::TRANSACTION_DELETED . ") " . $filter . " limit 100") 
         );
         //dd(HTTPCodes);
         Log::info('Extracted service service_packages results : '.var_export($results, 1));
@@ -89,7 +89,7 @@ class ServicePackagesController extends Controller{
                 . " :status_id, now(), now(), now())", [
                     'category_id'=>$request->get('category_id'),
                     'package_name'=>$request->get('package_name'),
-                    'status_id'=>DBStatus::RECORD_PENDING,
+                    'status_id'=>DBStatus::TRANSACTION_PENDING,
                     'description'=>$request->get('description')
                 ]
 	    	);
@@ -177,7 +177,7 @@ class ServicePackagesController extends Controller{
 		}else{
 	    	DB::table('categories')
             ->where('id', $request->get('id'))
-            ->update(['status_id' => DBStatus::RECORD_DELETED]);
+            ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,

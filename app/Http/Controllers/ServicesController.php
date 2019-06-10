@@ -88,7 +88,7 @@ class ServicesController extends Controller
                 . " :status_id, now(), now(), now())", [
                     'category_id'=>$request->get('category_id'),
                     'service_name'=>$request->get('service_name'),
-                    'status_id'=>DBStatus::RECORD_PENDING
+                    'status_id'=>DBStatus::TRANSACTION_PENDING
                 ]
             );
 
@@ -171,7 +171,7 @@ class ServicesController extends Controller
         }else{
             DB::table('services')
             ->where('id', $request->get('id'))
-            ->update(['status_id' => DBStatus::RECORD_DELETED]);
+            ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
             $out = [
                 'success' => true,

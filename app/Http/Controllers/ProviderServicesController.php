@@ -260,7 +260,7 @@ class ProviderServicesController extends Controller
            
             DB::table('provider_services')
                 ->where('id', $request->get('id'))
-                ->update(['status_id' => DBStatus::RECORD_DELETED]);
+                ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
             $out = [
                 'success' => true,

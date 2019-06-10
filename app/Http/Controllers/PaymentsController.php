@@ -123,7 +123,7 @@ class PaymentsController extends Controller
                         'account_no'       => $bill_ref_no,
                         'msisdn'           => $msisdn,
                         'names'            => $name,
-                        'trx_status'       => DBStatus::COMPLETE
+                        'trx_status'       => DBStatus::TRANSACTION_COMPLETE
                     ]
                 );
                 $user = DB::select(
@@ -199,7 +199,7 @@ class PaymentsController extends Controller
 					booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
 					paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
 					received_payment='" . $transaction_amount . "', balance='" . $balance . "',
-					status_id='" . DBStatus::COMPLETE . "', created_at=now()");
+					status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
 
                 DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
 					    status_id='" . DBStatus::BOOKING_PAID . "', 

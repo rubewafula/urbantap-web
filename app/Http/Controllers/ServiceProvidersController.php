@@ -102,7 +102,7 @@ class ServiceProvidersController extends Controller{
         $_day = $slot_date->format('l');
         $working_day = RawQuery::query($working_hours_sql,
             ['service_provider_id' => $request->get('service_provider_id'),
-             '_day'=>$_day, 'active'=>DBStatus::RECORD_ACTIVE ]);
+             '_day'=>$_day, 'active'=>DBStatus::TRANSACTION_ACTIVE ]);
        
         if(empty($working_day)){
             $out = ['success'=>false, 'message'=>['slot_date' => 'Service provider not available on this date']]; 
@@ -257,7 +257,7 @@ class ServiceProvidersController extends Controller{
 
         $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
             . " where service_provider_id ='" . $service_provider_id . "'"
-	    . " and status_id=". DBStatus::RECORD_ACTIVE;
+	    . " and status_id=". DBStatus::TRANSACTION_ACTIVE;
 
         $results['operating_hours'] = RawQuery::query($working_hours_sql);
 
@@ -873,7 +873,7 @@ class ServiceProvidersController extends Controller{
 		}else{
 	    	DB::table('service_providers')
             ->where('user_id', $request->get('id'))
-            ->update(['status_id' => DBStatus::RECORD_DELETED]);
+            ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,

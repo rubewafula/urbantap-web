@@ -200,7 +200,7 @@ class AuthController extends Controller
             'email'     => $email,
             'network'   => is_null($phone) ? 'EMAIL' : 'SAFARICOM',
             'message'   => $message,
-            'status_id' => DBStatus::SMS_NEW
+            'status_id' => DBStatus::NOTIFICATION_NEW
         ]);
 
         //Send message over API

@@ -449,7 +449,7 @@ class BookingsController extends Controller
                     'booking_time'        => $actual_booking_time,
                     'booking_duration'    => $request['booking_duration'],
                     'expiry_time'         => $request['expiry_time'],
-                    'status_id'           => DBStatus::RECORD_PENDING,
+                    'status_id'           => DBStatus::TRANSACTION_PENDING,
                     'booking_type'        => $request['booking_type'],
                     'location'            => $request['location'],
                     'amount'              => $actual_cost
