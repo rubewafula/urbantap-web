@@ -58,7 +58,9 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         
- 
+        $request->service  = $request->service ?: "";
+        $request->service_time = $request->service_time ?: "";
+        $request->location = $request->location ?: "" ;
 
         $filter = $service_filter = '';
         if(!is_null($id)){
@@ -73,13 +75,6 @@ class ProviderServicesController extends Controller
         $icon_url = URL::to('/storage/static/image/icons/');
         $profile_url =  URL::to('/storage/static/image/profiles/');
         
-
-         if(empty($request->get('service_time')) )
-         {
-            $request->service_time= date('Y-m-d H:i');
-         } 
-
-
          $service_params = [];
          if($service_filter){
              $service_params = [ 'service'=>'%'.$request->service ?: "" .'%',];
@@ -105,8 +100,7 @@ class ProviderServicesController extends Controller
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from service_providers sp  inner join  provider_services ps on "
-            . " ps.service_provider_id = sp.id  left  join user_personal_details  d using(user_id)  "
+            . " from service_providers sp left  join user_personal_details  d using(user_id)  "
             . " where 1=1 ". $filter ;
 
         //echo print_r($params, 1);
@@ -119,9 +113,9 @@ class ProviderServicesController extends Controller
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
                 . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
                 . " ps.updated_at from provider_services ps inner join services s "
-                . " on s.id = ps.service_id  where  ps.service_provider_id = :pid ". $service_filter ;
+                . " on s.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
             Log::info("Provider data form service fetch " . $provider->service_provider_id);
-            $service_params['pid'] = $provider->service_provider_id;
+            $service_params['spid'] = $provider->service_provider_id;
             Log::info("Service params ==> " . print_r($service_params, 1));
             $service_results = RawQuery::query( $serviceQ, $service_params);
             $provider->services= $service_results;

@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Class AuthController
@@ -361,8 +362,8 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'current_password'    => 'required|string',
-            'new_password'    => 'required|string',
-            'conf_password' => 'required|string'
+            'new_password'    => 'required|same:new_password',
+            'conf_password' => 'required|same:new_password'
         ]);
 
         if ($validator->fails()) {
@@ -373,30 +374,16 @@ class AuthController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         
-
-        if ($request->new_password != $request->conf_password) {
+        $user = $request->user();
+        $current_password = $user->password;  
+        if(!Hash::check($request->current_password, $current_password)){
             $out = [
                 'success' => false,
-                'message' => ['new_password' => 'Password does not match confirm password']
+                'message' => ['current_password' => 'Invalid password']
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+
         }
-
-
-        $user = $request->user();
-        if($user->email){
-            $credentials = ['email' =>$user->email, 'password' => $request->get('current_password')];
-        }else{
-            $credentials = ['phone_no' =>$user->phone_no, 'password' => $request->get('current_password')];
-        }
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid credentials, please provide valid current password'
-            ], HTTPCodes::HTTP_UNAUTHORIZED);
-        }
-
         $user->password = bcrypt($request->new_password);
         $user->save();
 
