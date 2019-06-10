@@ -67,7 +67,8 @@ class HomePageController extends Controller
     	   //  . " user_personal_details  d using(user_id) order by sp.created_at desc, "
     	   //  . " overall_likes desc limit 20";
 
-        $provideQ = "select sp.id as service_provider_id, sp.type, sp.service_provider_name, "
+        $provideQ = "select sp.id as service_provider_id, sp.id as id, "
+            . " sp.type, sp.service_provider_name, "
             . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
             . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
@@ -76,15 +77,13 @@ class HomePageController extends Controller
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
-            . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
+            . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from service_providers sp  inner join  provider_services ps on "
-            . " ps.service_provider_id = sp.id  left  join user_personal_details  d using(user_id)  "
-            . " by sp.created_at desc, overall_likes desc " ;
+            . " from service_providers sp left  join user_personal_details  d using(user_id)  "
+            . " order by sp.created_at desc, overall_likes desc limit 4 " ;
 
         //echo print_r($params, 1);
-        $provider_data =  RawQuery::paginate( $provideQ, $page = 1, $limit = 4, 
-            $params=null);
+        $provider_data =  RawQuery::query( $provideQ);
 
         $popular_providers = [];
         foreach ($provider_data as $key => $provider) {
@@ -92,22 +91,15 @@ class HomePageController extends Controller
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
                 . " s.service_name, ps.cost, ps.description, ps.duration, ps.created_at,"
                 . " ps.updated_at from provider_services ps inner join services s "
-                . " on s.id = ps.service_id  where  ps.id = :pid ". $service_filter ;
+                . " on s.id = ps.service_id  where  ps.service_provider_id = :pid " ;
 
-            $service_params['pid'] = $provider['service_provider_id'];
+            $service_params['pid'] = $provider->service_provider_id;
 
             $service_results = RawQuery::query( $serviceQ, $params=$service_params);
             $provider->services = $service_results;
 
             array_push($popular_providers, $provider);
         }
-
-
-
-
-
-
-
 
 
         $featured_providers = "SELECT sp.id, s.service_name, sp.type, "

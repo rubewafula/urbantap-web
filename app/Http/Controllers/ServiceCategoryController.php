@@ -153,7 +153,7 @@ class ServiceCategoryController extends Controller{
 		}else{
 	    	DB::table('categories')
             ->where('id', $request->get('id'))
-            ->update(['status_id' => DBStatus::RECORD_DELETED]);
+            ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,
