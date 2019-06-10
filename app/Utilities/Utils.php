@@ -1,6 +1,7 @@
 <?php
 namespace App\Utilities;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use \Exception;
 
@@ -9,7 +10,8 @@ class Utils
 
     static function loadTemplateData($template_data, $data)
     {
-
+        // Remove sms key from data
+        $data = Arr::except($data, 'sms');
         Log::info("Data to Load " . print_r($data, 1));
         $dd = [];
         array_walk($data, function ($value, $key) use (&$dd) {
@@ -31,12 +33,12 @@ class Utils
             $keys[] = '/\[\[(\s+)?' . $v . '(\s+)?\]\]/';
         });
 
-        $html= preg_replace($keys, array_values($dd), $template_data);
+        $html = preg_replace($keys, array_values($dd), $template_data);
 
         $confirm_rex = "/\[\[(\s\+)?[\w-]+(\s\+)?\]\]/";
-        
-        if(preg_match_all($confirm_rex, $html)){
-           throw new Exception('Email template not properly completed. ');
+
+        if (preg_match_all($confirm_rex, $html)) {
+            throw new Exception('Email template not properly completed. ');
         }
 
         return $html;

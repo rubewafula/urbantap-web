@@ -29,5 +29,4 @@ class DBStatus
     const SMS_SENT = 25;
     const SMS_DELIVERED = 26;
     const SMS_FAILED = 27;
-
 }
