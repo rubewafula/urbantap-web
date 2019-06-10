@@ -56,7 +56,7 @@ class UserRegisteredListener implements ShouldSendMail, ShouldSendSMS
         return "Dear " . $user->first_name . "," . "<br/>" . "<br/>"
             . " Thank you for signing up with URBANTAP. From now on you will be able to order for our services on the fly. Feel free to peruse through the profiles on URBANTAP and identify the best service providers you can order from. " . "<br/>" . "<br/>"
             . " Click on the below link to get your account verified and start tapping to freedom " . "<br/>"
-            . env('APP_URL', 'http:127.0.0.1:8000/') . "/account/verify/" . Arr::get($data, 'token_hash') . " " . "<br/>" . "<br/>"
+            . env('APP_URL', 'http:127.0.0.1:8000/') . "/verify-account/" . Arr::get($data, 'token_hash') . " " . "<br/>" . "<br/>"
             . " Cheers " . "<br/>"
             . " URBANTAP - Tap to Freedom ";
     }
