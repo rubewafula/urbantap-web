@@ -195,7 +195,7 @@ class ServicePackageDetailsController extends Controller{
 		}else{
 	    	DB::table('service_package_details')
             ->where('id', $request->get('id'))
-            ->update(['status_id' => DBStatus::RECORD_DELETED]);
+            ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,

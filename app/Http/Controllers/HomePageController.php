@@ -136,12 +136,12 @@ class HomePageController extends Controller
        
         $out = ['services' =>$results[0], 
                 'top_services'=>$results[1],
-                'customer_count'=>$results[2][0]->customer_count,
-                'service_provider_count' => $results[3][0]->service_provider_count,
-                'rating_count' => $results[4][0]->rating_count, 
-                'weekly_providers_count' => $results[5][0]->weekly_providers_count,
+                'customer_count'=> optional(array_get($results, '2.0'))->customer_count,
+                'service_provider_count' => optional(array_get($results, '3.0'))->service_provider_count,
+                'rating_count' => optional(array_get($results, '4.0'))->rating_count,
+                'weekly_providers_count' => optional(array_get($results, '5.0'))->weekly_providers_count,
                 'popular_providers' => $popular_providers,
-                'featured_providers' => $results[6]
+                'featured_providers' => array_get($results, '5')
             ];
         
         return Response::json($out, HTTPCodes::HTTP_OK);

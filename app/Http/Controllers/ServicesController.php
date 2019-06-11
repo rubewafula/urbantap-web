@@ -42,7 +42,7 @@ class ServicesController extends Controller
             $filter = " and category_id = '" .$category_id . "' ";
         }
 
-        $query = "SELECT s.id, s.category_id, c.category_name, s.service_name FROM services s inner join categories c on c.id = s.category_id where s.status_id not in (" . DBStatus::RECORD_DELETED . ") " . $filter . " limit 100";
+        $query = "SELECT s.id, s.category_id, c.category_name, s.service_name FROM services s inner join categories c on c.id = s.category_id where s.status_id not in (" . DBStatus::TRANSACTION_DELETED . ") " . $filter . " limit 100";
         Log::info('Query : ' . $query);
 
         $results = DB::select( 

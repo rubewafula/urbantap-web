@@ -168,7 +168,7 @@ class ServiceProviderReviewsController extends Controller{
 
 	    	DB::table('reviews')
                 ->where('id', $request->get('id'))
-                ->update(['status_id' => DBStatus::RECORD_DELETED]);
+                ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,

@@ -170,7 +170,7 @@ class ServiceProviderPortfoliosController extends Controller{
 
 	    	DB::table('portfolios')
                 ->where('id', $request->get('id'))
-                ->update(['status_id' => DBStatus::RECORD_DELETED]);
+                ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
 
 	    	$out = [
 		        'success' => true,
