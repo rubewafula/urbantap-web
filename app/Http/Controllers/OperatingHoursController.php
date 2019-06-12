@@ -76,12 +76,11 @@ class OperatingHoursController extends Controller
     {
 
         $validator = Validator::make($request->all(),[
-            'service_provider_id' => 'required|exists:service_providers,id',
-            'day' => 'required',
+            'day' => 'required|unique:operating_hours,service_day',
             'time_from' => 'required|string',
             'time_to' =>'required|string'
         ]);
-
+       
         if ($validator->fails()) {
             $out = [
                 'success' => false,
@@ -89,23 +88,29 @@ class OperatingHoursController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }else{
-
+            $user = $request->user();
+            $sp = RawQuery::query("select id from service_providers where user_id=$user->id");
+            $sp_id = optional(array_get($sp, 0))->id;
             DB::insert("insert into operating_hours (service_provider_id,"
-                . " service_day, time_from, time_to, created_at, updated_at)"
+                . " service_day, time_from, time_to, created_at, updated_at, status_id)"
                 . " values (:service_provider_id, :day, :time_from, "
-                . " :time_to, now(),  now())  ", 
+                . " :time_to, now(),  now(), :status)  ", 
                     [
-                        'service_provider_id'=> $request->get('service_provider_id'),
+                        'service_provider_id'=> $sp_id,
                         'day'=>$request->get('day'),
                         'time_from'=>$request->get('time_from'),
-                        'time_to'=>$request->get('time_to')
+                        'time_to'=>$request->get('time_to'),
+                        'status' => DBStatus::TRANSACTION_ACTIVE
                     ]
                 );
 
             $out = [
                 'success' => true,
                 'id'=>DB::getPdo()->lastInsertId(),
-                'message' => 'Provider service Created'
+                'service_day' => $request->get('day'),
+                'time_from'=>$request->get('time_from'),
+                'time_to' => $request->get('time_to'),
+                'message' => 'Operation Hour Created'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_CREATED);
@@ -185,7 +190,7 @@ class OperatingHoursController extends Controller
            
             DB::table('operating_hours')
                 ->where('id', $request->get('id'))
-                ->update(['status_id' => DBStatus::TRANSACTION_DELETED]);
+                ->delete();
 
             $out = [
                 'success' => true,

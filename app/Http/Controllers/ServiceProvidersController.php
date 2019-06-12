@@ -210,18 +210,13 @@ class ServiceProvidersController extends Controller{
 
         $rawQuery = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
-            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
-            . " on c.id = ss.category_id  inner join provider_services ps "
-            . " on ss.id = ps.service_id where "
-            . " ps.service_provider_id=sp.id ) as service_name, "
-	    . " (select group_concat(distinct c.id) from categories c inner join services ss " 
-            . " on c.id = ss.category_id  inner join provider_services ps "
-            . " on ss.id = ps.service_id where "
-            . " ps.service_provider_id=sp.id ) as service_id, "
-            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.service_provider_name as business_name,  sp.business_description,"
+            . "  sp.work_location as location_name, sp.work_lat, sp.work_lng, "
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
-            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " d.home_location, business_phone, business_email, key_words as keywords, "
+            . " address_data as address_data, facebook as facebook_page, twitter, "
+            . " instagram, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
@@ -242,13 +237,14 @@ class ServiceProvidersController extends Controller{
        
         $service_provider_id =  $user_id;
 
-        $sql_provider_services = "select ps.id as provider_service_id,  "
+        $sql_provider_services = "select ps.id as provider_service_id,  c.category_name, c.id as category_id, "
             . " concat('$p_services_url' ,'/', if(ps.media_url is null, '2.jpg', "
             . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
             . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on " 
-            . " s.id = ps.service_id  where ps.service_provider_id = '" . $service_provider_id . "' ";
+            . " s.id = ps.service_id inner join categories c on s.category_id = c.id "
+            . " where ps.service_provider_id = '" . $service_provider_id . "' ";
 
        
 
@@ -265,7 +261,8 @@ class ServiceProvidersController extends Controller{
             . " concat('$p_services_url' ,'/', if(media_data is null, '2.jpg', "
             . " JSON_UNQUOTE(json_extract(media_data, '$.media_url'))) ) as media_photo, " 
             . " p.description  FROM  portfolios p "
-            . " where service_provider_id = '" . $service_provider_id. "'" ;
+            . " where service_provider_id = '" . $service_provider_id. "' "
+            . " and status_id = ".DBStatus::TRANSACTION_ACTIVE ;
 
         $pflios = RawQuery::query($portfolios_sql);
 
@@ -360,22 +357,19 @@ class ServiceProvidersController extends Controller{
 
         $rawQuery = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
-            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
-            . " on c.id = ss.category_id  inner join provider_services ps "
-            . " on ss.id = ps.service_id where "
-            . " ps.service_provider_id=sp.id ) as service_name, "
-            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.service_provider_name as business_name,  sp.business_description,"
+            . "  sp.work_location as location_name, sp.work_lat, sp.work_lng, "
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
-            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " d.home_location, business_phone, business_email, key_words as keywords, "
+            . " address_data as address_data, facebook as facebook_page, twitter, "
+            . " instagram, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
-            . " FROM  service_providers sp inner join provider_services ps on ps.service_provider_id=ps.id left join "
-            . " user_personal_details  d using(user_id) where sp.status_id =1  " 
-            . $filter .    $sort_by ;
-
+            . " FROM  service_providers sp left join "
+            . " user_personal_details  d using(user_id) where 1=1 "  . $filter . " ". $sort_by;
         //die($rawQuery);
 
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
@@ -451,25 +445,22 @@ class ServiceProvidersController extends Controller{
         }
 
 
-        $rawQuery = "SELECT sp.id,  "
+         $rawQuery = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
-            . " (select group_concat(distinct category_name) from categories c inner join services ss " 
-            . " on c.id = ss.category_id  inner join provider_services ps "
-            . " on ss.id = ps.service_id where "
-            . " ps.service_provider_id=sp.id ) as service_name, "
-            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
+            . " sp.service_provider_name as business_name,  sp.business_description,"
+            . "  sp.work_location as location_name, sp.work_lat, sp.work_lng, "
             . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
             . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
-            . " d.home_location, work_phone_no, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " d.home_location, business_phone, business_email, key_words as keywords, "
+            . " address_data as address_data, facebook as facebook_page, twitter, "
+            . " instagram, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " FROM  service_providers sp left join "
-            . " user_personal_details  d using(user_id) where sp.status_id =1  " 
-            . $filter .    $sort_by ;
-
-        
+            . " user_personal_details  d using(user_id) where 1=1 "  . $filter . " ". $sort_by;
+   
         //die($rawQuery);
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
@@ -571,7 +562,7 @@ class ServiceProvidersController extends Controller{
         }
         $ext = $file->getClientOriginalExtension();
         $size = $file->getClientSize();
-        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('user_id'));
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->user()->id);
         $type = $this->getType($ext);
 
         if($type == 'unknown'){
@@ -627,9 +618,9 @@ class ServiceProvidersController extends Controller{
     {
 
         $request->replace($request->all());    
+        $user = $request->user();
 
     	$validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:users,id|unique:service_providers,user_id',
             'business_name' => 'required|unique:service_providers,service_provider_name',
             'business_description' => 'required|string',
             'keywords' => 'string|nullable',
@@ -653,7 +644,7 @@ class ServiceProvidersController extends Controller{
             ] ,
             'services'=>['required'] ,  
             'cover_photo' => 'required|file|image|mimes:jpeg,png,gif,webp|max:2048',
-            'address_data'=>'nullable|json'
+            'address_data'=>'nullable|string'
 	]);
    
          if ($validator->fails()) {
@@ -661,7 +652,7 @@ class ServiceProvidersController extends Controller{
 		        'success' => false,
 		        'message' => $validator->messages()
 		    ];
-			return Response::json($out, HTTPCodes::HTTP_OK);
+			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
 	    }else{
 
 
@@ -683,14 +674,14 @@ class ServiceProvidersController extends Controller{
                 . " created_at, updated_at, key_words, address_data)  values (1, :user_id, "
                 . " :service_provider_name, :business_description, :work_location, :work_location_city, "
                 . " :business_phone, :business_email, :facebook, :twitter, :instagram, "
-                . " :work_lat, :work_lng,". DBStatus::RECORD_PENDING .",:cover_photo, now(), "
+                . " :work_lat, :work_lng,". DBStatus::USER_ACTIVE .",:cover_photo, now(), "
                 . " now(), :keywords, :address_data)  ", 
                     [
-                        'user_id'=>$request->get('user_id'),
+                        'user_id'=>$user->id,
                         'service_provider_name'=> $request->get('business_name'),
                         'business_description'=>$request->get('business_description'),
-                        'work_location'=>$request->get('work_location'),
-                        'work_location_city'=>$request->get('work_location_city'),
+                        'work_location'=>$request->get('location_name'),
+                        'work_location_city'=>$request->get('location_city'),
                         'business_phone'=>$request->get('business_phone'),
                         'business_email'=>$request->get('business_email'),
                         'facebook'=>$request->get('facebook'),
@@ -743,10 +734,10 @@ class ServiceProvidersController extends Controller{
     public function update(Request $request)
     {
     
-        $request->replace($request->all());	
+        $request->replace($request->all());
+        $user = $request->user();	
     	$validator = Validator::make($request->all(),[
-            'service_provider_id' => 'required|exists:service_providers,id',
-            'service_provider_name' => 'unique:service_providers',
+            'business_name' => 'unique:service_providers,service_provider_name',
             'business_description' => 'string',
             'location_name' =>'nullable|string',
             'location_city' =>'nullable|string',
@@ -760,18 +751,15 @@ class ServiceProvidersController extends Controller{
                 'regex:/^((\+?254)|0)?7\d{8}$/'
             ],
             'work_lat'=>[
-                 'required',
+                 'nullable',
                  'regex:/^[-+]?([1-8]?\d(\.\d+)?|90(\.0+)?)$/'
              ],
             'work_lng'=>[
-                 'required', 
+                 'nullable', 
                  'regex:/^[-+]?(180(\.0+)?|((1[0-7]\d)|([1-9]?\d))(\.\d+)?)$/'
              ] ,
             'status_id' =>'integer', 
-            'overall_likes' =>'integer',  
-            'overall_dislikes' =>'integer',  
-            'overall_rating' =>'between:0,99.99',       
-            'address_data'=>'nullable|json', 
+            'address_data'=>'nullable|string', 
         ]);
         Log::info("Update request => ". var_export($request->all(), 1) );
 	if ($validator->fails()) {
@@ -783,17 +771,17 @@ class ServiceProvidersController extends Controller{
 	}else{
 
             $update = [];
-            if(!empty($request->get('service_provider_name')) ){
-                $update['service_provider_name']  =$request->get('service_provider_name') ;
+            if(!empty($request->get('business_name')) ){
+                $update['service_provider_name']  =$request->get('business_name') ;
             }
             if(!empty($request->get('business_description')) ){
                 $update['business_description']  =$request->get('business_description') ;
             }
              if(!empty($request->get('location_name')) ){
-                $update['location_name']  =$request->get('location_name') ;
+                $update['work_location']  =$request->get('location_name') ;
             }
             if(!empty($request->get('location_city')) ){
-                $update['location_city']  =$request->get('location_city') ;
+                $update['work_location_city']  =$request->get('location_city') ;
             }
 
             if(!empty($request->get('work_lat')) ){
@@ -805,17 +793,8 @@ class ServiceProvidersController extends Controller{
             if(!empty($request->get('status_id')) ){
                 $update['status_id']  =$request->get('status_id') ;
             }
-            if(!empty($request->get('overall_rating')) ){
-                $update['overall_rating']  =$request->get('overall_rating') ;
-            }
-            if(!empty($request->get('overall_likes')) ){
-                $update['overall_likes']  =$request->get('overall_likes') ;
-            }
-            if(!empty($request->get('overall_dislikes')) ){
-                $update['overall_dislikes']  =$request->get('overall_dislikes') ;
-            }
             if(!empty($request->get('facebook_page')) ){
-                $update['facebook_page']  =$request->get('facebook_page') ;
+                $update['facebook']  =$request->get('facebook_page') ;
             }
             if(!empty($request->get('twitter')) ){
                 $update['twitter']  =$request->get('twitter') ;
@@ -833,15 +812,18 @@ class ServiceProvidersController extends Controller{
             if(!empty($request->get('address_data')) ){
                 $update['address_data']  =$request->get('address_data') ;
             }
+            if(!empty($request->get('business_email')) ){
+                $update['business_email']  =$request->get('business_email') ;
+            }
 
 
 	    DB::table('service_providers')
-                ->where('id', $request->get('service_provider_id'))
+                ->where('user_id', $user->id)
                 ->update($update);
 
 	    	$out = [
 		        'success' => true,
-		        'user_id'=>$request->get('user_id'),
+		        'user_id'=>$user->id,
 		        'message' => 'Service Provider updated OK'
 		    ];
 
