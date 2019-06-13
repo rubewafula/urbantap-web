@@ -268,6 +268,8 @@ class PaymentsController extends Controller
         $amount = $request->amount;
         $msisdn = $request->msisdn;
 
+        Log::info("Data as read from the request BOOKING ID ".$booking_id." AMOUNT ".$amount." MSISDN ".$msisdn);
+
         $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $token = Utils::generateMPESAOAuthToken();
 
