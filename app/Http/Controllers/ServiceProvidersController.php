@@ -238,8 +238,9 @@ class ServiceProvidersController extends Controller{
        
         $service_provider_id =  $user_id;
 
+        $service_image_url = URL::to('/storage/static/image/services/');
         $sql_provider_services = "select ps.id as provider_service_id,  c.category_name, c.id as category_id, "
-            . " concat('$p_services_url' ,'/', if(ps.media_url is null, '2.jpg', "
+            . " concat('$service_image_url' ,'/', if(ps.media_url is null, '2.jpg', "
             . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
             . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
@@ -590,9 +591,6 @@ class ServiceProvidersController extends Controller{
         }
 
         return false;
-
-
-
     }
 
 

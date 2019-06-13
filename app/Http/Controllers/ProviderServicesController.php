@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;    
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;    
 use App\Utilities\HTTPCodes;
@@ -40,7 +41,7 @@ class ProviderServicesController extends Controller
         $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
         $icon_url = URL::to('/storage/static/image/icons/');
         $profile_url =  URL::to('/storage/static/image/profiles/');
-        
+        $service_image_url =  URL::to('/storage/static/image/services/');
 
         $provideQ = "select sp.id as service_provider_id, sp.id as id, "
             . " sp.type, s.id as service_id, "
@@ -53,6 +54,8 @@ class ProviderServicesController extends Controller
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
@@ -140,6 +143,7 @@ class ProviderServicesController extends Controller
         $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
         $icon_url = URL::to('/storage/static/image/icons/');
         $profile_url =  URL::to('/storage/static/image/profiles/');
+        $service_image_url = URL::to('/storage/static/image/services/');
         
          $service_params = [];
          if($service_filter){
@@ -178,8 +182,11 @@ class ProviderServicesController extends Controller
 
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
                 . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
+                . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
+                . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
                 . " ps.updated_at from provider_services ps inner join services s "
                 . " on s.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
+
             Log::info("Provider data form service fetch " . $provider->service_provider_id);
             $service_params['spid'] = $provider->service_provider_id;
             Log::info("Service params ==> " . print_r($service_params, 1));
@@ -227,27 +234,55 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }else{
 
+            $service_photo= $this->upload_servicephoto($request);
+
+            if($service_photo !=  FALSE)
+            {
+                  $service_photo = json_encode($cover_photo);
+            }else{
+                 $service_photo = NULL;
+            }
+
             DB::insert("insert into provider_services (service_provider_id,"
-                . " service_id, description, cost, duration, created_at, updated_at)"
+                . " service_id, description, cost, duration, media_url, created_at, updated_at)"
                 . " values (:service_provider_id, :service_id, :description, "
-                . " :cost, :duration, now(),  now())  ", 
+                . " :cost, :duration, :media_url, now(),  now())  ", 
                     [
                         'service_provider_id'=> $request->get('service_provider_id'),
                         'service_id'=>$request->get('service_id'),
                         'description'=>$request->get('description'),
+                        'media_url' => $service_photo,
                         'cost'=>$request->get('cost'),
                         'duration'=>$request->get('duration')
                     ]
                 );
 
+            $psid = DB::getPdo()->lastInsertId();
             $out = [
                 'success' => true,
-                'id'=>DB::getPdo()->lastInsertId(),
+                'id'=> $psid,
+                'service' => $this->get_service_data($psid),
                 'message' => 'Provider service Created'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_CREATED);
         }
+    }
+
+
+    private function get_service_data($id){
+        $service_image_url = URL::to('/storage/static/image/services/');
+
+        $sql_provider_services = "select ps.id as provider_service_id,  c.category_name, c.id as category_id, "
+            . " concat('$service_image_url' ,'/', if(ps.media_url is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
+            . " ps.service_provider_id, ps.service_id, s.service_name, ps.rating, "
+            . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
+            . "  ps.updated_at from provider_services ps inner join services s on "
+            . " s.id = ps.service_id inner join categories c on s.category_id = c.id "
+            . " where ps.id = :id ";
+        $service_data = RawQuery::query($sql_provider_services, ['id'=> $id]);
+        return array_get($service_data, 0);
     }
 
     /**
@@ -287,6 +322,15 @@ class ProviderServicesController extends Controller
                 $update['duration']  =$request->get('duration') ;
             }
 
+            $service_photo= $this->upload_servicephoto($request);
+
+            if($service_photo !=  FALSE)
+            {
+
+                  $update['media_url'] = json_encode($service_photo);
+
+            }
+
             DB::table('provider_services')
                 ->where('id', $request->get('id'))
                 ->update($update);
@@ -294,6 +338,7 @@ class ProviderServicesController extends Controller
             $out = [
                 'success' => true,
                 'user_id'=>$request->get('id'),
+                'service' => $this->get_service_data($request->get('id')),
                 'message' => 'Provider service updated OK'
             ];
 
@@ -337,5 +382,59 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
         }
     }
+
+    public  function  upload_servicephoto($request)
+    {
+
+        $file = $request->file('service_image');
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return null;
+        }
+        $max_size = (int)ini_get('upload_max_filesize') * 1000;
+        $all_ext = implode(',', $this->allExtensions());
+
+        $this->validate($request, [
+            'name' => 'nullable|unique:files',
+            'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
+        ]);
+
+        $file = $request->file('service_image');
+
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return FALSE;
+        }
+        $ext = $file->getClientOriginalExtension();
+        $size = $file->getClientSize();
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->user()->id);
+        $type = $this->getType($ext);
+
+        if($type == 'unknown'){
+            Log::info("Aborting file upload unknown file type "+ $type);
+            return FALSE;
+        }
+
+        $fullPath = $name . '.' . $ext;
+
+        $file_path = 'public/static/' . $type . '/services/'.$fullPath;
+
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+        if (Storage::putFileAs('public/static/' . $type . '/services/', $file, $fullPath)) {
+            return [
+                    'media_url'=>$fullPath,
+                    'name' => $name,
+                    'type' => $type,
+                    'extension' => $ext,
+                    'size'=>$size
+                ]; 
+        }
+
+        return false;
+    }
+
+
 
 }

@@ -142,7 +142,7 @@ Route::group([
         'middleware' => 'auth:api'
         ], function () {
         Route::post('create', 'ProviderServicesController@create');
-        Route::put('update', 'ProviderServicesController@update');
+        Route::post('update', 'ProviderServicesController@update');
         Route::delete('del', 'ProviderServicesController@delete');
      });
 });
