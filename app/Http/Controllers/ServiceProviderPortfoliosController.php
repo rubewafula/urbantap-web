@@ -61,7 +61,7 @@ class ServiceProviderPortfoliosController extends Controller{
                         return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
                 }
 
-                $p_services_url =  URL::to('/storage/static/image/portfolios/');
+                $p_services_url =  Utils::PROVIDER_PORTFOLIOS_URL;
 
                 $filter= '';
                 if(!is_null($service_provider_id)){
@@ -96,7 +96,7 @@ class ServiceProviderPortfoliosController extends Controller{
         {
 
                 Log::info("Received request ==> ". print_r($request->all(), 1));
-                $p_services_url =  URL::to('/storage/static/image/portfolios/');
+                $p_services_url =  Utils::PROVIDER_PORTFOLIOS_URL;
 
                 $user = $request->user();
                 $validator = Validator::make($request->all(),[

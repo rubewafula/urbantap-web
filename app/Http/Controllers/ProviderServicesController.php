@@ -37,11 +37,12 @@ class ProviderServicesController extends Controller
         }
 
 
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
-        $service_image_url =  URL::to('/storage/static/image/services/');
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
+        $service_image_url =  Utils::SERVICE_IMAGE_URL;
 
         $provideQ = "select sp.id as service_provider_id, sp.id as id, "
             . " sp.type, s.id as service_id, "
@@ -139,11 +140,12 @@ class ProviderServicesController extends Controller
             $filter  = " and (work_location like :location or work_location_city like :location2) group by sp.id ";
         }
 
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
-        $service_image_url = URL::to('/storage/static/image/services/');
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
+        $service_image_url  =  Utils::SERVICE_IMAGE_URL;
         
          $service_params = [];
          if($service_filter){

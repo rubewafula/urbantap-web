@@ -4,6 +4,7 @@ namespace App\Utilities;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use \Exception;
 
 class Utils
@@ -12,6 +13,18 @@ class Utils
     const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif'];
     const AUDIO_EXT = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
     const VIDEO_EXT = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
+
+
+    /** image append urls **/
+    #TODO: This would work well from .env then utils
+    const IMAGE_URL               =  'https://urbantap.co.ke:9173/storage/static/image/avatar/';
+    const SERVICE_PROVIDERS_URL   =  'https://urbantap.co.ke:9173/storage/static/image/service-providers/';
+    const ICONS_URL               =  'https://urbantap.co.ke:9173/storage/static/image/icons/';
+    const PROFILE_URL             =  'https://urbantap.co.ke:9173/storage/static/image/profiles/';
+    const PROVIDER_SERVICES_URL   =  'https://urbantap.co.ke:9173/storage/static/image/provider-services/';
+    const PROVIDER_PORTFOLIOS_URL =  'https://urbantap.co.ke:9173/storage/static/image/portfolios/';
+    const SERVICE_IMAGE_URL       =  'https://urbantap.co.ke:9173/storage/static/image/services/';
+
 
 
     static function getType($ext)
