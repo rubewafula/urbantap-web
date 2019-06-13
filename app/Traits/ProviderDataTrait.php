@@ -64,7 +64,7 @@ trait ProviderDataTrait
     {
         $sp = $this->queryData($data);
         Log::info("Found provider data", $data);
-        return [
+        $data = [
             array_merge(
                 $data,
                 [
@@ -83,6 +83,8 @@ trait ProviderDataTrait
             ),
             new User(['id' => $sp->user_id]),
         ];
+        Log::info("Final provider data", $data);
+        return $data;
     }
 
     /**
