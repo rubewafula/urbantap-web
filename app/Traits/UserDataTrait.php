@@ -5,6 +5,7 @@ namespace App\Traits;
 
 
 use App\ServiceProvider;
+use App\Services;
 use App\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +32,12 @@ trait UserDataTrait
             Log::info("Service provider exists", compact('id'));
             $provider = optional(ServiceProvider::query()->find($id))->toArray() ?: [];
         }
+        $service = [];
+        $id = Arr::get($data, 'request.service_id', Arr::get($data, 'service_id'));
+        if ($id) {
+            Log::info("Service exists", compact('id'));
+            $service = optional(Services::query()->find($id))->toArray() ?: [];
+        }
         return array_merge(
             $data,
             $user->toArray(),
@@ -48,7 +55,8 @@ trait UserDataTrait
                     'message'    => Arr::get($data, 'message')
                 ]
             ],
-            $provider
+            $provider,
+            $service
         );
     }
 
