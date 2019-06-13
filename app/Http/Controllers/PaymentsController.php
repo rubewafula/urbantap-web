@@ -181,7 +181,7 @@ class PaymentsController extends Controller
                 $transaction->reference = $transaction_id;
                 $transaction->amount = $transaction_amount;
                 $transaction->running_balance = $balance;
-                $transaction->status_id = DBstatus::COMPLETE;
+                $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
 
                 $transaction->save();
 
