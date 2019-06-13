@@ -262,9 +262,13 @@ class PaymentsController extends Controller
 
     public function stkPush(Request $request){
 
+        Log::info("Logging the request");
+        Log::info($request->all());
         $booking_id = $request->booking_id;
         $amount = $request->amount;
         $msisdn = $request->msisdn;
+
+        Log::info("Data as read from the request BOOKING ID ".$booking_id." AMOUNT ".$amount." MSISDN ".$msisdn);
 
         $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $token = Utils::generateMPESAOAuthToken();
