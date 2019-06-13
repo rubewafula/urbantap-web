@@ -29,7 +29,7 @@ trait UserDataTrait
         $id = Arr::get($data, 'request.service_provider_id', Arr::get($data, 'service_provider_id'));
         if ($id) {
             Log::info("Service provider exists", compact('id'));
-            $provider = optional(ServiceProvider::first($id))->toArray() ?: [];
+            $provider = optional(ServiceProvider::query()->find($id))->toArray() ?: [];
         }
         return array_merge(
             $data,
