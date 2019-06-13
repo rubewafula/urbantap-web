@@ -58,7 +58,7 @@ class UserPersonalDetailsController extends Controller{
 
             return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
     	}
-        $profile_url =  URL::to('/storage/static/image/profiles/');
+        $profile_url =  Utils::PROFILE_URL;
 
         $filter= '';
         if(!is_null($user_id)){
@@ -98,7 +98,7 @@ class UserPersonalDetailsController extends Controller{
     public function create(Request $request)
     {
 
-        $profile_url =  URL::to('/storage/static/image/profiles/');
+        $profile_url =  Utils::PROFILE_URL;
 
     	$validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:users,id|inique:user_personal_details,user_id',
@@ -198,7 +198,7 @@ class UserPersonalDetailsController extends Controller{
     public function update(Request $request)
     {
     	
-        $profile_url =  URL::to('/storage/static/image/profiles/');
+        $profile_url =  Utils::PROFILE_URL;
 
     	$validator = Validator::make($request->all(),[
             'user_id' => 'required|exists:user_personal_details,user_id',

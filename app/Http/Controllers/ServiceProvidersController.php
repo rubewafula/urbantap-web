@@ -168,17 +168,14 @@ class ServiceProvidersController extends Controller{
         $req= $request->all();
         $page = 1; 
         $limit =null;
-        //die(print_r($req, 1));
+       
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
+        $service_image_url = Utils::SERVICE_IMAGE_URL;
 
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
-
-
-        // $image_url = URL::to('/storage/image/avatar/');
-        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        $p_services_url =  URL::to('/storage/static/image/portfolios/');
         
         $validator = Validator::make(['id'=>$user_id],
             ['user_id'=>'integer|exists:service_providers']
@@ -228,7 +225,6 @@ class ServiceProvidersController extends Controller{
        
         $service_provider_id =  $user_id;
 
-        $service_image_url = URL::to('/storage/static/image/services/');
         $sql_provider_services = "select ps.id as provider_service_id,  c.category_name, c.id as category_id, "
             . " concat('$service_image_url' ,'/', if(ps.media_url is null, '2.jpg', "
             . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url'))) ) as service_photo, "
@@ -302,6 +298,14 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         $sort = null;
+
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
+
+
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
         //die(print_r($req, 1));
         if(array_key_exists('page', $req)){
@@ -337,15 +341,6 @@ class ServiceProvidersController extends Controller{
         if(!is_null($sort)){
             $sort_by = " order by $sort desc ";
         }
-
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
-
-        // $image_url = URL::to('/storage/images/avatar/');
-        // $sp_providers_url =  URL::to('/storage/images/service-providers/');
-
 
         $rawQuery = "SELECT sp.id,  "
             . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
@@ -391,13 +386,13 @@ class ServiceProvidersController extends Controller{
         $page = 1; 
         $limit =null;
         $sort = null;
-        // $image_url = URL::to('/storage/image/avatar/');
-        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
 
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
+
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
 
 
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
@@ -795,14 +790,13 @@ class ServiceProvidersController extends Controller{
     public  function  search_by_location_service(Request  $request)
     {
 
-        $image_url = URL::to('/storage/static/image/avatar/');
-        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
-        $icon_url = URL::to('/storage/static/image/icons/');
-        $profile_url =  URL::to('/storage/static/image/profiles/');
+        $image_url          = Utils::IMAGE_URL;
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url           = Utils::ICONS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+        $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
 
-        // $image_url = URL::to('/storage/image/avatar/');
-        // $sp_providers_url =  URL::to('/storage/image/service-providers/');
-        // $p_services_url =  URL::to('/storage/image/provider-services/');
+
 
         $validator = Validator::make($request->all(),[
             'service' => 'required',
