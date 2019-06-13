@@ -292,7 +292,7 @@ class PaymentsController extends Controller
           'Password' => $apiPassword,
           'Timestamp' => $timestamp,
           'TransactionType' => 'CustomerPayBillOnline',
-          'Amount"' => $amount,
+          'Amount' => $amount,
           'PartyA' => $msisdn,
           'PartyB' => env("PAYBILL_NO"),
           'PhoneNumber' => $msisdn,
