@@ -31,6 +31,8 @@ trait UserDataTrait
         if ($id) {
             Log::info("Service provider exists", compact('id'));
             $provider = optional(ServiceProvider::query()->find($id))->toArray() ?: [];
+
+            Log::info("Existed service provider found", $provider);
         }
         $service = [];
         $id = Arr::get($data, 'request.service_id', Arr::get($data, 'service_id'));
