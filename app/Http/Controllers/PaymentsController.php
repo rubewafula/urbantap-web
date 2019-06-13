@@ -269,9 +269,13 @@ class PaymentsController extends Controller
         $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $token = Utils::generateMPESAOAuthToken();
 
+        Log::info("Generated access token ".$token);
+
         $timestamp = date("YmdHis");
 
         $apiPassword = Utils::mpesaGenerateSTKPassword($timestamp);
+
+        Log::info("Generated Password ".$apiPassword);
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
