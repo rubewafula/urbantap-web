@@ -30,14 +30,4 @@ class ServiceProvider extends Model
     {
         return $this->BelongsTo('App\User');
     }
-
-    public function toArray() {
-//        $data = parent::toArray();
-        $data['service_provider_id'] = $this->id;
-        $data['service_provider_name'] = $this->service_provider_name;
-        $data['display_images'] = $this->displayImages;
-        $data['reviews'] = $this->totalReviews();
-        $data['avg_rating'] = number_format($this->averageRating(), 2, '.', '');
-        return $data;
-    }
 }
