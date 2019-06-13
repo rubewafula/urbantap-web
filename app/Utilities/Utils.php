@@ -50,8 +50,8 @@ class Utils
 
         $url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
-        $consumer_key = env("CONSUMER_KEY");
-        $consumer_secret = env("CONSUMER_SECRET");
+        $consumer_key = env("PAYBILL_CONSUMER_KEY");
+        $consumer_secret = env("PAYBILL_CONSUMER_SECRET");
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
