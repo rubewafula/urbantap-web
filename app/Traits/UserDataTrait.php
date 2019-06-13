@@ -4,6 +4,7 @@
 namespace App\Traits;
 
 
+use App\ServiceProvider;
 use App\User;
 use Illuminate\Support\Arr;
 
@@ -23,6 +24,11 @@ trait UserDataTrait
      */
     protected function getUserNotificationData(User $user, array $data)
     {
+        $provider = [];
+        $id = Arr::get($data, 'request.service_provider_id', Arr::get($data, 'service_provider_id'));
+        if ($id) {
+            $provider = optional(ServiceProvider::first($id))->toArray() ?: [];
+        }
         return array_merge(
             $data,
             $user->toArray(),
@@ -39,7 +45,8 @@ trait UserDataTrait
                     'recipients' => $msisdn ? [$msisdn] : [],
                     'message'    => Arr::get($data, 'message')
                 ]
-            ]
+            ],
+            $provider
         );
     }
 
