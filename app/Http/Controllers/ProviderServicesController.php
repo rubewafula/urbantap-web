@@ -15,6 +15,73 @@ use Illuminate\Support\Facades\URL;
 
 class ProviderServicesController extends Controller
 {
+     
+    /**
+     * Get specific provider service details given provider_service_id
+     */
+    public function provider_service_detail($id){
+
+        $validator = Validator::make(['provider_service_id'=>$id],
+            ['provider_service_id'=>'integer|exists:provider_services,id|required']
+        );
+
+        //die(print_r($request->all()));
+        Log::info("Provider service ID ".$id);
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+
+
+        $image_url = URL::to('/storage/static/image/avatar/');
+        $sp_providers_url =  URL::to('/storage/static/image/service-providers/');
+        $icon_url = URL::to('/storage/static/image/icons/');
+        $profile_url =  URL::to('/storage/static/image/profiles/');
+        
+
+        $provideQ = "select sp.id as service_provider_id, sp.id as id, "
+            . " sp.type, s.id as service_id, "
+            . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, "
+            . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+            . " sp.service_provider_name as business_name, sp.overall_likes, "
+            . " sp.overall_dislikes, sp.created_at,"
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
+            . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
+            . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
+            . " from provider_services ps inner join service_providers sp inner " 
+            . " join services s on s.id=ps.service_id left  join user_personal_details  d using(user_id)  "
+            . " where ps.id =:id ";
+
+        //echo print_r($params, 1);
+        
+        $service_data =  RawQuery::query( $provideQ,['id'=>$id]);
+
+        Log::info('Extracted statuses results : ' . var_export($service_data, 1));
+
+        if(empty($service_data)){
+            return Response::json(new stdClass, HTTPCodes::HTTP_OK );
+        }
+
+        $service_provider_id = optional(array_get($service_data, 0))->id;
+
+        $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
+            . " where service_provider_id ='" . $service_provider_id . "'"
+            . " and status_id=". DBStatus::TRANSACTION_ACTIVE;
+
+        $service_data[0]->operating_hours = RawQuery::query($working_hours_sql);
+        return Response::json(array_get($service_data, 0), HTTPCodes::HTTP_OK);
+
+    }
+
+
 
     /**
      * Display the provider service details 
@@ -26,7 +93,6 @@ class ProviderServicesController extends Controller
      *
      * @return JSON 
      */
- 
 
     public function get($id=null, Request $request){
 
@@ -64,7 +130,7 @@ class ProviderServicesController extends Controller
 
         $filter = $service_filter = '';
         if(!is_null($id)){
-            $filter = " and ps.id = '" .$id . "' ";
+            $filter = " and sp.id = '" .$id . "' ";
         }else {
             $service_filter = " and s.service_name like  :service ";
             $filter  = " and (work_location like :location or work_location_city like :location2) group by sp.id ";

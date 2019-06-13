@@ -100,6 +100,7 @@ class ServiceProvidersController extends Controller{
             . " and status_id=:active";
 
         $_day = $slot_date->format('l');
+
         $working_day = RawQuery::query($working_hours_sql,
             ['service_provider_id' => $request->get('service_provider_id'),
              '_day'=>$_day, 'active'=>DBStatus::TRANSACTION_ACTIVE ]);
@@ -622,10 +623,10 @@ class ServiceProvidersController extends Controller{
 
     	$validator = Validator::make($request->all(),[
             'business_name' => 'required|unique:service_providers,service_provider_name',
-            'business_description' => 'required|string',
+            'business_description' => 'required|string|max:400',
             'keywords' => 'string|nullable',
-            'location_name' =>'string',
-            'location_city' =>'string',
+            'location_name' =>'string|nullable',
+            'location_city' =>'string|nullable',
             'business_phone' => [
                 'required',
                 'regex:/^((\+?254)|0)?7\d{8}$/'

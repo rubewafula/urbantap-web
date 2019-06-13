@@ -45,6 +45,15 @@ class Utils
 
     }
 
+     static function mpesaGenerateSTKPassword(){
+
+        $shortCode = env("PAYBILL_NO");
+        $passKey = env("PASS_KEY");
+        $timestamp = date("YmdHis");
+
+        return base64_encode($shortCode.$passKey.$timestamp);
+    }
+
 }
 
 ?>

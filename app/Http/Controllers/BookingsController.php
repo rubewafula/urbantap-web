@@ -312,9 +312,10 @@ class BookingsController extends Controller
 
     public function create(Request $request)
     {
+        $user = $request->user();
+        $user_id = $user->id;
         $validator = Validator::make($request->all(), [
             'service_provider_id' => 'required|exists:service_providers,id',
-            'user_id'             => 'required|exists:users,id',
             'service_id'          => 'integer|exists:provider_services,id',
             'booking_date'        => 'required|date_format:Y-m-d',
             'booking_time'        => 'required|date_format:H:i',
