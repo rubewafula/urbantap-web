@@ -316,7 +316,7 @@ class PaymentsController extends Controller
           'PartyA' => $msisdn,
           'PartyB' => env("PAYBILL_NO"),
           'PhoneNumber' => $msisdn,
-          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/payment',
+          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/stk',
           'AccountReference' => $booking_id,
           'TransactionDesc' => 'Booking Payment at UrbanTap'
         );
