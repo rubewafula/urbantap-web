@@ -11,6 +11,7 @@ use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingCreatedListener
@@ -58,6 +59,8 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
             $data,
             $serviceProvider,
         ] = $this->getServiceProviderNotificationData($data);
+        Log::info("Found service provider", $serviceProvider);
+        Log::info("Final service provider data", $data);
         // Send SP mail
         $this->send($data, $this->serviceProviderMailTemplate);
         // Notify SP
