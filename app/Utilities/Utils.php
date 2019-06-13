@@ -3,6 +3,7 @@ namespace App\Utilities;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use \Exception;
 
 class Utils
@@ -10,9 +11,7 @@ class Utils
 
     const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif'];
     const AUDIO_EXT = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
-    const AUDIO_EXT = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
-
-
+    const VIDEO_EXT = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
 
 
     static function getType($ext)
@@ -37,6 +36,49 @@ class Utils
         return array_merge(Utils::IMAGE_EXT, Utils::AUDIO_EXT, Utils::VIDEO_EXT);
     }
 
+
+     static  function  upload_media($request, $base_dir, $file_name='file')
+    {
+
+        $file = $request->file($file_name);
+        if(is_null($file)){
+            /** No file uploaded accept and proceeed **/
+            return FALSE;
+        }
+        $max_size = (int)ini_get('upload_max_filesize') * 1000;
+        $all_ext = implode(',', Utils::allExtensions());
+
+        
+        $ext = $file->getClientOriginalExtension();
+        $size = $file->getClientSize();
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-',$file->getClientOriginalName());
+        $type = Utils::getType($ext);
+
+        if($type == 'unknown'){
+            Log::info("Aborting file upload unknown file type "+ $type);
+            return FALSE;
+        }
+
+        $fullPath = $name . '.' . $ext;
+
+        $file_path = 'public/static/' . $type . '/' .$base_dir . '/'.$fullPath;
+
+        if (Storage::exists($file_path)) {
+            Storage::delete($file_path);
+        }
+
+        if (Storage::putFileAs('public/static/' . $type . '/' .$base_dir, $file, $fullPath)) {
+            return [
+                    'media_url'=>$fullPath,
+                    'name' => $name,
+                    'type' => $type,
+                    'extension' => $ext,
+                    'size'=>$size
+                ];
+        }
+
+        return FALSE;
+    }
 
 
 

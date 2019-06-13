@@ -15,14 +15,13 @@ use Illuminate\Http\Request;
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
+use App\Utilities\Utils;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 
 
 class UserPersonalDetailsController extends Controller{
 
-     private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
 
 	 /**
      * Display the specified service providers.
@@ -264,62 +263,7 @@ class UserPersonalDetailsController extends Controller{
      */
     public function store(Request $request)
     {
-        $max_size = (int)ini_get('upload_max_filesize') * 1000;
-        $all_ext = implode(',', $this->image_ext);
-
-        $this->validate($request, [
-            'name' => 'nullable|unique:files',
-            'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
-        ]);
-
-        $file = $request->file('cover_photo');
-        if(is_null($file)){
-            /** No file uploaded accept and proceeed **/
-            return null;
-        }
-        $ext = $file->getClientOriginalExtension();
-        $size = $file->getClientSize();
-        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->get('user_id'));
-        $type = $this->getType($ext);
-
-        if($type == 'unknown'){
-            Log::info("Aborting file upload unknown file type ". $type);
-            return false;
-        }
-
-        $file_path = 'public/static/' . $type . '/profiles/'.$name . '.' . $ext;;
-
-        if (Storage::exists($file_path)) {
-            Storage::delete($file_path);
-        }
-
-        if (Storage::putFileAs('public/static/' . $type .  '/profiles/', $file, $name . '.' . $ext)) {
-            return [
-                    'media_url'=>$name . '.' . $ext,
-                    'name' => $name,
-                    'type' => $type,
-                    'extension' => $ext,
-                    'size'=>$size
-                ];
-        }
-
-        return false;
-    }
-
-
-
-    /**
-     * Get type by extension
-     * @param  string $ext Specific extension
-     * @return string      Type
-     */
-    private function getType($ext)
-    {
-        if (in_array($ext, $this->image_ext)) {
-            return 'image';
-        }
-
-        return 'unknown';
+        return Utils::upload_media($request, 'profiles', 'cover_photo');  
     }
 
 
