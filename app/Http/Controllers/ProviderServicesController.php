@@ -184,8 +184,8 @@ class ProviderServicesController extends Controller
 
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
                 . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
-                . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
-                . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
+                . " concat( '$service_image_url' , '/', if(ps.media_url is null, '2.jpg', "
+                . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url')))) as service_photo, "
                 . " ps.updated_at from provider_services ps inner join services s "
                 . " on s.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
 
@@ -240,7 +240,7 @@ class ProviderServicesController extends Controller
 
             if($service_photo !=  FALSE)
             {
-                  $service_photo = json_encode($cover_photo);
+                  $service_photo = json_encode($service_photo);
             }else{
                  $service_photo = NULL;
             }
