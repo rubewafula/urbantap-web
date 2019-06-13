@@ -16,7 +16,35 @@ use Illuminate\Support\Facades\URL;
 
 class ProviderServicesController extends Controller
 {
+    private $image_ext = ['jpg', 'jpeg', 'png', 'gif'];
+    private $audio_ext = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
+    private $video_ext = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
+
+
+
+     private function allExtensions()
+    {
+        return array_merge($this->image_ext, $this->audio_ext, $this->video_ext);
+    }
      
+    private function getType($ext)
+    {
+        if (in_array($ext, $this->image_ext)) {
+            return 'image';
+        }
+
+        if (in_array($ext, $this->audio_ext)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, $this->video_ext)) {
+            return 'video';
+        }
+
+        return 'unknown';
+    }
+
+
     /**
      * Get specific provider service details given provider_service_id
      */
@@ -407,7 +435,7 @@ class ProviderServicesController extends Controller
         }
         $ext = $file->getClientOriginalExtension();
         $size = $file->getClientSize();
-        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->user()->id);
+        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $file->getClientOriginalName());
         $type = $this->getType($ext);
 
         if($type == 'unknown'){
