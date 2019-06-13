@@ -262,6 +262,8 @@ class PaymentsController extends Controller
 
     public function stkPush(Request $request){
 
+        Log::info("Logging the request");
+        Log::info($request->all());
         $booking_id = $request->booking_id;
         $amount = $request->amount;
         $msisdn = $request->msisdn;
