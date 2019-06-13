@@ -134,7 +134,7 @@ class PaymentsController extends Controller
                         . " where b.id = ?"), [$bill_ref_no]);
                 $email = null;
                 $running_balance = 0;
-                
+
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
@@ -219,7 +219,7 @@ class PaymentsController extends Controller
 
                 } else {
 
-                    Log::info("Booking called back by MPESA Number $invoice_number NOT FOUND");
+                    Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
 
                     $out = [
                         'status'  => 202,
@@ -227,7 +227,7 @@ class PaymentsController extends Controller
                         'message' => 'Booking Not Found'
                     ];
 
-                    return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+                    //return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
                 }
 
                 DB::commit();
@@ -272,11 +272,13 @@ class PaymentsController extends Controller
                 )
             );
 
-            return Response::json([
-                'status'  => 201,
-                'success' => true,
-                'message' => 'MPESA Payment Received Successfully'
-            ], HTTPCodes::HTTP_ACCEPTED);
+            $out = [
+                    'status'  => 201,
+                    'success' => true,
+                    'message' => 'MPESA Payment Received Successfully'
+                   ];
+
+            return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
 
         }
 
