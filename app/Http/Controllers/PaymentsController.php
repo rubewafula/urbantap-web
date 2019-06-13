@@ -162,7 +162,7 @@ class PaymentsController extends Controller
 
                         $user_id = DB::table('users')->insertGetId(
                             [
-                                "name"       => $name,
+                                "first_name"       => $name,
                                 "user_group" => 4,
                                 "phone_no"   => $msisdn,
                                 "email"      => $msisdn . "@urbantap.co.ke",
