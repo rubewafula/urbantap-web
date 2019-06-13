@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response;    
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;    
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
+use App\Utilities\Utils;
 use Illuminate\Support\Facades\Validator;
 use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\URL;
@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\URL;
 
 class ProviderServicesController extends Controller
 {
-     
+  
     /**
      * Get specific provider service details given provider_service_id
      */
@@ -385,54 +385,7 @@ class ProviderServicesController extends Controller
 
     public  function  upload_servicephoto($request)
     {
-
-        $file = $request->file('service_image');
-        if(is_null($file)){
-            /** No file uploaded accept and proceeed **/
-            return null;
-        }
-        $max_size = (int)ini_get('upload_max_filesize') * 1000;
-        $all_ext = implode(',', $this->allExtensions());
-
-        $this->validate($request, [
-            'name' => 'nullable|unique:files',
-            'file' => 'nullable|file|mimes:' . $all_ext . '|max:' . $max_size
-        ]);
-
-        $file = $request->file('service_image');
-
-        if(is_null($file)){
-            /** No file uploaded accept and proceeed **/
-            return FALSE;
-        }
-        $ext = $file->getClientOriginalExtension();
-        $size = $file->getClientSize();
-        $name = preg_replace('/[^A-Za-z0-9\-]/', '-', $request->user()->id);
-        $type = $this->getType($ext);
-
-        if($type == 'unknown'){
-            Log::info("Aborting file upload unknown file type "+ $type);
-            return FALSE;
-        }
-
-        $fullPath = $name . '.' . $ext;
-
-        $file_path = 'public/static/' . $type . '/services/'.$fullPath;
-
-        if (Storage::exists($file_path)) {
-            Storage::delete($file_path);
-        }
-        if (Storage::putFileAs('public/static/' . $type . '/services/', $file, $fullPath)) {
-            return [
-                    'media_url'=>$fullPath,
-                    'name' => $name,
-                    'type' => $type,
-                    'extension' => $ext,
-                    'size'=>$size
-                ]; 
-        }
-
-        return false;
+        return Utils::upload_media($request, 'services', 'service_image');
     }
 
 
