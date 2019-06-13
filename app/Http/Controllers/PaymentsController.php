@@ -133,6 +133,8 @@ class PaymentsController extends Controller
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
                 $email = null;
+                $running_balance = 0;
+                
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
