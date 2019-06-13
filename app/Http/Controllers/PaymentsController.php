@@ -149,8 +149,27 @@ class PaymentsController extends Controller
                         );
                     }
                 } else {
-                    Log::error("Booking not found", $request->all());
-                    throw new Exception("Booking not found.");
+                    // Log::error("Booking not found", $request->all());
+                    // throw new Exception("Booking not found.");
+
+                    $user = DB::select(
+                        DB::raw("select * from users where phone_no = ?"), [$msisdn]);
+
+                    if (!empty($user)) {
+
+                        $user_id = $user[0]->id;
+                    }else{
+
+                        $user_id = DB::table('users')->insertGetId(
+                            [
+                                "name"       => $name,
+                                "user_group" => 4,
+                                "phone_no"   => $msisdn,
+                                "email"      => $msisdn . "@urbantap.co.ke",
+                                "password"   => Hash::make($msisdn)
+                            ]
+                        );
+                    }
                 }
                 $balance = $running_balance + $transaction_amount;
 
@@ -183,6 +202,19 @@ class PaymentsController extends Controller
                     $balance = $booking_amount - $transaction_amount;
                     $booking_time = $bookingRs[0]->booking_time;
 
+                    DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
+                        status_id='" . DBStatus::BOOKING_PAID . "', 
+                        description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
+
+                    DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
+                     where id = '" . $bill_ref_no . "'");
+
+                    DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
+                        booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
+                        paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
+                        received_payment='" . $transaction_amount . "', balance='" . $balance . "',
+                        status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
+
                 } else {
 
                     Log::info("Booking called back by MPESA Number $invoice_number NOT FOUND");
@@ -196,18 +228,6 @@ class PaymentsController extends Controller
                     return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
                 }
 
-                DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
-					booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
-					paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
-					received_payment='" . $transaction_amount . "', balance='" . $balance . "',
-					status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
-
-                DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
-					    status_id='" . DBStatus::BOOKING_PAID . "', 
-					    description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
-
-                DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
-				 where id = '" . $bill_ref_no . "'");
                 DB::commit();
             } catch (\Exception $exception) {
                 Log::info("Error message", ['error' => $exception->getMessage()]);
