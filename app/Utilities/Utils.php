@@ -45,11 +45,32 @@ class Utils
 
     }
 
-     static function mpesaGenerateSTKPassword(){
+
+    static function generateMPESAOAuthToken(){
+
+        $url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
+
+        $consumer_key = env("CONSUMER_KEY");
+        $consumer_secret = env("CONSUMER_SECRET");
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        $credentials = base64_encode($consumer_key.':'.$consumer_secret);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Authorization: Basic '.$credentials)); //setting a custom header
+        curl_setopt($curl, CURLOPT_HEADER, false);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
+
+        $curl_response = curl_exec($curl);
+        $response = json_decode($curl_response, true);
+
+        return $response["access_token"];
+    }
+
+     static function mpesaGenerateSTKPassword($timestamp){
 
         $shortCode = env("PAYBILL_NO");
         $passKey = env("PASS_KEY");
-        $timestamp = date("YmdHis");
 
         return base64_encode($shortCode.$passKey.$timestamp);
     }
