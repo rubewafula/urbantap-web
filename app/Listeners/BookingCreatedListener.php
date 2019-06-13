@@ -10,6 +10,7 @@ use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
+use App\User;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -95,4 +96,18 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
     {
         return sprintf("BOOKING Request received from %s FOR %s Service ", Arr::get($data, 'user.first_name'), Arr::get($data, 'provider.service_name'));
     }
+
+    /**
+     * @param User $user
+     * @param array $data
+     * @return string
+     */
+    protected function getUserNotificationMessage(User $user, array $data): string
+    {
+        $message = sprintf("BOOKING Request received from %s FOR %s Service ", $user->first_name, Arr::get($data, 'provider.service_name'));
+        $message .= "<br/>";
+        return $message;
+    }
+
+
 }
