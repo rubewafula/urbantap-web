@@ -8,6 +8,39 @@ use \Exception;
 class Utils
 {
 
+    const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'gif'];
+    const AUDIO_EXT = ['mp3', 'ogg', 'mpga', 'iff', 'm3u', 'mpa','wav', 'wma', 'aif'];
+    const AUDIO_EXT = ['mp4', 'mpeg','3g2','3gp','asf','flv','m4v','mpg','swf','vob', 'wmv'];
+
+
+
+
+    static function getType($ext)
+    {
+        if (in_array($ext, Utils::IMAGE_EXT)) {
+            return 'image';
+        }
+
+        if (in_array($ext, Utils::AUDIO_EXT)) {
+            return 'audio';
+        }
+
+        if (in_array($ext, Utils::AUDIO_EXT)) {
+            return 'video';
+        }
+
+        return 'unknown';
+    }
+
+    static function allExtensions()
+    {
+        return array_merge(Utils::IMAGE_EXT, Utils::AUDIO_EXT, Utils::VIDEO_EXT);
+    }
+
+
+
+
+
     static function loadTemplateData($template_data, $data)
     {
         // Remove sms key from data
@@ -44,6 +77,8 @@ class Utils
         return $html;
 
     }
+
+
 
 
     static function generateMPESAOAuthToken(){
