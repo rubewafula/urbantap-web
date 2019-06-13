@@ -9,6 +9,7 @@ use App\Transaction;
 use App\User;
 use App\Utilities\DBStatus;
 use App\Utilities\HTTPCodes;
+use App\Utilities\Utils;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -257,6 +258,51 @@ class PaymentsController extends Controller
 
         }
 
+    }
+
+    public function stkPush(Request $request){
+
+        $booking_id = $request->booking_id;
+        $amount = $request->amount;
+        $msisdn = $request->msisdn;
+
+        $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
+        $token = Utils::generateMPESAOAuthToken();
+
+        $timestamp = date("YmdHis");
+
+        $apiPassword = Utils::mpesaGenerateSTKPassword($timestamp);
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $url);
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer $token')); //setting custom header
+
+
+        $curl_post_data = array(
+          
+          'BusinessShortCode' => env("PAYBILL_NO"),
+          'Password' => $apiPassword,
+          'Timestamp' => $timestamp,
+          'TransactionType' => 'CustomerPayBillOnline',
+          'Amount"' => $amount,
+          'PartyA' => $msisdn,
+          'PartyB' => env("PAYBILL_NO"),
+          'PhoneNumber' => $msisdn,
+          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/payment',
+          'AccountReference' => $booking_id,
+          'TransactionDesc' => 'Booking Payment at UrbanTap'
+        );
+
+        $data_string = json_encode($curl_post_data);
+
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
+
+        $curl_response = curl_exec($curl);
+        print_r($curl_response);
+
+        echo $curl_response;
     }
 
 }
