@@ -140,7 +140,7 @@ class PaymentsController extends Controller
                     if ($user[0]->phone_no !== $msisdn) {
                         DB::table('users')->insert(
                             [
-                                "name"       => $name,
+                                "first_name"       => $name,
                                 "user_group" => 4,
                                 "phone_no"   => $msisdn,
                                 "email"      => $msisdn . "@urbantap.co.ke",
