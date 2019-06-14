@@ -3,9 +3,9 @@
 
     Your booking has been received.
 
-    **{{ $data['business_name'] }}**
+    ## {{ $data['business_name'] }}
 
-    __{{ $data['service_name'] }}__
+    __ {{ $data['service_name'] }} __
     {{ $data['description'] }}
 
     {{ $data['booking_time'] }}
