@@ -63,10 +63,10 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
             'subject'       => Arr::get($data, 'subject'),
             'mailable'      => \App\Mail\BookingCreated::class,
             'data'          => [
-                'business_name' => $provider->business_name,
-                'service_name' => $booking->service->service_name,
-                'description' => $booking->providerService->description,
-                'booking_time' => $booking->booking_time
+                'business_name' => $provider->service_provider_name,
+                'service_name'  => $booking->service->service_name,
+                'description'   => $booking->providerService->description,
+                'booking_time'  => $booking->booking_time
             ]
         ], "");
 

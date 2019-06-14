@@ -3,9 +3,9 @@
 
     Your booking has been received.
 
-    {{ $data['business_name'] }}<br>
-    {{ $data['service_name'] }}<br>
-    {{ $data['description'] }}<br>
+    {{ $data['business_name'] }}
+    {{ $data['service_name'] }}
+    {{ $data['description'] }}
 
     {{ $data['booking_time'] }}
 
@@ -13,8 +13,7 @@
         Button Text
     @endcomponent
 
-    To change or cancel your booking, log into
-    <a href="{{ config('app.url') }}">{{ config('app.name') }}</a> and select "My Bookings" bookmark
+    To change or cancel your booking, log into ({{ config('app.url') }})[{{ config('app.url') }}]  and select "My Bookings" bookmark
 
     Thanks,<br>
     {{ config('app.name') }}
