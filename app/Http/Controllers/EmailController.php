@@ -13,7 +13,7 @@ class EmailController extends Controller
 
 	public function sendEmail(Request $request){
 		
-		Log::info("Got called from email consumer queue");
+		Log::info("Got called from email consumer queue", $request->toArray());
 		if(strlen($request->email_address) < 1){
 			Log::info("Request has no valid email addresses");
 			return;
