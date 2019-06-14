@@ -8,15 +8,16 @@ use Illuminate\Queue\SerializesModels;
 class BookingCreated extends Mailable
 {
     use SerializesModels;
+    private $data = [];
 
     /**
      * Create a new message instance.
      *
-     * @return void
+     * @param array $data
      */
-    public function __construct()
+    public function __construct(array $data)
     {
-        //
+        $this->data = $data;
     }
 
     /**
@@ -26,6 +27,6 @@ class BookingCreated extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.booking.created');
+        return $this->markdown('emails.booking.created', $this->data);
     }
 }

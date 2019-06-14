@@ -57,14 +57,17 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
         // Send SP mail
         $booking = array_get($data, 'booking');
         $provider = $booking->provider;
-        $data['booking'] = $booking->toArray();
-        $data['provider'] = $provider;
 
         $this->send([
-            'email_address' => $email = $provider->business_email ?: $provider->user->email,
+            'email_address' => $provider->business_email ?: $provider->user->email,
             'subject'       => Arr::get($data, 'subject'),
             'mailable'      => \App\Mail\BookingCreated::class,
-            'data'          => []
+            'data'          => [
+                'business_name' => $provider->business_name,
+                'service_name' => $booking->service->service_name,
+                'description' => $booking->providerService->description,
+                'booking_time' => $booking->booking_time
+            ]
         ], "");
 
 //        Log::info("Booked Provider", compact('provider'));

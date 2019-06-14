@@ -55,7 +55,7 @@ class EmailController extends Controller
     private function generateEmailContent(Request $request)
     {
         $mailable = $request->get('mailable');
-        $content = (new $mailable())->render();
+        $content = (new $mailable($request->all()))->render();
         return $content;
     }
 }
