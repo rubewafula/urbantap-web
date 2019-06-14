@@ -6,11 +6,8 @@ use App\Booking;
 use App\Events\BookingStatusChanged;
 use App\Http\Requests\BookingStatusRequest;
 use App\Status;
-use App\User;
 use App\Utilities\DBStatus;
-use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 
 /**
  * Class BookingStatusController

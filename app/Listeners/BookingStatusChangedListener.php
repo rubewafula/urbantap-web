@@ -45,7 +45,7 @@ class BookingStatusChangedListener
             $notificationData = [
                 'booking_id' => $booking->id,
             ];
-            switch ($event->status_id) {
+            switch ($booking->status_id) {
                 case DBStatus::BOOKING_ACCEPTED:
                     $booking->user->notify(new BookingAcceptedNotification($notificationData));
                     break;
