@@ -8,7 +8,7 @@ Your booking has been received.
 __ {{ $data['service_name'] }} __
 {{ $data['description'] }}
 
-** Booking Date: {{ $data['booking_time'] }} **
+** <u>Booking Date: {{ $data['booking_time'] }}</u> **
 ---
 
 Use two asterisks for **strong emphasis**.
