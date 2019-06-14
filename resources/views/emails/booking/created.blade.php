@@ -1,19 +1,19 @@
 @component('mail::message')
-    # Booking Received
+# Booking Received
 
-    Your booking has been received.
+Your booking has been received.
 
-    ## {{ $data['business_name'] }}
+## {{ $data['business_name'] }}
 
-    __ {{ $data['service_name'] }} __
-    {{ $data['description'] }}
+__ {{ $data['service_name'] }} __
+{{ $data['description'] }}
 
-    {{ $data['booking_time'] }}
+{{ $data['booking_time'] }}
 
-    Use two asterisks for **strong emphasis**.
+Use two asterisks for **strong emphasis**.
 
-    To change or cancel your booking, log into [{{ config('app.name') }}]({{ config('app.url') }})  and select "My Bookings" bookmark
+To change or cancel your booking, log into [{{ config('app.name') }}]({{ config('app.url') }})  and select "My Bookings" bookmark
 
-    Thanks,
-    {{ config('app.name') }}
+Thanks,
+{{ config('app.name') }}
 @endcomponent
