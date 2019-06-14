@@ -55,8 +55,8 @@ class ProviderServicesController extends Controller
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
-            . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
-            . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
+            . " concat( '$service_image_url' , '/', if(ps.media_url is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url')))) as service_photo, "
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
@@ -282,8 +282,8 @@ class ProviderServicesController extends Controller
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on "
             . " s.id = ps.service_id inner join categories c on s.category_id = c.id "
-            . " where ps.id = :id ";
-        $service_data = RawQuery::query($sql_provider_services, ['id'=> $id]);
+            . " where ps.id = :id and ps.status_id =:active";
+        $service_data = RawQuery::query($sql_provider_services, ['id'=> $id, 'active'=>DBStatus::TRANSACTION_ACTIVE]);
         return array_get($service_data, 0);
     }
 

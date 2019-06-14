@@ -143,7 +143,7 @@ Route::group([
         ], function () {
         Route::post('create', 'ProviderServicesController@create');
         Route::post('update', 'ProviderServicesController@update');
-        Route::delete('del', 'ProviderServicesController@delete');
+        Route::delete('delete', 'ProviderServicesController@delete');
      });
 });
 

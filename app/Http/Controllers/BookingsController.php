@@ -405,7 +405,7 @@ class BookingsController extends Controller
         }
 
         if ($booking_allowed) {
-            $booking_cost_sql = "select base_cost from service_costs sc inner join provider_services ps "
+            $booking_cost_sql = "select coalesce(ps.cost, sc.base_cost) as cost from service_costs sc left join provider_services ps "
                 . " on ps.service_id =sc.service_id  where ps.service_id =:ps_id";
 
             $cresult = RawQuery::query($booking_cost_sql, ['ps_id' => $request['service_id']]);
@@ -429,7 +429,7 @@ class BookingsController extends Controller
 
         } else {
 
-            $base_cost = $cresult[0]->base_cost;
+            $base_cost = array_get($cresulr, 0)->cost;
             $other_amount = 0;
 
             $other_cost_result = RawQuery::query("select sum(c.amount)amt from "
@@ -446,7 +446,7 @@ class BookingsController extends Controller
             DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at, booking_type, location, amount) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now(), :booking_type, :location, :amount)", [
                     'provider_service_id' => $request['service_id'],
                     'service_provider_id' => $request['service_provider_id'],
-                    'user_id'             => $request['user_id'],
+                    'user_id'             => $user_id,
                     'booking_time'        => $actual_booking_time,
                     'booking_duration'    => $request['booking_duration'],
                     'expiry_time'         => $request['expiry_time'],
@@ -465,7 +465,7 @@ class BookingsController extends Controller
              **/
             $booking_id = DB::getPdo()->lastInsertId();
 
-            $user = User::query()->findOrFail($request->get('user_id'), ['id', 'first_name', 'last_name', 'email']);
+            $notification_data = Utils::getNoticationData($user,$service_provider_id, $service_id );
             broadcast(new BookingCreated($user, [
                 'booking_id'   => $booking_id,
                 'request'      => $request->all(),
