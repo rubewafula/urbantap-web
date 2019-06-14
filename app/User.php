@@ -65,6 +65,17 @@ class User extends Authenticatable
         return $this->belongsTo('App\UserGroup', 'user_group');
     }
 
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function serviceProvider()
+    {
+        return $this->hasOne('App\ServiceProvider');
+    }
+
+
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */

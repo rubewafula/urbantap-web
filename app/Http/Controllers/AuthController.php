@@ -447,8 +447,7 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-
-        $user->service_provider = ServiceProvider::where('user_id', $user->id)->first();
+        $user->load('serviceProvider');
 
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;
