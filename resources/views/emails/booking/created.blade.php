@@ -5,7 +5,7 @@ Your booking has been received.
 
 @component('mail::table')
 
-| ------------- |-------------|
+| ------------- | ------------- |
 | Service Provider      | {{ $data['business_name'] }}      |
 | Service      | {{ $data['service_name'] }} |
 @endcomponent
