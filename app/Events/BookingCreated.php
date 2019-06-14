@@ -2,7 +2,7 @@
 
 namespace App\Events;
 
-use App\User;
+use App\Booking;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -13,25 +13,18 @@ use Illuminate\Queue\SerializesModels;
 class BookingCreated
 {
     use Dispatchable, SerializesModels;
-
     /**
-     * @var User
+     * @var Booking
      */
-    public $user;
-    /**
-     * @var array
-     */
-    public $data;
+    public $booking;
 
     /**
      * Create a new event instance.
      *
-     * @param User $user
-     * @param array $data
+     * @param Booking $booking
      */
-    public function __construct(User $user, array $data)
+    public function __construct(Booking $booking)
     {
-        $this->user = $user;
-        $this->data = $data;
+        $this->booking = $booking;
     }
 }

@@ -6,6 +6,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Booking;
+use App\Category;
 use App\Events\BookingCreated;
 use App\Notifications\BookingCreatedNotification;
 use App\User;
@@ -15,6 +17,7 @@ use App\Utilities\RabbitMQ;
 use App\Utilities\RawQuery;
 use App\Utilities\Utils;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -112,9 +115,9 @@ class BookingsController extends Controller
         Log::info("USER => " . var_export($user, 1));
         $user_id = $user->id;
 
-        $page=$request->get('page');
-        if(!is_numeric($page)){
-           $page = 1;
+        $page = $request->get('page');
+        if (!is_numeric($page)) {
+            $page = 1;
         }
 
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
@@ -138,7 +141,7 @@ class BookingsController extends Controller
             . " u.id = b.user_id where b.user_id = '$user_id'";
 
 
-        $results = RawQuery::paginate($query, $page=$page);
+        $results = RawQuery::paginate($query, $page = $page);
 
         if (empty($results)) {
             return Response::json([], HTTPCodes::HTTP_NO_CONTENT);
@@ -193,7 +196,7 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
-        
+
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
         $query = "select b.id, b.service_provider_id, b.user_id, "
@@ -256,11 +259,11 @@ class BookingsController extends Controller
      * curl -i -XGET -H "content-type:application/json"
      * http://127.0.0.1:8000/api/bookings/all
      *
-     * @param \App\Category $category
+     * @param Category $category
      *
      * @return JSON
      */
-    public function get(Request $request, $client=false)
+    public function get(Request $request, $client = false)
     {
 
         $user = $request->user();
@@ -306,7 +309,7 @@ class BookingsController extends Controller
      *  "description":"Best salon jab for the old"}'
      * 'http://127.0.0.1:8000/api/bookings/create'
      * @param Illuminate\Http\Request $request
-     * @return JSON|\Illuminate\Http\JsonResponse
+     * @return JSON|JsonResponse
      *
      ***/
 
@@ -465,25 +468,18 @@ class BookingsController extends Controller
              **/
             $booking_id = DB::getPdo()->lastInsertId();
 
-            $booking  = \App\Booking::with([
+            $booking = Booking::with([
                 'user',
                 'provider.user',
                 'providerService'
             ])->find($booking_id);
 
             Log::info("Booking Data", $booking->toArray());
-            broadcast(new BookingCreated($user, [
-                'booking_id'   => $booking_id,
-                'request'      => $request->all(),
-                'booking_time' => $actual_booking_time,
-                'cost'         => $actual_cost,
-                'subject'      => 'Booking Request Placed',
-                'booking' => $booking,
-            ]));
+            broadcast(new BookingCreated($booking));
 
             $out = [
                 'success' => true,
-                'id'      => $booking_id,
+                'booking' => $booking,
                 'message' => 'Bookings Created'
             ];
 

@@ -22,6 +22,10 @@ use Illuminate\Support\Arr;
 class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
 {
     use SendSMSTrait, SendEmailTrait;
+    /**
+     * @var string
+     */
+    protected $mailSubject = "Booking Request Placed";
 
     /**
      * Create the event listener.
@@ -42,28 +46,25 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
      */
     public function handle(BookingCreated $event)
     {
-        $data = $event->data;
-        $booking = array_get($data, 'booking');
-        $provider = $booking->provider;
+        $booking = $event->booking;
 
         // Send customer email
-        $this->sendUserNotifications($booking, $data, $provider);
+        $this->sendUserNotifications($booking, $booking->provider);
 
         // Send provider email
-        $this->sendProviderNotifications($provider, $data, $booking);
+        $this->sendProviderNotifications($booking->provider, $booking);
     }
 
     /**
-     * @param $provider
-     * @param array $data
-     * @param $booking
+     * @param ServiceProvider $provider
+     * @param Booking $booking
      */
-    private function sendProviderNotifications(ServiceProvider $provider, array $data, Booking $booking): void
+    private function sendProviderNotifications(ServiceProvider $provider, Booking $booking): void
     {
         // Send email
         $this->send([
             'email_address' => $provider->business_email,
-            'subject'       => Arr::get($data, 'subject'),
+            'subject'       => $this->mailSubject,
             'mailable'      => BookingCreatedProvider::class,
             'data'          => [
                 'booking_time'         => $booking->booking_time,
@@ -93,17 +94,16 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
     }
 
     /**
-     * @param $booking
-     * @param array $data
-     * @param $provider
+     * @param Booking $booking
+     * @param ServiceProvider $provider
      */
-    private function sendUserNotifications(Booking $booking, array $data, ServiceProvider $provider): void
+    private function sendUserNotifications(Booking $booking, ServiceProvider $provider): void
     {
         // Send email
         if ($booking->user->email) {
             $this->send([
                 'email_address' => $booking->user->email,
-                'subject'       => Arr::get($data, 'subject'),
+                'subject'       => $this->mailSubject,
                 'mailable'      => \App\Mail\BookingCreated::class,
                 'data'          => [
                     'business_name'    => $provider->service_provider_name,
