@@ -3,6 +3,13 @@
 
 Your booking has been received.
 
+@component('mail::table')
+
+| ------------- |-------------|
+| Service Provider      | {{ $data['business_name'] }}      |
+| Service      | {{ $data['service_name'] }} |
+@endcomponent
+
 Service Provider:    **{{ $data['business_name'] }}**
 
 Service:            __ {{ $data['service_name'] }} __
