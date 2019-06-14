@@ -11,7 +11,7 @@ Your booking has been received.
 | ** Service Cost  ** | {{ $data['service_cost'] }} |
 | ** Service Duration  ** | {{ $data['service_duration'] }} |
 | ** Service Duration  ** | {{ $data['service_duration'] }} (minutes) |
-| ** Booking Date  ** | {{ $data['booking_time'] }} (minutes) |
+| ** Booking Date  ** | {{ $data['booking_time'] }} |
 @endcomponent
 
 ### Service Description
@@ -20,6 +20,6 @@ Your booking has been received.
 
 To change or cancel your booking, log into [{{ config('app.name') }}]({{ config('app.url') }})  and select "My Bookings" bookmark
 
-Thanks,
+Thanks, <br>
 {{ config('app.name') }}
 @endcomponent
