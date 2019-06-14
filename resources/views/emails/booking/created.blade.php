@@ -3,18 +3,15 @@
 
     Your booking has been received.
 
-    {{ $data['business_name'] }}
-    {{ $data['service_name'] }}
+    **{{ $data['business_name'] }}**
+
+    __{{ $data['service_name'] }}__
     {{ $data['description'] }}
 
     {{ $data['booking_time'] }}
 
-    @component('mail::button', ['url' => config('app.url')])
-        Button Text
-    @endcomponent
-
     To change or cancel your booking, log into ({{ config('app.url') }})[{{ config('app.url') }}]  and select "My Bookings" bookmark
 
-    Thanks,<br>
+    Thanks,
     {{ config('app.name') }}
 @endcomponent
