@@ -30,17 +30,8 @@ trait SendEmailTrait
     public function send(array $data, string $template)
     {
         Log::info("Data to send to mail queue", $data);
-//        $mailContents = file_get_contents(storage_path(sprintf('%s%s', $this->path, $template)));
         if ($data['email_address']) {
-            (new RabbitMQ())->publish(
-                array_merge(
-                    $data,
-                    [
-                        'email' => (new BookingCreated())->render()
-//                        'email' => Utils::loadTemplateData($mailContents, $data)
-                    ]
-                ),
-                env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
+            (new RabbitMQ())->publish($data, env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
             );
         } else {
             Log::info("Email info missing, skipped notification");
