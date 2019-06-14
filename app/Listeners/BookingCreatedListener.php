@@ -52,38 +52,34 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
     {
         $data = $event->data;
         // Send user email
+
+        // Send SP mail
+	$booking = array_get($data, 'booking');
+	$provider = $booking->provider;
+	$data['booking'] = $booking->toArray();
+	$data['provider'] = $provider;
+	
+	Log::info("Booked Provider", compact('provider'));
         $this->send($this->getUserNotificationData($event->user, $data), $this->userMailTemplate);
 
-        // Send service provider mail, notification and sms
-        $data['user'] = $event->user->toArray();
-        [
-            $data,
-            $serviceProvider,
-        ] = $this->getServiceProviderNotificationData($data);
-        Log::info("Found service provider", $serviceProvider);
-        Log::info("Final service provider data", $data);
-        // Send SP mail
-        $this->send($data, $this->serviceProviderMailTemplate);
+	$this->send($data, $this->serviceProviderMailTemplate);
         // Notify SP
-        $serviceProvider->notify(new BookingCreatedNotification([
+        $provider->user->notify(new BookingCreatedNotification([
             'user'             => $event->user->toArray(),
             'booking_id'       => $data['booking_id'],
-            'service_provider' => $serviceProvider->toArray(),
+            'service_provider' => $provider->toArray(),
         ]));
         // Send SMS
-        if (!is_null($data['msisdn'])) {
+        if ($provider->business_phone) {
             $this->sms(
-                array_merge(
-                    Arr::get($data, 'sms'),
                     [
-                        'message'             => "Booking Request. " . $data['service_name']
-                            . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
+                        'message'             => "Booking Request. " . $booking->service->service_name
+                            . " Start Time: " . $booking->booking_time . ", Cost " . $booking->amount
                             . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
                         'reference'           => $data['booking_id'],
-                        'user_id'             => $data['request']['user_id'],
-                        'service_provider_id' => $data['request']['service_provider_id']
+                        'user_id'             => $user->id,
+                        'service_provider_id' => $provider->id
                     ]
-                )
             );
         }
     }

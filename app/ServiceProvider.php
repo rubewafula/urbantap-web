@@ -3,11 +3,24 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Utilities\Utils;
 
 class ServiceProvider extends Model
 {
 
     protected $table = "service_providers";
+
+    protected $appends = [
+        'service_provider_id',
+    ];
+
+    protected $casts = [
+        'cover_photo' => 'json'
+    ];
+
+    public function getServiceProviderIdAttribute(){
+        return $this->id;
+    }
 
     public function displayImages() {
         return $this->hasMany('App\ServiceProviderImages');
@@ -30,4 +43,11 @@ class ServiceProvider extends Model
     {
         return $this->belongsTo('App\User');
     }
+
+    public function getCoverPhotoAttribute($value){
+        return Utils::PROVIDER_SERVICES_URL . array_get($value, 'media_url', '2.jpg');
+    }
+
+
+
 }

@@ -6,6 +6,7 @@ use Illuminate\Notifications\HasDatabaseNotifications;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Passport\HasApiTokens;
+use App\Utilities\Utils;
 
 
 /**
@@ -52,6 +53,10 @@ class User extends Authenticatable
         return $this->BelongsTo('App\Status');
     }
 
+    public function details(){
+        return $this->hasOne('App\UserPersonalDetail');
+    }
+
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
      */
@@ -59,6 +64,17 @@ class User extends Authenticatable
     {
         return $this->belongsTo('App\UserGroup', 'user_group');
     }
+
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
+    public function serviceProvider()
+    {
+        return $this->hasOne('App\ServiceProvider');
+    }
+
+
 
     /**
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
@@ -89,21 +105,6 @@ class User extends Authenticatable
         return $static;
     }
 
-    /**
-     * @return mixed
-     */
-    public function getDetailsAttribute()
-    {
-        $details = UserPersonalDetail::where('user_id', $this->id)->first();
-
-        if ($details && $details->passport_photo == null) {
-            $details->passport_photo =
-                [
-                    'media_type' => 'image',
-                    'media_url'  => env('API_URL', 'http://127.0.0.1:8000') . '/static/images/avatar/default-avatar.jpg'
-                ];
-        }
-        return $details;
-    }
+    
 
 }

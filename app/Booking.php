@@ -11,6 +11,8 @@ class Booking extends Model
 
     protected $primaryKey = 'id';
 
+   protected $appends = ["service"];
+
     protected $fillable = ["provider_service_id", "service_provider_id", "user_id", 
     "booking_time", "booking_duration", "expiry_time", "status_id","booking_type",
      "amount","created_at", "location"];
@@ -20,10 +22,24 @@ class Booking extends Model
         return $this->belongsTo('App\User');
     }
 
-    public function service_provider()
+    public function provider()
     {
-        return $this->belongsTo('App\ServiceProvider');
-    }
+        return $this->belongsTo('App\ServiceProvider', 'service_provider_id');
+    }         
+
+
+    public function providerService()
+    {
+        return $this->belongsTo('App\ProviderServices');
+    }       
+
+
+    public function getServiceAttribute()
+    {
+        return $this->providerService->service()->first();
+    }  
+
+
 
     public function status()
     {

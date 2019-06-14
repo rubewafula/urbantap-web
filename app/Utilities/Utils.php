@@ -93,7 +93,9 @@ class Utils
         return FALSE;
     }
 
+    static function getNoticationData($user, $pid, $service_id){
 
+    }
 
 
     static function loadTemplateData($template_data, $data)

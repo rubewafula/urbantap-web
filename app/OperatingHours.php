@@ -7,4 +7,5 @@ use Illuminate\Database\Eloquent\Model;
 class OperatingHours extends Model
 {
     //
+    protected $guarded = [];
 }

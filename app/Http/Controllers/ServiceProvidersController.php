@@ -232,11 +232,12 @@ class ServiceProvidersController extends Controller{
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on " 
             . " s.id = ps.service_id inner join categories c on s.category_id = c.id "
-            . " where ps.service_provider_id = '" . $service_provider_id . "' ";
+            . " where ps.service_provider_id =:spid and ps.status_id=:active";
 
        
 
-        $services = RawQuery::query($sql_provider_services);
+        $services = RawQuery::query($sql_provider_services,
+            ['spid'=>$service_provider_id, 'active'=>DBStatus::TRANSACTION_ACTIVE]);
         $results['services'] = $services;
 
         $working_hours_sql = "select id,service_day, time_from, time_to from operating_hours "
