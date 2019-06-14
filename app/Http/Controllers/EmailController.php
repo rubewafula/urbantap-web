@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;    
+use Illuminate\Http\Request;
 
 use App\Utilities\Email;
 use App\Outbox;
@@ -12,8 +12,8 @@ class EmailController extends Controller
 {
 
 	public function sendEmail(Request $request){
-		
-		Log::info("Got called from email consumer queue", $request->toArray());
+
+		Log::info("Got called from email consumer queue", $request->all() ?: ['Nothing on request']);
 		if(strlen($request->email_address) < 1){
 			Log::info("Request has no valid email addresses");
 			return;
