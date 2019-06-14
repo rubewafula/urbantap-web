@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\URL;
 /**
  * Trait ProviderDataTrait
  * @package App\Traits
+ * @deprecated
  */
 trait ProviderDataTrait
 {

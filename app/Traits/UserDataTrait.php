@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Trait UserDataTrait
  * @package App\Traits
+ * @deprecated
  */
 trait UserDataTrait
 {

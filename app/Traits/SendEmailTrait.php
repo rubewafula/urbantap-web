@@ -16,11 +16,6 @@ use Illuminate\Support\Facades\Log;
 trait SendEmailTrait
 {
     /**
-     * @var string
-     */
-    private $path = "/app/public/static/mailer/";
-
-    /**
      * Send email.
      * All data should be provided in the data array
      *

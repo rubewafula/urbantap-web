@@ -9,15 +9,11 @@ use App\Events\BookingCreated;
 use App\Mail\BookingCreatedProvider;
 use App\Notifications\BookingCreatedNotification;
 use App\ServiceProvider;
-use App\Traits\ProviderDataTrait;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
-use App\Traits\UserDataTrait;
 use App\User;
-use App\Utilities\RabbitMQ;
 use Exception;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Class BookingCreatedListener
@@ -25,16 +21,7 @@ use Illuminate\Support\Facades\Log;
  */
 class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
 {
-    use SendSMSTrait, SendEmailTrait, ProviderDataTrait, UserDataTrait;
-
-    /**
-     * @var string
-     */
-    private $userMailTemplate = "booking.email.blade.html";
-    /**
-     * @var string
-     */
-    private $serviceProviderMailTemplate = "booking.email.blade.html";
+    use SendSMSTrait, SendEmailTrait;
 
     /**
      * Create the event listener.
@@ -60,67 +47,10 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
         $provider = $booking->provider;
 
         // Send customer email
-        $this->send([
-            'email_address' => $booking->user->email,
-            'subject'       => Arr::get($data, 'subject'),
-            'mailable'      => \App\Mail\BookingCreated::class,
-            'data'          => [
-                'business_name'    => $provider->service_provider_name,
-                'service_name'     => $booking->service->service_name,
-                'description'      => $booking->providerService->description,
-                'booking_time'     => $booking->booking_time,
-                'service_cost'     => $booking->amount,
-                'service_duration' => $booking->providerService->duration,
-            ]
-        ], '');
+        $this->sendUserNotifications($booking, $data, $provider);
 
         // Send provider email
         $this->sendProviderNotifications($provider, $data, $booking);
-
-//        Log::info("Booked Provider", compact('provider'));
-//        $this->send($this->getUserNotificationData($event->user, $data), $this->userMailTemplate);
-//
-//        $this->send($data, $this->serviceProviderMailTemplate);
-//        // Notify SP
-//        $provider->user->notify(new BookingCreatedNotification([
-//            'user'             => $event->user->toArray(),
-//            'booking_id'       => $data['booking_id'],
-//            'service_provider' => $provider->toArray(),
-//        ]));
-//        // Send SMS
-//        if ($provider->business_phone) {
-//            $this->sms(
-//                [
-//                    'message'             => "Booking Request. " . $booking->service->service_name
-//                        . " Start Time: " . $booking->booking_time . ", Cost " . $booking->amount
-//                        . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
-//                    'reference'           => $data['booking_id'],
-//                    'user_id'             => $user->id,
-//                    'service_provider_id' => $provider->id
-//                ]
-//            );
-//        }
-    }
-
-    /**
-     * @param array $data
-     * @return string
-     */
-    protected function getNotificationMessage(array $data): ?string
-    {
-        return sprintf("BOOKING Request received from %s FOR %s Service ", Arr::get($data, 'user.first_name'), Arr::get($data, 'provider.service_name'));
-    }
-
-    /**
-     * @param User $user
-     * @param array $data
-     * @return string
-     */
-    protected function getUserNotificationMessage(User $user, array $data): string
-    {
-        $message = sprintf("BOOKING Request received from %s FOR %s Service ", $user->first_name, Arr::get($data, 'provider.service_name'));
-        $message .= "<br/>";
-        return $message;
     }
 
     /**
@@ -160,6 +90,37 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
             'service_provider' => $provider,
             'message'          => "Booking received from {$booking->user->name} for service {$booking->service->service_name}"
         ]));
+    }
+
+    /**
+     * @param $booking
+     * @param array $data
+     * @param $provider
+     */
+    private function sendUserNotifications(Booking $booking, array $data, ServiceProvider $provider): void
+    {
+        // Send email
+        if ($booking->user->email) {
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => Arr::get($data, 'subject'),
+                'mailable'      => \App\Mail\BookingCreated::class,
+                'data'          => [
+                    'business_name'    => $provider->service_provider_name,
+                    'service_name'     => $booking->service->service_name,
+                    'description'      => $booking->providerService->description,
+                    'booking_time'     => $booking->booking_time,
+                    'service_cost'     => $booking->amount,
+                    'service_duration' => $booking->providerService->duration,
+                ]
+            ], '');
+        } else {
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => "Your request has been received. {$provider->service_provider_name}," .
+                    " {$booking->service->service_name} at {$booking->booking_time}"
+            ]);
+        }
     }
 
 
