@@ -29,7 +29,8 @@ trait SendEmailTrait
      */
     public function send(array $data, string $template)
     {
-        $mailContents = file_get_contents(storage_path(sprintf('%s%s', $this->path, $template)));
+        Log::info("Data to send to mail queue", $data);
+//        $mailContents = file_get_contents(storage_path(sprintf('%s%s', $this->path, $template)));
         if ($data['email_address']) {
             (new RabbitMQ())->publish(
                 array_merge(
