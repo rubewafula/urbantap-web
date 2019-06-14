@@ -60,11 +60,11 @@ class ProviderServicesController extends Controller
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from provider_services ps inner join service_providers sp inner " 
+            . " from provider_services ps inner join service_providers sp on ps.service_provider_id = sp.id inner " 
             . " join services s on s.id=ps.service_id left  join user_personal_details  d using(user_id)  "
             . " where ps.id =:id ";
 
-        //echo print_r($params, 1);
+        Log::info("Query to get provider service details" . $provideQ );
         
         $service_data =  RawQuery::query( $provideQ,['id'=>$id]);
 

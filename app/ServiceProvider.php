@@ -41,7 +41,7 @@ class ServiceProvider extends Model
 
     public function user()
     {
-        return $this->BelongsTo('App\User');
+        return $this->belongsTo('App\User');
     }
 
     public function getCoverPhotoAttribute($value){

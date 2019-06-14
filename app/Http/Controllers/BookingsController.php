@@ -429,7 +429,7 @@ class BookingsController extends Controller
 
         } else {
 
-            $base_cost = array_get($cresulr, 0)->cost;
+            $base_cost = array_get($cresult, 0)->cost;
             $other_amount = 0;
 
             $other_cost_result = RawQuery::query("select sum(c.amount)amt from "
@@ -465,21 +465,20 @@ class BookingsController extends Controller
              **/
             $booking_id = DB::getPdo()->lastInsertId();
 
-            $booking  = App\Booking::with([
+            $booking  = \App\Booking::with([
                 'user',
-                'provider',
-                'service',
+                'provider.user',
                 'providerService'
             ])->find($booking_id);
 
-            Log::info("Booking Data", $booking);
+            Log::info("Booking Data", $booking->toArray());
             broadcast(new BookingCreated($user, [
                 'booking_id'   => $booking_id,
                 'request'      => $request->all(),
                 'booking_time' => $actual_booking_time,
                 'cost'         => $actual_cost,
                 'subject'      => 'Booking Request Placed',
-                'booking' => $booking->toArray()
+                'booking' => $booking,
             ]));
 
             $out = [

@@ -26,20 +26,6 @@ trait UserDataTrait
      */
     protected function getUserNotificationData(User $user, array $data)
     {
-        $provider = [];
-        $id = Arr::get($data, 'request.service_provider_id', Arr::get($data, 'service_provider_id'));
-        if ($id) {
-            Log::info("Service provider exists", compact('id'));
-            $provider = optional(ServiceProvider::query()->find($id))->toArray() ?: [];
-
-            Log::info("Existed service provider found", $provider);
-        }
-        $service = [];
-        $id = Arr::get($data, 'request.service_id', Arr::get($data, 'service_id'));
-        if ($id) {
-            Log::info("Service exists", compact('id'));
-            $service = optional(Services::query()->find($id))->toArray() ?: [];
-        }
         return array_merge(
             $data,
             $user->toArray(),
@@ -50,15 +36,12 @@ trait UserDataTrait
                 'subject'             => Arr::get($data, 'subject'),
                 'reference'           => Arr::get($data, 'booking_id'),
                 'user_id'             => $user->id,
-                'service_provider_id' => Arr::get($data, 'request.service_provider_id', null),
                 'message'             => $this->getUserNotificationMessage($user, $data),
                 'sms'                 => [
                     'recipients' => $msisdn ? [$msisdn] : [],
                     'message'    => Arr::get($data, 'message')
                 ]
             ],
-            $provider,
-            $service
         );
     }
 

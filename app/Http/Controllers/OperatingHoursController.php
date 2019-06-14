@@ -76,7 +76,7 @@ class OperatingHoursController extends Controller
     {
 
         $validator = Validator::make($request->all(),[
-            'day' => 'required|unique:operating_hours,service_day',
+            'day' => 'required|in:Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
             'time_from' => 'required|string',
             'time_to' =>'required|string'
         ]);
@@ -91,22 +91,18 @@ class OperatingHoursController extends Controller
             $user = $request->user();
             $sp = RawQuery::query("select id from service_providers where user_id=$user->id");
             $sp_id = optional(array_get($sp, 0))->id;
-            DB::insert("insert into operating_hours (service_provider_id,"
-                . " service_day, time_from, time_to, created_at, updated_at, status_id)"
-                . " values (:service_provider_id, :day, :time_from, "
-                . " :time_to, now(),  now(), :status)  ", 
-                    [
-                        'service_provider_id'=> $sp_id,
-                        'day'=>$request->get('day'),
-                        'time_from'=>$request->get('time_from'),
-                        'time_to'=>$request->get('time_to'),
-                        'status' => DBStatus::TRANSACTION_ACTIVE
-                    ]
-                );
-
+	    $wkhr = \App\OperatingHours::updateOrCreate(
+               ['service_provider_id' => $sp_id, 'service_day' => $request->get('day')],
+               [
+                   'time_from'=>$request->get('time_from'),
+                   'time_to'=>$request->get('time_to'),
+                   'status_id' => DBStatus::TRANSACTION_ACTIVE
+               ]
+            );
+ 
             $out = [
                 'success' => true,
-                'id'=>DB::getPdo()->lastInsertId(),
+                'id'=>$wkhr->id,
                 'service_day' => $request->get('day'),
                 'time_from'=>$request->get('time_from'),
                 'time_to' => $request->get('time_to'),

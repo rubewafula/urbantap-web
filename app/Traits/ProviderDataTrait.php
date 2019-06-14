@@ -62,26 +62,22 @@ trait ProviderDataTrait
      */
     protected function getServiceProviderNotificationData(array $data): array
     {
-        $sp = $this->queryData($data);
-        Log::info("Found provider data", $data);
+	$sp = array_get($data, 'provider');
         $data = [
             array_merge(
                 $data,
                 [
-                    'provider'      => (array)$sp,
+                    'provider'      => $sp->toArray(),
                     'message'       => $this->getNotificationMessage($data),
                     'msisdn'        => $msisdn = $sp->{'business_phone'},
                     'email_address' => $sp->{'business_email'},
-                    'sms'           => array_merge(
+                    'sms'           => 
                         [
                             'recipients' => [$msisdn],
                             'message'    => Arr::get($data, 'message'),
                         ],
-                        $this->getProviderBindings($data)
-                    )
                 ]
             ),
-            new User(['id' => $sp->user_id]),
         ];
         Log::info("Final provider data", $data);
         return $data;
