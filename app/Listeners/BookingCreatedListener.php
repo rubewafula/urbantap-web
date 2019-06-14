@@ -11,6 +11,7 @@ use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
 use App\Traits\UserDataTrait;
 use App\User;
+use App\Utilities\RabbitMQ;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -54,34 +55,42 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
         // Send user email
 
         // Send SP mail
-	$booking = array_get($data, 'booking');
-	$provider = $booking->provider;
-	$data['booking'] = $booking->toArray();
-	$data['provider'] = $provider;
-	
-	Log::info("Booked Provider", compact('provider'));
-        $this->send($this->getUserNotificationData($event->user, $data), $this->userMailTemplate);
+        $booking = array_get($data, 'booking');
+        $provider = $booking->provider;
+        $data['booking'] = $booking->toArray();
+        $data['provider'] = $provider;
 
-	$this->send($data, $this->serviceProviderMailTemplate);
-        // Notify SP
-        $provider->user->notify(new BookingCreatedNotification([
-            'user'             => $event->user->toArray(),
-            'booking_id'       => $data['booking_id'],
-            'service_provider' => $provider->toArray(),
-        ]));
-        // Send SMS
-        if ($provider->business_phone) {
-            $this->sms(
-                    [
-                        'message'             => "Booking Request. " . $booking->service->service_name
-                            . " Start Time: " . $booking->booking_time . ", Cost " . $booking->amount
-                            . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
-                        'reference'           => $data['booking_id'],
-                        'user_id'             => $user->id,
-                        'service_provider_id' => $provider->id
-                    ]
-            );
-        }
+        $this->send([
+            'email_address' => $email = $provider->business_email ?: $provider->user->email,
+            'to'            => $email,
+            'subject'       => Arr::get($data, 'subject'),
+            'email'         => $message = (new \App\Mail\BookingCreated())->render(),
+            'message'       => $message
+        ], "");
+
+//        Log::info("Booked Provider", compact('provider'));
+//        $this->send($this->getUserNotificationData($event->user, $data), $this->userMailTemplate);
+//
+//        $this->send($data, $this->serviceProviderMailTemplate);
+//        // Notify SP
+//        $provider->user->notify(new BookingCreatedNotification([
+//            'user'             => $event->user->toArray(),
+//            'booking_id'       => $data['booking_id'],
+//            'service_provider' => $provider->toArray(),
+//        ]));
+//        // Send SMS
+//        if ($provider->business_phone) {
+//            $this->sms(
+//                [
+//                    'message'             => "Booking Request. " . $booking->service->service_name
+//                        . " Start Time: " . $booking->booking_time . ", Cost " . $booking->amount
+//                        . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
+//                    'reference'           => $data['booking_id'],
+//                    'user_id'             => $user->id,
+//                    'service_provider_id' => $provider->id
+//                ]
+//            );
+//        }
     }
 
     /**
