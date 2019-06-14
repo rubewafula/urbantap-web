@@ -3,6 +3,7 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Utilities\Utils;
 
 class Portfolio extends Model
 {
