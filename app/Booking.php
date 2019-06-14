@@ -20,10 +20,24 @@ class Booking extends Model
         return $this->belongsTo('App\User');
     }
 
-    public function service_provider()
+    public function provider()
     {
         return $this->belongsTo('App\ServiceProvider');
-    }
+    }         
+
+
+    public function providerService()
+    {
+        return $this->belongsTo('App\ProviderServices');
+    }       
+
+
+    public function service()
+    {
+        return $this->providerService->service();
+    }  
+
+
 
     public function status()
     {

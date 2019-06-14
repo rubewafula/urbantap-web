@@ -9,6 +9,10 @@ class ServiceProvider extends Model
 
     protected $table = "service_providers";
 
+    protected $casts = [
+        'cover_photo' => 'json'
+    ];
+
     public function displayImages() {
         return $this->hasMany('App\ServiceProviderImages');
     }
@@ -30,4 +34,9 @@ class ServiceProvider extends Model
     {
         return $this->BelongsTo('App\User');
     }
+
+    public function getCoverPhotoAttribute($value){
+        return Utils::PROVIDER_SERVICES_URL . array_get($value, 'media_url', '2.jpg');
+    }
+
 }

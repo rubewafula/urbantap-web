@@ -3,9 +3,15 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Utilities\Utils;
 
 class ProviderServices extends Model
 {
+
+    protected $casts = [
+        'media_url' => 'json'
+    ];
+
     public function service() {
         return $this->belongsTo('App\Services');
     }
@@ -13,16 +19,10 @@ class ProviderServices extends Model
     public function serviceProvider() {
         return $this->belongsTo('App\ServiceProvider');
     }
-    // override the toArray function (called by toJson)
-    public function toArray() {
-//        $data = parent::toArray();
-        $data['id'] = $this->id;
-        $data['service_provider_id'] = $this->service_provider_id;
-        $data['service_id'] = $this->service_id;
-        $data['service_name'] = $this->service->service_name;
-        $data['description'] = $this->description;
-        $data['cost'] = $this->cost;
-        $data['duration'] = $this->duration;
-        return $data;
+
+
+    public function getMediaUrlAttribute($value){
+        return Utils::SERVICE_IMAGE_URL . array_get($value, 'media_url', '2.jpg');
     }
+
 }
