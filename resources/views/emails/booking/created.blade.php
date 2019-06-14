@@ -4,9 +4,9 @@
 Your booking has been received.
 
 @component('mail::table')
-| Laravel          | Table                        |
-| ---------------- | ---------------------------- |
-| Service Provider | {{ $data['business_name'] }} |
+|                  |                              |
+|:---------------- |:---------------------------- |
+| ** Service Provider ** | {{ $data['business_name'] }} |
 @endcomponent
 
 Service Provider:    **{{ $data['business_name'] }}**
