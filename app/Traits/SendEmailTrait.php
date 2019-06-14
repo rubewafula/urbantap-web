@@ -31,7 +31,7 @@ trait SendEmailTrait
     {
         Log::info("Data to send to mail queue", $data);
         if ($data['email_address']) {
-            (new RabbitMQ())->publish($data, env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
+            (new RabbitMQ())->publish(array_merge($data, compact('template')), env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
             );
         } else {
             Log::info("Email info missing, skipped notification");

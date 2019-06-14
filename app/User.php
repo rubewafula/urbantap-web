@@ -53,7 +53,11 @@ class User extends Authenticatable
         return $this->BelongsTo('App\Status');
     }
 
-    public function details(){
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function details()
+    {
         return $this->hasOne('App\UserPersonalDetail');
     }
 
@@ -73,7 +77,6 @@ class User extends Authenticatable
     {
         return $this->hasOne('App\ServiceProvider');
     }
-
 
 
     /**
@@ -105,6 +108,13 @@ class User extends Authenticatable
         return $static;
     }
 
-    
+    /**
+     * @return string
+     */
+    public function getNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->last_name;
+    }
+
 
 }
