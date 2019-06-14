@@ -41,7 +41,7 @@ trait UserDataTrait
                     'recipients' => $msisdn ? [$msisdn] : [],
                     'message'    => Arr::get($data, 'message')
                 ]
-            ],
+            ]
         );
     }
 
