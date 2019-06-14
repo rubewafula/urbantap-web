@@ -10,7 +10,9 @@
 
     {{ $data['booking_time'] }}
 
-    To change or cancel your booking, log into ({{ config('app.url') }})[{{ config('app.url') }}]  and select "My Bookings" bookmark
+    Use two asterisks for **strong emphasis**.
+
+    To change or cancel your booking, log into [{{ config('app.name') }}]({{ config('app.url') }})  and select "My Bookings" bookmark
 
     Thanks,
     {{ config('app.name') }}
