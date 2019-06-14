@@ -2,23 +2,20 @@
 
 namespace App\Mail;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class BookingAccepted extends Mailable
 {
-    use Queueable, SerializesModels;
+    use SerializesModels;
 
     /**
      * Create a new message instance.
      *
-     * @return void
+     * @param array $data
      */
-    public function __construct()
+    public function __construct(array $data)
     {
-        //
+        parent::__construct($data);
     }
 
     /**
@@ -28,6 +25,6 @@ class BookingAccepted extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.booking.accepted');
+        return $this->markdown('emails.booking.accepted', $this->data);
     }
 }

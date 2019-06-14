@@ -2,7 +2,6 @@
 
 namespace App\Mail;
 
-use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
 /**
@@ -14,18 +13,13 @@ class BookingCreatedProvider extends Mailable
     use SerializesModels;
 
     /**
-     * @var array
-     */
-    private $data = [];
-
-    /**
      * Create a new message instance.
      *
      * @param array $data
      */
     public function __construct(array $data)
     {
-        $this->data = $data;
+        parent::__construct($data);
     }
 
     /**
