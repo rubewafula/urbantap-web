@@ -22,6 +22,8 @@ class BookingStatusRequest extends FormRequest
                 return $this->user()->can('reject', $booking);
             case DBStatus::BOOKING_ACCEPTED:
                 return $this->user()->can('accept', $booking);
+            case DBStatus::BOOKING_CANCELLED:
+                return $this->user()->can('cancel', $booking);
             default:
                 return true;
         }
