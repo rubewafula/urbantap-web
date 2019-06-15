@@ -20,6 +20,8 @@ class BookingStatusRequest extends FormRequest
         switch ($this->get('status')) {
             case DBStatus::BOOKING_REJECTED:
                 return $this->user()->can('reject', $booking);
+            case DBStatus::BOOKING_ACCEPTED:
+                return $this->user()->can('accept', $booking);
             default:
                 return true;
         }
