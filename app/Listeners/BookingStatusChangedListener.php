@@ -181,7 +181,7 @@ class BookingStatusChangedListener
      */
     private function getBookingCancelledUserMessage(Booking $booking): string
     {
-        return "Your booking has been cancelled. {$booking->service->service_name} from {$booking->provider->service_provider_name}." .
+        return "You have successfully cancelled your booking. {$booking->service->service_name} from {$booking->provider->service_provider_name}." .
             "Visit " . config('app.name') . " to book with a different provider.";
     }
 
