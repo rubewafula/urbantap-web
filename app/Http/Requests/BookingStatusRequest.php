@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Booking;
 use App\Utilities\DBStatus;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -15,7 +16,13 @@ class BookingStatusRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        $booking = Booking::query()->find($this->get('booking_id'));
+        switch ($this->get('status')) {
+            case DBStatus::BOOKING_REJECTED:
+                return $this->user()->can('reject', $booking);
+            default:
+                return true;
+        }
     }
 
     /**
@@ -42,7 +49,7 @@ class BookingStatusRequest extends FormRequest
                 'integer',
                 'exists:bookings,id'
             ],
-            'user_id' => [
+            'user_id'    => [
                 'required',
                 'integer',
                 'exists:users,id'
