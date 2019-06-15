@@ -52,7 +52,7 @@ class BookingStatusChangedListener
                     $this->sendBookingAcceptedUserNotifications($booking);
                     break;
                 case DBStatus::BOOKING_REJECTED:
-                    $event->user->notify(new BookingRejectedNotification($notificationData));
+                    $booking->user->notify(new BookingRejectedNotification($notificationData));
                     $this->sendBookingRejectedUserNotifications($booking);
                     break;
             }
