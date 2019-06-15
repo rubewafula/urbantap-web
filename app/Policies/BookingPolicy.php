@@ -37,4 +37,17 @@ class BookingPolicy
     {
         return $user->id === $booking->provider->user_id && $booking->status_id === DBStatus::BOOKING_NEW;
     }
+
+    /**
+     * - User must be service provider
+     * - Status should not be accepted
+     *
+     * @param User $user
+     * @param Booking $booking
+     * @return bool
+     */
+    public function accept(User $user, Booking $booking)
+    {
+        return $this->reject($user, $booking);
+    }
 }
