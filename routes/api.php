@@ -246,7 +246,6 @@ Route::group([
         'BookingsController@getProviderBookingWithDetails');
 
     Route::post('create', 'BookingsController@create');
-    Route::put('update', 'BookingsController@updateBooking');
     Route::delete('delete', 'BookingsController@delete');
 
     // Update booking status
