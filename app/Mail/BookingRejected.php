@@ -2,11 +2,7 @@
 
 namespace App\Mail;
 
-/**
- * Class BookingCreatedProvider
- * @package App\Mail
- */
-class BookingCreatedProvider extends Mailable
+class BookingRejected extends Mailable
 {
     /**
      * Create a new message instance.
@@ -25,6 +21,6 @@ class BookingCreatedProvider extends Mailable
      */
     public function build()
     {
-        return $this->markdown('emails.booking.created-provider', $this->data);
+        return $this->markdown('emails.booking.rejected');
     }
 }

@@ -2,12 +2,12 @@
 
 namespace App\Mail;
 
-use Illuminate\Queue\SerializesModels;
-
+/**
+ * Class BookingAccepted
+ * @package App\Mail
+ */
 class BookingAccepted extends Mailable
 {
-    use SerializesModels;
-
     /**
      * Create a new message instance.
      *

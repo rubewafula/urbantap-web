@@ -2,16 +2,12 @@
 
 namespace App\Mail;
 
-use Illuminate\Queue\SerializesModels;
-
 /**
  * Class BookingCreated
  * @package App\Mail
  */
 class BookingCreated extends Mailable
 {
-    use SerializesModels;
-
     /**
      * BookingCreated constructor.
      * @param array $data

@@ -4,12 +4,15 @@
 namespace App\Mail;
 
 
+use Illuminate\Queue\SerializesModels;
+
 /**
  * Class Mailable
  * @package App\Mail
  */
 abstract class Mailable extends \Illuminate\Mail\Mailable
 {
+    use SerializesModels;
     /**
      * @var array
      */
