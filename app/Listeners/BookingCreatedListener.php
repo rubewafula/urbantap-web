@@ -63,7 +63,7 @@ class BookingCreatedListener implements ShouldSendSMS, ShouldSendMail
     {
         // Send email
         $this->send([
-            'email_address' => $provider->business_email,
+            'email_address' => $provider->business_email ?: $provider->user->email,
             'subject'       => $this->mailSubject,
             'mailable'      => BookingCreatedProvider::class,
             'data'          => [
