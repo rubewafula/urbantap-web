@@ -274,10 +274,11 @@ class BookingsController extends Controller
         if (!is_numeric($page)) {
             $page = 1;
         }
-
+        
         $filter_col = $client == false ? " sp.user_id " : " u.id ";
 
-        $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
+        $query = "select b.created_at, b.id as booking_id, b.service_provider_id, "
+            . " b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
             . " b.booking_type, b.location, sp.service_provider_name, "
