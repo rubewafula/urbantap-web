@@ -27,4 +27,16 @@ abstract class Mailable extends \Illuminate\Mail\Mailable
     {
         $this->data = $data;
     }
+
+    abstract function getMailTemplate(): string;
+
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
+    public function build()
+    {
+        return $this->markdown($this->getMailTemplate(), $this->data);
+    }
 }

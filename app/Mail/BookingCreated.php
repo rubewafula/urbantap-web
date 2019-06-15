@@ -17,14 +17,11 @@ class BookingCreated extends Mailable
         parent::__construct($data);
     }
 
-
     /**
-     * Build the message.
-     *
-     * @return $this
+     * @return string
      */
-    public function build()
+    function getMailTemplate(): string
     {
-        return $this->markdown('emails.booking.created', $this->data);
+        return 'emails.booking.created';
     }
 }

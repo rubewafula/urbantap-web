@@ -19,12 +19,10 @@ class BookingCreatedProvider extends Mailable
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * @return string
      */
-    public function build()
+    function getMailTemplate(): string
     {
-        return $this->markdown('emails.booking.created-provider', $this->data);
+        return 'emails.booking.created-provider';
     }
 }

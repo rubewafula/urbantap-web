@@ -19,12 +19,10 @@ class BookingAccepted extends Mailable
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * @return string
      */
-    public function build()
+    function getMailTemplate(): string
     {
-        return $this->markdown('emails.booking.accepted', $this->data);
+        return 'emails.booking.accepted';
     }
 }

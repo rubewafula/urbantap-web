@@ -2,6 +2,10 @@
 
 namespace App\Mail;
 
+/**
+ * Class BookingRejected
+ * @package App\Mail
+ */
 class BookingRejected extends Mailable
 {
     /**
@@ -15,12 +19,10 @@ class BookingRejected extends Mailable
     }
 
     /**
-     * Build the message.
-     *
-     * @return $this
+     * @return string
      */
-    public function build()
+    function getMailTemplate(): string
     {
-        return $this->markdown('emails.booking.rejected');
+        return 'emails.booking.rejected';
     }
 }
