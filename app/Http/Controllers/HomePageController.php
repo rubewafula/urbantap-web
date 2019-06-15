@@ -136,8 +136,6 @@ class HomePageController extends Controller
         }
 
 
-
-
         $results = RawQuery::queryMultiple(
                 [
                 $service_query, 
