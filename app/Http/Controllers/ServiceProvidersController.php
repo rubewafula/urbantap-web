@@ -75,7 +75,7 @@ class ServiceProvidersController extends Controller{
         foreach($booked_records as $key=>$record)
         {
             $start = $record->booking_time;
-            Log::info("Trying tp generate booking slot from " . $start . "duration ". $record->booking_duration );
+            #Log::info("Trying tp generate booking slot from " . $start . "duration ". $record->booking_duration );
 
             $bb_date = DateTime::createFromFormat('Y-m-d H:i:s', $start);
 
@@ -125,8 +125,8 @@ class ServiceProvidersController extends Controller{
             $slot_date->format('Y-m-d'). " ".$work_end_time);
 
         while(true){
-            Log::info("Checking " . $slot_data  . "==> " . $slot_date->format('Y-m-d H:i') 
-                . " work end ==> ". $work_end_datetime->format('Y-m-d H:i'));
+            #Log::info("Checking " . $slot_data  . "==> " . $slot_date->format('Y-m-d H:i') 
+            #    . " work end ==> ". $work_end_datetime->format('Y-m-d H:i'));
             if($slot_date <  $round_date ){
                 #FIXME: Date overlap error
                 $slot_date = $round_date->sub(new DateInterval('PT30M'));
@@ -135,14 +135,11 @@ class ServiceProvidersController extends Controller{
             }
 
             $slot_date->add(new DateInterval('PT15M'));
-            Log::info("New slot dat " . $slot_date->format('Y-m-d H:i') ); 
+            #Log::info("New slot dat " . $slot_date->format('Y-m-d H:i') ); 
             if($slot_data == $slot_date->format('Y-m-d')){
 
                 if(!in_array($slot_date->format('H:i'), $booked_slots)){
                     array_push($slots, $slot_date->format('H:i'));
-                }else{
-                    Log::info("Browsing a booked time slot for SP => "
-                        . $request->get('service_provider_id') . "Time =>" . $slot_date->format('H:i'));
                 }
                 
             }
