@@ -69,13 +69,19 @@ class ServiceProvidersController extends Controller{
             . " date(booking_time)=:booking_date and status_id=:st ";
         $params = ['pid'=>$request->get('service_provider_id'),
                     'booking_date'=> $slot_data, 'st'=>DBStatus::BOOKING_PAID];
+
         $booked_records = RawQuery::query($provider_booking_sql, $params);
         $booked_slots = [];
-        foreach($booked_records as $key=>$record){
+        foreach($booked_records as $key=>$record)
+        {
             $start = $record->booking_time;
+            Log::info("Trying tp generate booking slot from", $booked_records);
+            
             $bb_date = DateTime::createFromFormat('Y-m-d H:i', $start);
+
             $ls_date = DateTime::createFromFormat('Y-m-d H:i', $start)
                 ->add(new DateInterval('PT'.$record->booking_duration.'M'));
+
             do{
 
                 array_push($booked_slots, $bb_date->format("H:i"));
