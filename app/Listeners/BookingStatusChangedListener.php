@@ -45,39 +45,35 @@ class BookingStatusChangedListener
     {
         $booking = $event->booking;
         // Send provider notification
-        if (in_array($booking->status_id, [DBStatus::BOOKING_ACCEPTED, DBStatus::BOOKING_REJECTED])) {
-            $notificationData = [
-                'booking_id' => $booking->id,
-            ];
-            switch ($booking->status_id) {
-                case DBStatus::BOOKING_ACCEPTED:
-                    $booking->user->notify(new BookingAcceptedNotification($notificationData));
-                    $this->sendBookingAcceptedUserNotifications($booking);
-                    break;
-                case DBStatus::BOOKING_REJECTED:
-                    $booking->user->notify(new BookingRejectedNotification($notificationData));
-                    $this->sendBookingRejectedUserNotifications($booking);
-                    break;
-                case DBStatus::BOOKING_CANCELLED:
-                    $booking->user->notify(
-                        new BookingCancelledNotification([
-                            'booking_id' => $booking->id,
-                            'message'    => $this->getBookingCancelledUserMessage($booking)
-                        ])
-                    );
-                    $this->sendBookingCancelledUserNotifications($booking);
-            }
-        } else {
-            switch ($booking->status_id) {
-                case DBStatus::BOOKING_CANCELLED:
-                    $booking->provider->user->notify(
-                        new BookingCancelledNotification([
-                            'booking_id' => $booking->id,
-                            'message'    => $this->getBookingCancelledProviderMessage($booking)
-                        ])
-                    );
-                    $this->sendBookingCancelledProviderNotifications($booking);
-            }
+        $notificationData = [
+            'booking_id' => $booking->id,
+        ];
+        switch ($booking->status_id) {
+            case DBStatus::BOOKING_ACCEPTED:
+                $booking->user->notify(new BookingAcceptedNotification($notificationData));
+                $this->sendBookingAcceptedUserNotifications($booking);
+                break;
+            case DBStatus::BOOKING_REJECTED:
+                $booking->user->notify(new BookingRejectedNotification($notificationData));
+                $this->sendBookingRejectedUserNotifications($booking);
+                break;
+            case DBStatus::BOOKING_CANCELLED:
+                // Send user notifications
+                $booking->user->notify(
+                    new BookingCancelledNotification([
+                        'booking_id' => $booking->id,
+                        'message'    => $this->getBookingCancelledUserMessage($booking)
+                    ])
+                );
+                $this->sendBookingCancelledUserNotifications($booking);
+                // Send provider notifications
+                $booking->provider->user->notify(
+                    new BookingCancelledNotification([
+                        'booking_id' => $booking->id,
+                        'message'    => $this->getBookingCancelledProviderMessage($booking)
+                    ])
+                );
+                $this->sendBookingCancelledProviderNotifications($booking);
         }
     }
 
