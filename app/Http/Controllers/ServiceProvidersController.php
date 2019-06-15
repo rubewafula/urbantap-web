@@ -77,9 +77,9 @@ class ServiceProvidersController extends Controller{
             $start = $record->booking_time;
             Log::info("Trying tp generate booking slot from " . $start . "duration ". $record->booking_duration );
 
-            $bb_date = DateTime::createFromFormat('Y-m-d H:i', $start);
+            $bb_date = DateTime::createFromFormat('Y-m-d H:i:s', $start);
 
-            $ls_date = DateTime::createFromFormat('Y-m-d H:i', $start)
+            $ls_date = DateTime::createFromFormat('Y-m-d H:i:s', $start)
                 ->add(new DateInterval('PT'.$record->booking_duration.'M'));
 
             do{
