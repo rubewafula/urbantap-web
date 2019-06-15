@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Booking;
 use App\Events\BookingStatusChanged;
 use App\Mail\BookingAccepted;
 use App\Notifications\BookingAcceptedNotification;
@@ -53,20 +54,7 @@ class BookingStatusChangedListener
                     $event->user->notify(new BookingRejectedNotification($notificationData));
                     break;
             }
-            $this->send([
-                'email_address' => $booking->user->email,
-                'subject'       => "Booking Request Accepted",
-                'mailable'      => BookingAccepted::class,
-                'data'          => [
-                    'booking_id'       => $booking->id,
-                    'business_name'    => $booking->provider->service_provider_name,
-                    'service_name'     => $booking->service->service_name,
-                    'description'      => $booking->providerService->description,
-                    'booking_time'     => $booking->booking_time,
-                    'service_cost'     => $booking->amount,
-                    'service_duration' => $booking->providerService->duration,
-                ]
-            ], "");
+            $this->sendUserNotifications($booking);
         } else {
 //            [
 //                $data,
@@ -74,5 +62,38 @@ class BookingStatusChangedListener
 //            ] = $this->getServiceProviderNotificationData($event->data);
 //            $serviceProvider->notify(new BookingCancelledNotification($data));
         }
+    }
+
+    /**
+     * @param Booking $booking
+     */
+    private function sendUserNotifications(Booking $booking): void
+    {
+        $service = $booking->service->service_name;
+        $provider = $booking->provider->service_provider_name;
+        $time = $booking->booking_time;
+        $amount = $booking->amount;
+        $id = $booking->id;
+        if ($booking->user->email)
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => "Booking Request Accepted",
+                'mailable'      => BookingAccepted::class,
+                'data'          => [
+                    'booking_id'       => $id,
+                    'business_name'    => $provider,
+                    'service_name'     => $service,
+                    'description'      => $booking->providerService->description,
+                    'booking_time'     => $time,
+                    'service_cost'     => $amount,
+                    'service_duration' => $booking->providerService->duration,
+                ]
+            ], "");
+        else
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => "Your booking has been accepted. {$service}, {$provider} at {$time}." .
+                    "Send {$amount} to " . env('URBANTAP_PAYBILL') . " A/C No. {$id}. " . config('app.name')
+            ]);
     }
 }
