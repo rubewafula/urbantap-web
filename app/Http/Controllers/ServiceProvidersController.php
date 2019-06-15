@@ -75,8 +75,8 @@ class ServiceProvidersController extends Controller{
         foreach($booked_records as $key=>$record)
         {
             $start = $record->booking_time;
-            Log::info("Trying tp generate booking slot from", $booked_records);
-            
+            Log::info("Trying tp generate booking slot from " . $start . "duration ". $record->booking_duration );
+
             $bb_date = DateTime::createFromFormat('Y-m-d H:i', $start);
 
             $ls_date = DateTime::createFromFormat('Y-m-d H:i', $start)
