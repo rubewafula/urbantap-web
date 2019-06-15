@@ -50,4 +50,17 @@ class BookingPolicy
     {
         return $this->reject($user, $booking);
     }
+
+    /**
+     * - User is booking owner
+     * - Status should be new
+     *
+     * @param User $user
+     * @param Booking $booking
+     * @return bool
+     */
+    public function cancel(User $user, Booking $booking)
+    {
+        return $user->id === $booking->user->id && $booking->status_id === DBStatus::BOOKING_NEW;
+    }
 }
