@@ -81,6 +81,7 @@ class Utils
 
         if (Storage::putFileAs('public/static/' . $type . '/' . $base_dir, $file, $fullPath)) {
             // Process with intervention
+            $file_path = storage_path("app/{$file_path}");
             Log::info("File uploaded... Sending to Intervention", compact('file_path'));
             if ($type === 'image') {
                 $image = ImageAlias::make($file_path);
