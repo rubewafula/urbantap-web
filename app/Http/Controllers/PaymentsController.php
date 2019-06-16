@@ -339,7 +339,7 @@ class PaymentsController extends Controller
                     'ref'             => $transaction_id,
                     'booking_amount'  => $booking_amount,
                     'running_balance' => $running_balance,
-                    'balance'         => $balance,
+                    'balance'         => $booking_balance,
                 ])
             );
 
