@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Booking;
 use App\Events\BookingPaid;
+use App\Events\BookingWasPaidEvent;
 use App\ServiceProvider;
 use App\Status;
 use App\Transaction;
@@ -139,7 +140,7 @@ class PaymentsController extends Controller
                         . " b.service_provider_id from users u inner join bookings b on u.id = b.user_id  "
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
-                
+
                 $provider = null;
 
                 if (!empty($user)) {
@@ -229,7 +230,7 @@ class PaymentsController extends Controller
                 ], HTTPCodes::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            if(empty($user)){
+            if (empty($user)) {
 
                 Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
 
@@ -241,7 +242,7 @@ class PaymentsController extends Controller
 
                 return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
             }
-            
+
             try {
                 DB::beginTransaction();
 
@@ -290,7 +291,7 @@ class PaymentsController extends Controller
                     );
 
                     DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
-                        status_id='" . DBStatus::BOOKING_PAID . "',transaction_id = '".$transaction->id."',
+                        status_id='" . DBStatus::BOOKING_PAID . "',transaction_id = '" . $transaction->id . "',
                         description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
 
                     DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
@@ -333,15 +334,21 @@ class PaymentsController extends Controller
                 'service',
                 'providerService'
             ])->find($bill_ref_no);
-            broadcast(
-                new BookingPaid($booking, [
-                    'amount'          => $transaction_amount,
-                    'ref'             => $transaction_id,
-                    'booking_amount'  => $booking_amount,
-                    'running_balance' => $running_balance,
-                    'balance'         => $balance,
-                ])
-            );
+            $data = [
+                'amount'          => $transaction_amount,
+                'ref'             => $transaction_id,
+                'booking_amount'  => $booking_amount,
+                'running_balance' => $running_balance,
+                'balance'         => $booking_balance,
+            ];
+            if ($booking)
+                broadcast(
+                    new BookingPaid($booking, $data)
+                );
+            else
+                broadcast(
+                    new BookingWasPaidEvent(new User(['id' => $user_id]), $data)
+                );
 
             $out = [
                 'status'  => 201,
@@ -382,18 +389,18 @@ class PaymentsController extends Controller
 
 
         $curl_post_data = array(
-          
-          'BusinessShortCode' => env("PAYBILL_NO"),
-          'Password' => $apiPassword,
-          'Timestamp' => $timestamp,
-          'TransactionType' => 'CustomerPayBillOnline',
-          'Amount' => $amount,
-          'PartyA' => $msisdn,
-          'PartyB' => env("PAYBILL_NO"),
-          'PhoneNumber' => $msisdn,
-          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/payment',
-          'AccountReference' => $booking_id,
-          'TransactionDesc' => 'Booking Payment at UrbanTap'
+
+            'BusinessShortCode' => env("PAYBILL_NO"),
+            'Password'          => $apiPassword,
+            'Timestamp'         => $timestamp,
+            'TransactionType'   => 'CustomerPayBillOnline',
+            'Amount'            => $amount,
+            'PartyA'            => $msisdn,
+            'PartyB'            => env("PAYBILL_NO"),
+            'PhoneNumber'       => $msisdn,
+            'CallBackURL'       => 'https://urbantap.co.ke/mpesa/c2b/payment',
+            'AccountReference'  => $booking_id,
+            'TransactionDesc'   => 'Booking Payment at UrbanTap'
         );
 
         $data_string = json_encode($curl_post_data);
