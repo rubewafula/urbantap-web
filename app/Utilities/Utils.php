@@ -108,6 +108,7 @@ class Utils
      * @deprecated
      *
      */
+
     static function loadTemplateData($template_data, $data)
     {
         // Remove sms key from data
@@ -146,8 +147,7 @@ class Utils
     }
 
 
-    static function generateMPESAOAuthToken()
-    {
+    static function generateMPESAOAuthToken(){
 
         $url = 'https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials';
 
