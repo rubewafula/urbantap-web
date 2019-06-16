@@ -1,12 +1,11 @@
 <?php
 namespace App\Utilities;
 
+use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\URL;
-use \Exception;
-use Intervention\Image\Image;
+use Intervention\Image\Facades\Image as ImageAlias;
 
 class Utils
 {
@@ -82,12 +81,14 @@ class Utils
 
         if (Storage::putFileAs('public/static/' . $type . '/' . $base_dir, $file, $fullPath)) {
             // Process with intervention
+            Log::info("File uploaded... Sending to Intervention", compact('file_path'));
             if ($type === 'image') {
-                $image = \Intervention\Image\Facades\Image::make($file_path);
+                $image = ImageAlias::make($file_path);
                 $image->fit(600, 360, function ($constraint) {
                     $constraint->upsize();
                 });
             }
+            Log::info("Intervention done", compact('file_path'));
             return [
                 'media_url' => $fullPath,
                 'name'      => $name,
