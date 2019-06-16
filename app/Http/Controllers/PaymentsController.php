@@ -211,7 +211,8 @@ class PaymentsController extends Controller
 
                 $customerTransaction->save();
 
-                DB::insert("insert into user_balance set user_id='" . $user_id . "', available_balance='" . $transaction_amount . "',"
+                DB::insert("insert into user_balance set user_id='" . $user_id . "', 
+                        balance='" . $transaction_amount . "', available_balance='" . $transaction_amount . "',"
                     . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
                     . " update available_balance = available_balance + $transaction_amount "
                 );
@@ -283,7 +284,7 @@ class PaymentsController extends Controller
                     $providerTransaction->save();
 
                     DB::insert("insert into user_balance set user_id='" . $bookingRs[0]->service_provider_id . "',
-                         balance='" . $transaction_amount . "',"
+                         balance='" . $transaction_amount . "', available_balance='0',"
                         . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
                         . " update balance = balance + $transaction_amount "
                     );
