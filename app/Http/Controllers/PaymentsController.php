@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Booking;
 use App\Events\BookingPaid;
 use App\ServiceProvider;
 use App\Status;
@@ -23,7 +24,6 @@ use Exception;
  */
 class PaymentsController extends Controller
 {
-
     /**
      * @var
      */
@@ -142,7 +142,7 @@ class PaymentsController extends Controller
                     if ($user[0]->phone_no !== $msisdn) {
                         DB::table('users')->insert(
                             [
-                                "first_name"       => $name,
+                                "first_name" => $name,
                                 "user_group" => 4,
                                 "phone_no"   => $msisdn,
                                 "email"      => $msisdn . "@urbantap.co.ke",
@@ -160,11 +160,11 @@ class PaymentsController extends Controller
                     if (!empty($user)) {
 
                         $user_id = $user[0]->id;
-                    }else{
+                    } else {
 
                         $user_id = DB::table('users')->insertGetId(
                             [
-                                "first_name"       => $name,
+                                "first_name" => $name,
                                 "user_group" => 4,
                                 "phone_no"   => $msisdn,
                                 "email"      => $msisdn . "@urbantap.co.ke",
@@ -243,40 +243,27 @@ class PaymentsController extends Controller
             }
 
             // Notify user / service provider
+            $booking = Booking::with([
+                'user',
+                'provider',
+                'service',
+                'providerService'
+            ])->find($bill_ref_no);
             broadcast(
-                new BookingPaid(
-                    [
-                        'booking_id'         => $bill_ref_no,
-                        'amount'             => $transaction_amount,
-                        'running_balance'    => $running_balance,
-                        'balance'            => $balance,
-                        'name'               => $name,
-                        'subject'            => "Booking has been Paid",
-                        'first_name'         => $first_name,
-                        'booking_amount'     => $booking_amount,
-                        'transaction_id'     => $transaction_id,
-                        'booking_time'       => $booking_time,
-                        'status'             => DBStatus::BOOKING_PAID,
-                        'status_description' => Status::getDescription(DBStatus::BOOKING_PAID)
-                    ],
-                    new User(
-                        array_merge(
-                            [
-                                'id'       => $user_id,
-                                'email'    => $email,
-                                'phone_no' => $msisdn,
-                            ],
-                            compact('first_name', 'last_name', 'middle_name')
-                        )
-                    )
-                )
+                new BookingPaid($booking, [
+                    'amount'          => $transaction_amount,
+                    'ref'             => $transaction_id,
+                    'booking_amount'  => $booking_amount,
+                    'running_balance' => $running_balance,
+                    'balance'         => $balance,
+                ])
             );
 
             $out = [
-                    'status'  => 201,
-                    'success' => true,
-                    'message' => 'MPESA Payment Received Successfully'
-                   ];
+                'status'  => 201,
+                'success' => true,
+                'message' => 'MPESA Payment Received Successfully'
+            ];
 
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
 
@@ -284,7 +271,8 @@ class PaymentsController extends Controller
 
     }
 
-    public function stkPush(Request $request){
+    public function stkPush(Request $request)
+    {
 
         Log::info("Logging the request");
         Log::info($request->all());
@@ -292,37 +280,37 @@ class PaymentsController extends Controller
         $amount = $request->amount;
         $msisdn = $request->msisdn;
 
-        Log::info("Data as read from the request BOOKING ID ".$booking_id." AMOUNT ".$amount." MSISDN ".$msisdn);
+        Log::info("Data as read from the request BOOKING ID " . $booking_id . " AMOUNT " . $amount . " MSISDN " . $msisdn);
 
         $url = 'https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest';
         $token = Utils::generateMPESAOAuthToken();
 
-        Log::info("Generated access token ".$token);
+        Log::info("Generated access token " . $token);
 
         $timestamp = date("YmdHis");
 
         $apiPassword = Utils::mpesaGenerateSTKPassword($timestamp);
 
-        Log::info("Generated Password ".$apiPassword);
+        Log::info("Generated Password " . $apiPassword);
 
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $url);
-        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json','Authorization:Bearer '.$token)); //setting custom header
+        curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization:Bearer ' . $token)); //setting custom header
 
 
         $curl_post_data = array(
-          
-          'BusinessShortCode' => env("PAYBILL_NO"),
-          'Password' => $apiPassword,
-          'Timestamp' => $timestamp,
-          'TransactionType' => 'CustomerPayBillOnline',
-          'Amount' => $amount,
-          'PartyA' => $msisdn,
-          'PartyB' => env("PAYBILL_NO"),
-          'PhoneNumber' => $msisdn,
-          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/stk',
-          'AccountReference' => $booking_id,
-          'TransactionDesc' => 'Booking Payment at UrbanTap'
+
+            'BusinessShortCode' => env("PAYBILL_NO"),
+            'Password'          => $apiPassword,
+            'Timestamp'         => $timestamp,
+            'TransactionType'   => 'CustomerPayBillOnline',
+            'Amount'            => $amount,
+            'PartyA'            => $msisdn,
+            'PartyB'            => env("PAYBILL_NO"),
+            'PhoneNumber'       => $msisdn,
+            'CallBackURL'       => 'https://urbantap.co.ke/mpesa/c2b/stk',
+            'AccountReference'  => $booking_id,
+            'TransactionDesc'   => 'Booking Payment at UrbanTap'
         );
 
         $data_string = json_encode($curl_post_data);
