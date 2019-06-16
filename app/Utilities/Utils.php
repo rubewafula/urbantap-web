@@ -93,9 +93,6 @@ class Utils
         return FALSE;
     }
 
-
-
-
     static function loadTemplateData($template_data, $data)
     {
         // Remove sms key from data
@@ -132,9 +129,6 @@ class Utils
         return $html;
 
     }
-
-
-
 
     static function generateMPESAOAuthToken(){
 

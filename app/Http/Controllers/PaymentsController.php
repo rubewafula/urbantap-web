@@ -73,6 +73,10 @@ class PaymentsController extends Controller
     {
 
         $user_id = "";
+        $email = null;
+        $booking_balance = 0;
+        $running_balance = 0;
+        $provider_running_balance = 0;
 
         Log::info("Callback URL from Inbox Consumer called [MPESA Payments] "
             . " ==> " . var_export($request->all(), 1));
@@ -128,12 +132,12 @@ class PaymentsController extends Controller
                     ]
                 );
                 $user = DB::select(
-                    DB::raw("select u.id, if(ub.balance is null, 0, ub.balance) as balance, email, phone_no "
-                        . " from users u inner join bookings b on u.id = b.user_id  "
+                    DB::raw("select u.id, if(ub.available_balance is null, 0, ub.available_balance) as balance, email, phone_no, "
+                        . " b.service_provider_id from users u inner join bookings b on u.id = b.user_id  "
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
-                $email = null;
-                $running_balance = 0;
+                
+                $provider = null;
 
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
@@ -150,6 +154,13 @@ class PaymentsController extends Controller
                             ]
                         );
                     }
+
+                    $provider = DB::select(
+                        DB::raw("select * from user_balance ub "
+                            . " where ub.user_id = ?"), [$user[0]->service_provider_id]);
+
+                    $provider_running_balance = $provider[0]->balance;
+
                 } else {
                     // Log::error("Booking not found", $request->all());
                     // throw new Exception("Booking not found.");
@@ -173,26 +184,65 @@ class PaymentsController extends Controller
                         );
                     }
                 }
-                $balance = $running_balance + $transaction_amount;
+
+                $running_balance = $running_balance + $transaction_amount;
 
                 $transaction = new Transaction();
                 $transaction->user_id = $user_id;
                 $transaction->transaction_type = "CREDIT";
                 $transaction->reference = $transaction_id;
                 $transaction->amount = $transaction_amount;
-                $transaction->running_balance = $balance;
+                $transaction->running_balance = $running_balance;
                 $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
 
                 $transaction->save();
 
-                DB::insert("insert into user_balance set user_id='" . $user_id . "', balance='" . $balance . "',"
+                $customerTransaction = new CustomerTransaction();
+                $customerTransaction->user_id = $user_id;
+                $customerTransaction->transaction_type = "CREDIT";
+                $customerTransaction->reference = $transaction_id;
+                $customerTransaction->amount = $transaction_amount;
+                $customerTransaction->transaction_id = $transaction->id;
+                $customerTransaction->running_balance = $running_balance;
+                $customerTransaction->status_id = DBstatus::TRANSACTION_COMPLETE;
+
+                $customerTransaction->save();
+
+                DB::insert("insert into user_balance set user_id='" . $user_id . "', available_balance='" . $transaction_amount . "',"
                     . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
-                    . " update balance = balance + $balance "
+                    . " update available_balance = available_balance + $transaction_amount "
                 );
+
+                DB::commit();
+            } catch (\Exception $exception) {
+                Log::info("Error message", ['error' => $exception->getMessage()]);
+                DB::rollBack();
+
+                return Response::json([
+                    'status'  => 500,
+                    'success' => false,
+                    'message' => 'Failed to process payment'
+                ], HTTPCodes::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            if(empty($user)){
+
+                Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
+
+                $out = [
+                    'status'  => 202,
+                    'success' => false,
+                    'message' => 'Booking Not Found'
+                ];
+
+                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+            }
+            
+            try {
+                DB::beginTransaction();
 
                 $booking_amount = 0;
                 $booking_reference = "";
-                $balance = 0;
                 $booking_time = "";
 
                 $bookingRs = DB::select(
@@ -200,12 +250,43 @@ class PaymentsController extends Controller
                 );
 
                 if (count($bookingRs) > 0) {
+
                     $booking_amount = $bookingRs[0]->amount;
-                    $balance = $booking_amount - $transaction_amount;
+                    $booking_balance = $booking_amount - $transaction_amount;
                     $booking_time = $bookingRs[0]->booking_time;
 
+                    $running_balance = $running_balance - $transaction_amount;
+                    $provider_running_balance = $provider_running_balance + $transaction_amount;
+
+                    $transaction = new Transaction();
+                    $transaction->user_id = $user_id;
+                    $transaction->transaction_type = "DEBIT";
+                    $transaction->reference = $transaction_id;
+                    $transaction->amount = $transaction_amount;
+                    $transaction->running_balance = $running_balance;
+                    $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
+
+                    $transaction->save();
+
+                    $providerTransaction = new ProviderTransaction();
+                    $providerTransaction->user_id = $user_id;
+                    $providerTransaction->transaction_type = "CREDIT";
+                    $providerTransaction->reference = $transaction_id;
+                    $providerTransaction->amount = $transaction_amount;
+                    $providerTransaction->transaction_id = $transaction->id;
+                    $providerTransaction->running_balance = $provider_running_balance;
+                    $providerTransaction->status_id = DBstatus::TRANSACTION_COMPLETE;
+
+                    $providerTransaction->save();
+
+                    DB::insert("insert into user_balance set user_id='" . $bookingRs[0]->service_provider_id . "',
+                         balance='" . $transaction_amount . "',"
+                        . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
+                        . " update balance = balance + $transaction_amount "
+                    );
+
                     DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
-                        status_id='" . DBStatus::BOOKING_PAID . "', 
+                        status_id='" . DBStatus::BOOKING_PAID . "',transaction_id = '".$transaction->id."',
                         description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
 
                     DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
@@ -214,7 +295,7 @@ class PaymentsController extends Controller
                     DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
                         booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
                         paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
-                        received_payment='" . $transaction_amount . "', balance='" . $balance . "',
+                        received_payment='" . $transaction_amount . "', balance='" . $booking_balance . "',
                         status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
 
                 } else {
@@ -227,7 +308,6 @@ class PaymentsController extends Controller
                         'message' => 'Booking Not Found'
                     ];
 
-                    //return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
                 }
 
                 DB::commit();
@@ -281,7 +361,6 @@ class PaymentsController extends Controller
             return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
 
         }
-
     }
 
     public function stkPush(Request $request){
@@ -320,7 +399,7 @@ class PaymentsController extends Controller
           'PartyA' => $msisdn,
           'PartyB' => env("PAYBILL_NO"),
           'PhoneNumber' => $msisdn,
-          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/stk',
+          'CallBackURL' => 'https://urbantap.co.ke/mpesa/c2b/payment',
           'AccountReference' => $booking_id,
           'TransactionDesc' => 'Booking Payment at UrbanTap'
         );

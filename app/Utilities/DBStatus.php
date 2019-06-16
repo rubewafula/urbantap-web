@@ -26,8 +26,8 @@ class DBStatus
     const BOOKING_NO_SHOW               = 13;
     const BOOKING_POSTPONED             = 14;
 
-    const BOOKING_POST_REJECTED         = 29;
-    const BOOKING_PAID                  = 11;
+    const BOOKING_POST_REJECTED         = 30;
+    const BOOKING_PAID                  = 29;
 
     /** user status **/
     const USER_NEW                      = 15;
