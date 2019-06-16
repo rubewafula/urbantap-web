@@ -4,6 +4,7 @@
 namespace App\Traits;
 
 
+use App\Mail\BookingCreated;
 use App\Utilities\RabbitMQ;
 use App\Utilities\Utils;
 use Illuminate\Support\Facades\Log;
@@ -15,11 +16,6 @@ use Illuminate\Support\Facades\Log;
 trait SendEmailTrait
 {
     /**
-     * @var string
-     */
-    private $path = "/app/public/static/mailer/";
-
-    /**
      * Send email.
      * All data should be provided in the data array
      *
@@ -28,16 +24,9 @@ trait SendEmailTrait
      */
     public function send(array $data, string $template)
     {
-        $mailContents = file_get_contents(storage_path(sprintf('%s%s', $this->path, $template)));
+        Log::info("Data to send to mail queue", $data);
         if ($data['email_address']) {
-            (new RabbitMQ())->publish(
-                array_merge(
-                    $data,
-                    [
-                        'email' => Utils::loadTemplateData($mailContents, $data)
-                    ]
-                ),
-                env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
+            (new RabbitMQ())->publish(array_merge($data, compact('template')), env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE')
             );
         } else {
             Log::info("Email info missing, skipped notification");

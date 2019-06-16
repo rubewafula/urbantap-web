@@ -2,26 +2,27 @@
 
 namespace App\Listeners;
 
+use App\Booking;
 use App\Events\BookingStatusChanged;
+use App\Mail\BookingAccepted;
+use App\Mail\BookingCancelled;
+use App\Mail\BookingCancelledProvider;
+use App\Mail\BookingRejected;
 use App\Notifications\BookingAcceptedNotification;
 use App\Notifications\BookingCancelledNotification;
 use App\Notifications\BookingRejectedNotification;
+use App\Traits\SendEmailTrait;
+use App\Traits\SendSMSTrait;
 use App\Utilities\DBStatus;
+use Exception;
 
 /**
  * Class BookingStatusChangedListener
  * @package App\Listeners
  */
-class BookingStatusChangedListener extends BookingBaseListener
+class BookingStatusChangedListener
 {
-    /**
-     * @var string
-     */
-    private $userMailTemplate = "booking.email.blade.html";
-    /**
-     * @var string
-     */
-    private $serviceProviderMailTemplate = "booking.email.blade.html";
+    use SendEmailTrait, SendSMSTrait;
 
     /**
      * Create the event listener.
@@ -38,38 +39,159 @@ class BookingStatusChangedListener extends BookingBaseListener
      *
      * @param BookingStatusChanged $event
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(BookingStatusChanged $event)
     {
+        $booking = $event->booking;
         // Send provider notification
-        if (in_array($event->status, [DBStatus::BOOKING_ACCEPTED, DBStatus::BOOKING_REJECTED])) {
-            $data = $this->getUserNotificationData($event->user, $event->data);
-            switch ($event->status) {
-                case DBStatus::BOOKING_ACCEPTED:
-                    $event->user->notify(new BookingAcceptedNotification($event->data));
-                    break;
-                case DBStatus::BOOKING_REJECTED:
-                    $event->user->notify(new BookingRejectedNotification($event->data));
-                    break;
-            }
-            $this->send($data, $this->userMailTemplate);
-        } else {
-            [
-                $data,
-                $serviceProvider,
-            ] = $this->getServiceProviderNotificationData($event->data);
-            $serviceProvider->notify(new BookingCancelledNotification($data));
+        $notificationData = [
+            'booking_id' => $booking->id,
+        ];
+        switch ($booking->status_id) {
+            case DBStatus::BOOKING_ACCEPTED:
+                $booking->user->notify(new BookingAcceptedNotification($notificationData));
+                $this->sendBookingAcceptedUserNotifications($booking);
+                break;
+            case DBStatus::BOOKING_REJECTED:
+                $booking->user->notify(new BookingRejectedNotification($notificationData));
+                $this->sendBookingRejectedUserNotifications($booking);
+                break;
+            case DBStatus::BOOKING_CANCELLED:
+                // Send user notifications
+                $booking->user->notify(
+                    new BookingCancelledNotification([
+                        'booking_id' => $booking->id,
+                        'message'    => $this->getBookingCancelledUserMessage($booking)
+                    ])
+                );
+                $this->sendBookingCancelledUserNotifications($booking);
+                // Send provider notifications
+                $booking->provider->user->notify(
+                    new BookingCancelledNotification([
+                        'booking_id' => $booking->id,
+                        'message'    => $this->getBookingCancelledProviderMessage($booking)
+                    ])
+                );
+                $this->sendBookingCancelledProviderNotifications($booking);
         }
     }
 
+    /**
+     * @param Booking $booking
+     */
+    private function sendBookingAcceptedUserNotifications(Booking $booking): void
+    {
+        if ($booking->user->email)
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => "Booking Request Accepted",
+                'mailable'      => BookingAccepted::class,
+                'data'          => [
+                    'booking_id'       => $booking->id,
+                    'business_name'    => $booking->provider->service_provider_name,
+                    'service_name'     => $booking->service->service_name,
+                    'description'      => $booking->providerService->description,
+                    'booking_time'     => $booking->booking_time,
+                    'service_cost'     => $booking->amount,
+                    'service_duration' => $booking->providerService->duration,
+                ]
+            ], "");
+        else
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => "Your booking has been accepted. {$booking->service->service_name}, {$booking->provider->service_provider_name} at {$booking->booking_time}." .
+                    "Send {$booking->amount} to " . env('URBANTAP_PAYBILL') . " A/C No. {$booking->id}. " . config('app.name')
+            ]);
+    }
 
     /**
-     * @param array $data
+     * @param Booking $booking
+     */
+    private function sendBookingRejectedUserNotifications(Booking $booking)
+    {
+        if ($booking->user->email)
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => "Booking Request Rejected",
+                'mailable'      => BookingRejected::class,
+                'data'          => [
+                    'booking_id'       => $booking->id,
+                    'business_name'    => $booking->provider->service_provider_name,
+                    'service_name'     => $booking->service->service_name,
+                    'description'      => $booking->providerService->description,
+                    'booking_time'     => $booking->booking_time,
+                    'service_cost'     => $booking->amount,
+                    'service_duration' => $booking->providerService->duration,
+                ]
+            ], "");
+        else
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => "Your booking has been rejected. {$booking->service->service_name} from {$booking->provider->service_provider_name}." .
+                    "Visit " . config('app.name') . " to book with a different provider."
+            ]);
+    }
+
+    /**
+     * @param Booking $booking
+     */
+    private function sendBookingCancelledProviderNotifications(Booking $booking)
+    {
+        $this->send([
+            'email_address' => $booking->provider->business_email ?: $booking->provider->user->email,
+            'subject'       => "Booking Request Cancelled",
+            'mailable'      => BookingCancelledProvider::class,
+            'data'          => [
+                'booking_id' => $booking->id
+            ]
+        ], "");
+        if ($booking->provider->business_phone)
+            $this->sms([
+                'recipients' => [$booking->provider->business_phone],
+                'message'    => $this->getBookingCancelledProviderMessage($booking)
+            ]);
+    }
+
+    /**
+     * @param Booking $booking
+     */
+    private function sendBookingCancelledUserNotifications(Booking $booking)
+    {
+        if ($booking->user->email)
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => "Booking Request Cancelled",
+                'mailable'      => BookingCancelled::class,
+                'data'          => [
+                    'business_name' => $booking->provider->service_provider_name,
+                    'service_name'  => $booking->service->service_name,
+                ]
+            ], "");
+        else
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => $this->getBookingCancelledUserMessage($booking)
+            ]);
+    }
+
+    /**
+     * @param Booking $booking
      * @return string
      */
-    protected function getNotificationMessage(array $data): string
+    private function getBookingCancelledUserMessage(Booking $booking): string
     {
-        return "Booking status changed";
+        return "You have successfully cancelled your booking. {$booking->service->service_name} from {$booking->provider->service_provider_name}." .
+            "Visit " . config('app.name') . " to book with a different provider.";
+    }
+
+    /**
+     * @param Booking $booking
+     * @return string
+     */
+    private function getBookingCancelledProviderMessage(Booking $booking): string
+    {
+        return "Your booking has been cancelled. {$booking->service->service_name} from {$booking->provider->service_provider_name}." .
+            config('app.name');
     }
 }

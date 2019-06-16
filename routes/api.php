@@ -143,7 +143,7 @@ Route::group([
         ], function () {
         Route::post('create', 'ProviderServicesController@create');
         Route::post('update', 'ProviderServicesController@update');
-        Route::delete('del', 'ProviderServicesController@delete');
+        Route::delete('delete', 'ProviderServicesController@delete');
      });
 });
 
@@ -246,7 +246,6 @@ Route::group([
         'BookingsController@getProviderBookingWithDetails');
 
     Route::post('create', 'BookingsController@create');
-    Route::put('update', 'BookingsController@updateBooking');
     Route::delete('delete', 'BookingsController@delete');
 
     // Update booking status

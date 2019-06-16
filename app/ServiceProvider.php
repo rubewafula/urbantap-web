@@ -3,11 +3,24 @@
 namespace App;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Utilities\Utils;
 
 class ServiceProvider extends Model
 {
 
     protected $table = "service_providers";
+
+    protected $appends = [
+        'service_provider_id',
+    ];
+
+    protected $casts = [
+        'cover_photo' => 'json'
+    ];
+
+    public function getServiceProviderIdAttribute(){
+        return $this->id;
+    }
 
     public function displayImages() {
         return $this->hasMany('App\ServiceProviderImages');
@@ -28,16 +41,13 @@ class ServiceProvider extends Model
 
     public function user()
     {
-        return $this->BelongsTo('App\User');
+        return $this->belongsTo('App\User');
     }
 
-    public function toArray() {
-//        $data = parent::toArray();
-        $data['service_provider_id'] = $this->id;
-        $data['service_provider_name'] = $this->service_provider_name;
-        $data['display_images'] = $this->displayImages;
-        $data['reviews'] = $this->totalReviews();
-        $data['avg_rating'] = number_format($this->averageRating(), 2, '.', '');
-        return $data;
+    public function getCoverPhotoAttribute($value){
+        return Utils::PROVIDER_SERVICES_URL . array_get($value, 'media_url', '2.jpg');
     }
+
+
+
 }

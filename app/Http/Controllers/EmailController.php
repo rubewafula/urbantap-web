@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;    
+use Illuminate\Http\Request;
 
 use App\Utilities\Email;
 use App\Outbox;
@@ -11,39 +11,53 @@ use App\Outbox;
 class EmailController extends Controller
 {
 
-	public function sendEmail(Request $request){
-		
-		Log::info("Got called from email consumer queue");
-		if(strlen($request->email_address) < 1){
-			Log::info("Request has no valid email addresses");
-			return;
-		}
-		$to = ["email_address"=>$request->email_address];
-		$subject = $request->subject;
-		$email = $request->email;
-		$bcc = [];
-		$cc = [];
-		$attachments = [];
+    public function sendEmail(Request $request)
+    {
 
-		$service_provider_id = $request->service_provider_id;
-		$user_id = $request->user_id;
-		$reference = $request->reference;
+        Log::info("Got called from email consumer queue", $request->all() ?: ['Nothing on request']);
+        if (strlen($request->email_address) < 1) {
+            Log::info("Request has no valid email addresses");
+            return;
+        }
+        $to = ["email_address" => $request->email_address];
+        $subject = $request->subject;
+//        $email = $request->email;
+        $email = $this->generateEmailContent($request);
+        $bcc = [];
+        $cc = [];
+        $attachments = [];
 
-		$outbox = new Outbox();
-		$outbox->user_id = $user_id;
-		$outbox->status_id = 0;
-		$outbox->message = "EMAIL";
-		$outbox->service_provider_id = $service_provider_id;
-		$outbox->reference = $reference;
-		$outbox->save();
+        $service_provider_id = $request->service_provider_id;
+        $user_id = $request->user_id;
+        $reference = $request->reference;
 
-		$mailerDaemon = new Email();
+        $outbox = new Outbox();
+        $outbox->user_id = $user_id;
+        $outbox->status_id = 0;
+        $outbox->message = "EMAIL";
+        $outbox->service_provider_id = $service_provider_id;
+        $outbox->reference = $reference;
+        $outbox->save();
 
-		Log::info($request->all());
+        $mailerDaemon = new Email();
 
-		$mailerDaemon->sendEmail($to, $bcc, $cc, $subject, $email, $attachments);
+        Log::info($request->all());
 
-		Log::info("Email sent successfully to ".$request->email_address." subject ".$subject);
-	}
+        $mailerDaemon->sendEmail($to, $bcc, $cc, $subject, $email, $attachments);
+
+        Log::info("Email sent successfully to " . $request->email_address . " subject " . $subject);
+    }
+
+    /**
+     * @param Request $request
+     * @return string
+     */
+    private function generateEmailContent(Request $request)
+    {
+        $mailable = $request->get('mailable');
+        $content = (new $mailable($request->all()))->render();
+        return $content;
+    }
 }
+
 ?>

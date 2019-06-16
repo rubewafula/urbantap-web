@@ -102,24 +102,38 @@ class HomePageController extends Controller
         }
 
 
-        $featured_providers = "SELECT sp.id, s.service_name, sp.type, "
-            . " (select count(*) from reviews where service_provider_id = sp.id "
-            . " and provider_service_id=ps.id) as reviews, "
-            . " sp.service_provider_name,  sp.business_description, sp.work_location, "
-            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
-            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
-            . " d.home_location, work_phone_no, total_requests, "
-            . " date_format(sp.created_at, '%b, %Y') as since, "
-            . " concat( '$profile_url' , '/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
-            . " concat( '$sp_providers_url' , '/',if(sp.cover_photo is null, 'img-03.jpg', "
-            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')) )) as cover_photo "
-            . " FROM provider_services ps inner join "
-            . " service_providers sp on sp.id = ps.service_provider_id left  join "
-            . " user_personal_details  d using(user_id) inner join services s on "
-            . " s.id = ps.service_id where sp.status_id =1  order by overall_rating desc, "
-            . " overall_likes desc limit 2";
+        $featured_providers = "select sp.id as service_provider_id, sp.id as id, "
+            . " sp.type, sp.service_provider_name, "
+            . " sp.work_location, sp.work_lat, sp.work_lng, sp.status_id, sp.overall_rating, "
+            . " sp.service_provider_name, sp.overall_likes, sp.overall_dislikes, sp.created_at,"
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, "
+            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
+            . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
+            . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "
+            . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
+            . " from service_providers sp left  join user_personal_details  d using(user_id)  "
+            . " order by overall_rating desc, overall_likes desc limit 2";
 
+        $fp_data =  RawQuery::query( $featured_providers);
+
+        $featured_providers = [];
+        foreach ($fp_data as $key => $provider) {
+
+            $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
+                . " s.service_name, ps.cost, ps.description, ps.duration, ps.created_at,"
+                . " ps.updated_at from provider_services ps inner join services s "
+                . " on s.id = ps.service_id  where  ps.service_provider_id = :pid " ;
+
+            $service_params['pid'] = $provider->service_provider_id;
+
+            $service_results = RawQuery::query( $serviceQ, $params=$service_params);
+            $provider->services = $service_results;
+
+            array_push($featured_providers, $provider);
+        }
 
 
         $results = RawQuery::queryMultiple(
@@ -131,7 +145,7 @@ class HomePageController extends Controller
                 $top_review_id_q, 
                 $weekly_providers_q,
                 // $popular_providers,
-                $featured_providers
+                //$featured_providers
              ]);
        
         $out = ['services' =>$results[0], 
@@ -141,7 +155,7 @@ class HomePageController extends Controller
                 'rating_count' => optional(array_get($results, '4.0'))->rating_count,
                 'weekly_providers_count' => optional(array_get($results, '5.0'))->weekly_providers_count,
                 'popular_providers' => $popular_providers,
-                'featured_providers' => array_get($results, '5')
+                'featured_providers' => $featured_providers
             ];
         
         return Response::json($out, HTTPCodes::HTTP_OK);

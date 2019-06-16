@@ -46,8 +46,8 @@ class BookingCancelledNotification extends BaseNotification
      */
     public function toArray($notifiable)
     {
-        return array_merge($this->data, [
+        return array_merge([
             'message' => 'Customer has cancelled the booking.'
-        ]);
+        ], $this->data);
     }
 }

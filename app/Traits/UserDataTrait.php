@@ -4,12 +4,16 @@
 namespace App\Traits;
 
 
+use App\ServiceProvider;
+use App\Services;
 use App\User;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Trait UserDataTrait
  * @package App\Traits
+ * @deprecated
  */
 trait UserDataTrait
 {
@@ -33,7 +37,6 @@ trait UserDataTrait
                 'subject'             => Arr::get($data, 'subject'),
                 'reference'           => Arr::get($data, 'booking_id'),
                 'user_id'             => $user->id,
-                'service_provider_id' => Arr::get($data, 'request.service_provider_id', null),
                 'message'             => $this->getUserNotificationMessage($user, $data),
                 'sms'                 => [
                     'recipients' => $msisdn ? [$msisdn] : [],

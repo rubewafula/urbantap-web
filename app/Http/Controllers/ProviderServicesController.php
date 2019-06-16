@@ -55,16 +55,16 @@ class ProviderServicesController extends Controller
             . " json_extract(d.passport_photo, '$.media_url')) ) as thumbnail, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
-            . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
-            . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
+            . " concat( '$service_image_url' , '/', if(ps.media_url is null, '2.jpg', "
+            . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url')))) as service_photo, "
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from provider_services ps inner join service_providers sp inner " 
+            . " from provider_services ps inner join service_providers sp on ps.service_provider_id = sp.id inner " 
             . " join services s on s.id=ps.service_id left  join user_personal_details  d using(user_id)  "
             . " where ps.id =:id ";
 
-        //echo print_r($params, 1);
+        Log::info("Query to get provider service details" . $provideQ );
         
         $service_data =  RawQuery::query( $provideQ,['id'=>$id]);
 
@@ -184,8 +184,8 @@ class ProviderServicesController extends Controller
 
             $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
                 . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
-                . " concat( '$service_image_url' , '/', if(s.media_url is null, '2.jpg', "
-                . " JSON_UNQUOTE(json_extract(s.media_url, '$.media_url')))) as service_photo, "
+                . " concat( '$service_image_url' , '/', if(ps.media_url is null, '2.jpg', "
+                . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url')))) as service_photo, "
                 . " ps.updated_at from provider_services ps inner join services s "
                 . " on s.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
 
@@ -240,7 +240,7 @@ class ProviderServicesController extends Controller
 
             if($service_photo !=  FALSE)
             {
-                  $service_photo = json_encode($cover_photo);
+                  $service_photo = json_encode($service_photo);
             }else{
                  $service_photo = NULL;
             }
@@ -282,8 +282,8 @@ class ProviderServicesController extends Controller
             . " ps.description, ps.cost , ps.duration, ps.rating, ps.created_at, "
             . "  ps.updated_at from provider_services ps inner join services s on "
             . " s.id = ps.service_id inner join categories c on s.category_id = c.id "
-            . " where ps.id = :id ";
-        $service_data = RawQuery::query($sql_provider_services, ['id'=> $id]);
+            . " where ps.id = :id and ps.status_id =:active";
+        $service_data = RawQuery::query($sql_provider_services, ['id'=> $id, 'active'=>DBStatus::TRANSACTION_ACTIVE]);
         return array_get($service_data, 0);
     }
 

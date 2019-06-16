@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 /**
  * Class BookingBaseListener
  * @package App\Listeners
+ * @deprecated
  */
 abstract class BookingBaseListener implements ShouldSendMail, ShouldSendSMS
 {

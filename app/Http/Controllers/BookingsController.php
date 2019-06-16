@@ -6,6 +6,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Booking;
+use App\Category;
 use App\Events\BookingCreated;
 use App\Notifications\BookingCreatedNotification;
 use App\User;
@@ -15,6 +17,7 @@ use App\Utilities\RabbitMQ;
 use App\Utilities\RawQuery;
 use App\Utilities\Utils;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -112,9 +115,9 @@ class BookingsController extends Controller
         Log::info("USER => " . var_export($user, 1));
         $user_id = $user->id;
 
-        $page=$request->get('page');
-        if(!is_numeric($page)){
-           $page = 1;
+        $page = $request->get('page');
+        if (!is_numeric($page)) {
+            $page = 1;
         }
 
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
@@ -138,7 +141,7 @@ class BookingsController extends Controller
             . " u.id = b.user_id where b.user_id = '$user_id'";
 
 
-        $results = RawQuery::paginate($query, $page=$page);
+        $results = RawQuery::paginate($query, $page = $page);
 
         if (empty($results)) {
             return Response::json([], HTTPCodes::HTTP_NO_CONTENT);
@@ -193,7 +196,7 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
-        
+
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
         $query = "select b.id, b.service_provider_id, b.user_id, "
@@ -256,11 +259,11 @@ class BookingsController extends Controller
      * curl -i -XGET -H "content-type:application/json"
      * http://127.0.0.1:8000/api/bookings/all
      *
-     * @param \App\Category $category
+     * @param Category $category
      *
      * @return JSON
      */
-    public function get(Request $request, $client=false)
+    public function get(Request $request, $client = false)
     {
 
         $user = $request->user();
@@ -271,10 +274,11 @@ class BookingsController extends Controller
         if (!is_numeric($page)) {
             $page = 1;
         }
-
+        
         $filter_col = $client == false ? " sp.user_id " : " u.id ";
 
-        $query = "select b.id as booking_id, b.service_provider_id, b.user_id, u.first_name as client,"
+        $query = "select b.created_at, b.id as booking_id, b.service_provider_id, "
+            . " b.user_id, u.first_name as client,"
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
             . " b.booking_type, b.location, sp.service_provider_name, "
@@ -306,7 +310,7 @@ class BookingsController extends Controller
      *  "description":"Best salon jab for the old"}'
      * 'http://127.0.0.1:8000/api/bookings/create'
      * @param Illuminate\Http\Request $request
-     * @return JSON|\Illuminate\Http\JsonResponse
+     * @return JSON|JsonResponse
      *
      ***/
 
@@ -405,7 +409,7 @@ class BookingsController extends Controller
         }
 
         if ($booking_allowed) {
-            $booking_cost_sql = "select base_cost from service_costs sc inner join provider_services ps "
+            $booking_cost_sql = "select coalesce(ps.cost, sc.base_cost) as cost from service_costs sc left join provider_services ps "
                 . " on ps.service_id =sc.service_id  where ps.service_id =:ps_id";
 
             $cresult = RawQuery::query($booking_cost_sql, ['ps_id' => $request['service_id']]);
@@ -429,7 +433,7 @@ class BookingsController extends Controller
 
         } else {
 
-            $base_cost = $cresult[0]->base_cost;
+            $base_cost = array_get($cresult, 0)->cost;
             $other_amount = 0;
 
             $other_cost_result = RawQuery::query("select sum(c.amount)amt from "
@@ -446,7 +450,7 @@ class BookingsController extends Controller
             DB::insert("insert into bookings (provider_service_id, service_provider_id, user_id, booking_time, booking_duration, expiry_time, status_id, created_at, updated_at, deleted_at, booking_type, location, amount) values (:provider_service_id, :service_provider_id, :user_id, :booking_time, :booking_duration, :expiry_time, :status_id, now(), now(), now(), :booking_type, :location, :amount)", [
                     'provider_service_id' => $request['service_id'],
                     'service_provider_id' => $request['service_provider_id'],
-                    'user_id'             => $request['user_id'],
+                    'user_id'             => $user_id,
                     'booking_time'        => $actual_booking_time,
                     'booking_duration'    => $request['booking_duration'],
                     'expiry_time'         => $request['expiry_time'],
@@ -465,270 +469,24 @@ class BookingsController extends Controller
              **/
             $booking_id = DB::getPdo()->lastInsertId();
 
-            $user = User::query()->findOrFail($request->get('user_id'), ['id', 'first_name', 'last_name', 'email']);
-            broadcast(new BookingCreated($user, [
-                'booking_id'   => $booking_id,
-                'request'      => $request->all(),
-                'booking_time' => $actual_booking_time,
-                'cost'         => $actual_cost,
-                'subject'      => 'Booking Request Placed',
-            ]));
+            $booking = Booking::with([
+                'user',
+                'provider.user',
+                'providerService'
+            ])->find($booking_id);
+
+            Log::info("Booking Data", $booking->toArray());
+            broadcast(new BookingCreated($booking));
 
             $out = [
                 'success' => true,
-                'id'      => $booking_id,
+                'booking' => $booking,
                 'message' => 'Bookings Created'
             ];
 
             return Response::json($out, HTTPCodes::HTTP_CREATED);
         }
     }
-
-
-    /**
-     * @param array $data
-     * @deprecated
-     * @see  BookingCreatedListener@handle
-     */
-    private function sendNotifications(array $data)
-    {
-        $sp_providers_url = URL::to('/storage/static/image/service-providers/');
-
-        $user_booking_t_path = storage_path() . '/app/public/static/mailer/booking.email.blade.html';
-        $provider_booking_t_path = storage_path() . '/app/public/static/mailer/booking.email.blade.html';
-
-
-        $user_mail_content = file_get_contents($user_booking_t_path);
-        $provider_mail_content = file_get_contents($provider_booking_t_path);
-
-        // Fetch user
-        $userModel = $user = User::query()->findOrFail($data['request']['user_id'], ['id', 'first_name', 'last_name', 'email']);
-
-
-//        $user = RawQuery::query(
-//            "select first_name, last_name, email from users where id=:user_id",
-//            ['user_id' => $userId = $data['request']['user_id']]
-//        );
-
-        $user_profile = ['first_name' => $user->first_name,
-                         'last_name'  => $user->last_name,
-                         'email'      => $user->email,
-        ];
-
-        $data['user'] = $user_profile;
-        $sp = RawQuery::query(
-            "select sp.user_id, s.service_name, sp.service_provider_name, sp.instagram, sp.twitter, sp.facebook, sp.business_email, "
-            . " sp.business_phone, sp.work_location_city, sp.business_description, sp.work_location, "
-            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
-            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
-            . " s.service_name, ps.description as service_description "
-            . " from service_providers sp inner join provider_services ps on "
-            . " sp.id = ps.service_provider_id  inner join services s on s.id = ps.service_id "
-            . "  where sp.id=:sp_id  and s.id =:service_id ",
-            ['sp_id'      => $data['request']['service_provider_id'],
-             'service_id' => $data['request']['service_id'],]
-        );
-
-        $spModel = new User(['id' => $sp[0]->user_id]);
-
-        $sp_profile = [
-            'service_provider_name' => $sp[0]->service_provider_name,
-            'instagram'             => $sp[0]->instagram,
-            'twitter'               => $sp[0]->twitter,
-            'facebook'              => $sp[0]->facebook,
-            'business_email'        => $sp[0]->business_email,
-            'business_phone'        => $sp[0]->business_phone,
-            'work_location_city'    => $sp[0]->work_location_city,
-            'business_description'  => $sp[0]->business_description,
-            'work_location'         => $sp[0]->work_location,
-            'cover_photo'           => $sp[0]->cover_photo,
-            'service_name'          => $sp[0]->service_name,
-            'service_description'   => $sp[0]->service_description,
-            'service_name'          => $sp[0]->service_name,
-        ];
-
-        $data['provider'] = $sp_profile;
-
-        $user_notification = [
-            'to'                  => $user_profile['email'],
-            'subject'             => $data['subject'],
-            'reference'           => $data['booking_id'],
-            'user_id'             => $data['request']['user_id'],
-            'service_provider_id' => $data['request']['service_provider_id'],
-            'email'               => Utils::loadTemplateData($user_mail_content, $data),
-        ];
-        $notification = "BOOKING Request received from " . $userModel->first_name . " FOR " . $sp_profile['service_name'] . " Service ";
-
-        Log::info("Preparing to notify user");
-        $spModel->notify(new BookingCreatedNotification([
-            'message'          => $notification,
-            'user'             => $userModel->toArray(),
-            'booking_id'       => $data['booking_id'],
-            'service_provider' => $spModel->toArray(),
-        ]));
-
-        $provider_notification = [
-            'to'                  => $sp_profile['business_email'],
-            'subject'             => $data['subject'],
-            'reference'           => $data['booking_id'],
-            'user_id'             => $data['request']['user_id'],
-            'service_provider_id' => $data['request']['service_provider_id'],
-            'email'               => Utils::loadTemplateData($provider_mail_content, $data),
-        ];
-        $rabbit = new RabbitMQ();
-        if ($user_notification['to'] != null) {
-            $rabbit->publish($user_notification, env('EMAIL_MESSAGE_QUEUE'), env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
-        } else {
-            Log::info("User missing email info skipped notification");
-        }
-
-        if ($provider_notification['to'] != null) {
-            $rabbit->publish($provider_notification, env('EMAIL_MESSAGE_QUEUE'),
-                env('EMAIL_MESSAGE_EXCHANGE'), env('EMAIL_MESSAGE_ROUTE'));
-        } else {
-            Log::info("Provider missing email info skipped notification");
-        }
-
-        //send sms notification
-        if (!is_null($sp_profile['business_phone'])) {
-            $sms = [
-                'recipients'          => [$sp_profile['business_phone']],
-                'message'             => "Booking Request. " . $sp_profile['service_name']
-                    . " Start Time: " . $data['booking_time'] . ", Cost " . $data['cost']
-                    . " Confirm this request within 15 Minutes to reserve the slot. Urbantap",
-                'reference'           => $data['booking_id'],
-                'user_id'             => $data['request']['user_id'],
-                'service_provider_id' => $data['request']['service_provider_id']
-            ];
-
-            $rabbit->publish($sms, env('SMS_MESSAGE_QUEUE'), env('SMS_MESSAGE_EXCHANGE'), env('SMS_MESSAGE_ROUTE'));
-        }
-
-    }
-
-    /**
-     *  curl -i -XPUT -H "content-type:application/json"
-     * --data '{"id":1, "bookings":"Golden Ladies Salon",
-     * "description":"Best salon jab for the old", "new_name":"Golden Ladies Salon 23"}'
-     * 'http://127.0.0.1:8000/api/bookings/update'
-     * @param Illuminate\Http\Request $request
-     * @return JSON
-     * @deprecated
-     * @see BookingStatusController@update
-     *
-     ***/
-
-    public function updateBooking(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'booking_id'          => 'required|integer|exists:bookings,id',
-            'user_id'             => 'integer|exists:users,id|nullable',
-            'service_provicer_id' => 'integer|exists:service_providers, id|nullable',
-            'status'              => 'required|in:cancel,accept,reject, post-reject',
-            'reason'              => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            $out = [
-                'success' => false,
-                'message' => $validator->messages()
-            ];
-            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-        } else {
-            switch ($request->get('status')) {
-                case 'cancel':
-                    $status_id = DBStatus::BOOKING_CANCELLED;
-                    break;
-                case 'accept':
-                    $status_id = DBStatus::BOOKING_ACCEPTED;
-                    break;
-                case 'reject':
-                    $status_id = DBStatus::BOOKING_REJECTED;
-                    break;
-                case 'post-reject':
-                    $status_id = DBStatus::BOOKING_POST_REJECTED;
-                    break;
-
-                default:
-                    $status_id = DBStatus::BOOKING_CANCELLED;
-                    break;
-            }
-            if ($status_id == DBStatus::BOOKING_ACCEPTED
-                || $status_id == DBStatus::BOOKING_REJECTED
-                || $status_id == DBStatus::BOOKING_POST_REJECTED) {
-                if (is_null($request->get('service_provicer_id'))) {
-                    $out = [
-                        'success' => false,
-                        'message' => ["service_provider_id" => ["Could not cancel booking. "
-                            . " Missing valid service provider"]
-                        ]
-                    ];
-                    return Response::json($out, HTTPCodes::HTTP_FORBIDDEN);
-                }
-                $originator = 'SERVICE PROVIDER';
-            }
-
-            if ($status_id == DBStatus::BOOKING_CANCELLED) {
-                if (is_null($request->get('user_id'))) {
-                    $out = [
-                        'success' => false,
-                        'message' => ["user_id" => ["Could not cancel booking. "
-                            . " Missing valid user"]
-                        ]
-                    ];
-                    return Response::json($out, HTTPCodes::HTTP_FORBIDDEN);
-                }
-                $originator = 'USER';
-            }
-
-            $update = ['status_id' => $status_id];
-
-            $where = [
-                ['id', '=', $request->get('booking_id')]
-            ];
-            if ($status_id == DBStatus::BOOKING_CANCELLED) {
-                $where[] = ['user_id', '=', $request->get('user_id')];
-            } else {
-                $where[] = ['service_provider_id', '=', $request->get('service_provider_id')];
-            }
-
-            $updated = DB::table('bookings')
-                ->where($where)
-                ->update($update);
-
-            if (!$updated > 0) {
-                $out = [
-                    'success' => false,
-                    'message' => ["user_id" => ["Could not cancel booking. "
-                        . "User booking not found"]
-                    ]
-                ];
-                return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-            }
-
-            $insert = "insert into booking_trails (booking_id, status_id, "
-                . " description, originator, created_at, updated_at) values (:bid, "
-                . " :st, :desc, :originator, now(), now())";
-
-            DB::insert($insert,
-                [
-                    'bid'        => $request->get('booking_id'),
-                    'st'         => DBStatus::BOOKING_CANCELLED,
-                    'desc'       => $request->get('reason'),
-                    'originator' => $originator
-                ]
-            );
-
-            $out = [
-                'success' => true,
-                'id'      => $request->get('booking_id'),
-                'message' => 'Bookings updated OK'
-            ];
-
-            return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
-        }
-    }
-
 
 }
 
