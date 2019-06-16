@@ -9,7 +9,6 @@ Your booking has been received.
 | ** Service Provider ** | {{ $data['business_name'] }} |
 | ** Service  ** | {{ $data['service_name'] }} |
 | ** Service Cost  ** | {{ $data['service_cost'] }} |
-| ** Service Duration  ** | {{ $data['service_duration'] }} |
 | ** Service Duration  ** | {{ $data['service_duration'] }} (minutes) |
 | ** Booking Date  ** | {{ $data['booking_time'] }} |
 @endcomponent

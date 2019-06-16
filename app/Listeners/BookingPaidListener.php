@@ -2,9 +2,14 @@
 
 namespace App\Listeners;
 
+use App\Booking;
 use App\Events\BookingPaid;
+use App\Mail\BookingPaidProvider;
 use App\Notifications\BookingPaidNotification;
+use App\Traits\SendEmailTrait;
+use App\Traits\SendSMSTrait;
 use App\User;
+use Exception;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -12,16 +17,9 @@ use Illuminate\Support\Facades\Log;
  * Class BookingPaidListener
  * @package App\Listeners
  */
-class BookingPaidListener extends BookingBaseListener
+class BookingPaidListener
 {
-    /**
-     * @var string
-     */
-    private $userMailTemplate = "booking.email.blade.html";
-    /**
-     * @var string
-     */
-    private $serviceProviderMailTemplate = "booking.email.blade.html";
+    use SendEmailTrait, SendSMSTrait;
 
     /**
      * Create the event listener.
@@ -38,65 +36,19 @@ class BookingPaidListener extends BookingBaseListener
      *
      * @param BookingPaid $event
      * @return void
-     * @throws \Exception
+     * @throws Exception
      */
     public function handle(BookingPaid $event)
     {
-        $data = array_merge(
-            [
-                'subject' => 'Booking Paid'
-            ],
-            $event->data
-        );
-        // Send user notifications
-        $this->sendUserNotification($event, $data);
+        $booking = $event->booking;
+        $paymentData = $event->data;
 
-        // Send service provider notifications
-        try {
-            Log::info("Fetching provider information.", $data);
-            [
-                $data,
-                $serviceProvider,
-            ] = $this->getServiceProviderNotificationData($data);
-            $serviceProvider->notify(new BookingPaidNotification($data));
-            $this->send($data, $this->serviceProviderMailTemplate);
-            $this->sms(Arr::get($data, 'sms'));
-        } catch (\Exception $e) {
-            Log::info("Error", [$e->getMessage()]);
-        }
+        // Send user email, sms and notification
+        $this->sendUserNotifications($booking, $paymentData);
 
-    }
+        // Send provider email, sms and notification
+        $this->sendProviderNotifications($booking, $paymentData);
 
-    /**
-     * @param array $data
-     * @return string
-     */
-    protected function getNotificationMessage(array $data): ?string
-    {
-        if ($this->isHalfAmount($data)) {
-            $message = "Dear Service Provider, Booking reference number, %s has been reserved. Please note the booking time is %s for this request.";
-            return sprintf($message, Arr::get($data, 'transaction_id'), Arr::get($data, 'booking_time'));
-        }
-        return null;
-    }
-
-    /**
-     * @param User $user
-     * @param array $data
-     * @return string
-     */
-    protected function getUserNotificationMessage(User $user, array $data): string
-    {
-        // Name, transaction amount, transaction id, booking time
-        if ($this->isHalfAmount($data)) {
-            $message = "Dear %s, you have successfully paid KSh. %s for your booking, reference %s. Your slot has been reserved for %s. Thank you.";
-            return sprintf($message, Arr::get($data, 'name'), Arr::get($data, 'amount'), Arr::get($data, 'transaction_id'), Arr::get($data, 'booking_time'));
-        }
-        // Name, transaction amount, transaction id, amount to booking.
-        $halfAmount = $this->getHalfAmount($data);
-        $amountToBooking = $halfAmount - ($amount = Arr::get($data, 'amount'));
-        $message = "Dear %s, Confirmed payment KSh. %s for booking, REF %s. Pay at least KSh. %s to reserve your booking. Thank you.";
-        return sprintf($message, Arr::get($data, 'first_name'), $amount, Arr::get($data, 'booking_id'), $amountToBooking);
     }
 
 
@@ -120,20 +72,74 @@ class BookingPaidListener extends BookingBaseListener
     }
 
     /**
-     * @param BookingPaid $event
-     * @param array $data
+     * @param Booking $booking
+     * @param array $paymentData
      */
-    private function sendUserNotification(BookingPaid $event, array $data): void
+    private function sendUserNotifications(Booking $booking, array $paymentData): void
     {
-        $user = $event->user;
-        $userData = $this->getUserNotificationData($user, $data);
-        $user->notify(new BookingPaidNotification($userData));
-        $this->send($userData, $this->userMailTemplate);
-        $this->sms(
-            array_merge(
-                Arr::get($userData, 'sms'),
-                Arr::only($userData, ['booking_id'])
-            )
-        );
+        $booking->user->notify([
+            'booking_id' => $booking->id,
+            'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}"
+        ]);
+        if ($booking->user->email)
+            $this->send([
+                'email_address' => $booking->user->email,
+                'subject'       => "Booking Paid",
+                'mailable'      => \App\Mail\BookingPaid::class,
+                'data'          => [
+                    'booking_id'        => $booking->id,
+                    'business_name'     => $booking->provider->service_provider_name,
+                    'service_name'      => $booking->service->service_name,
+                    'description'       => $booking->providerService->description,
+                    'booking_time'      => $booking->booking_time,
+                    'service_cost'      => $booking->amount,
+                    'service_duration'  => $booking->providerService->duration,
+                    'amount_paid'       => $amount = $paymentData['amount'],
+                    'payment_ref'       => $paymentData['ref'],
+                    'balance'           => Arr::get($paymentData, 'balance', 0),
+                    'reserved'          => $this->isHalfAmount($paymentData),
+                    'amount_to_booking' => $this->getHalfAmount($paymentData) - $amount
+                ]
+            ], "");
+        else
+            $this->sms([
+                'recipients' => [$booking->user->phone_no],
+                'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}" . config('app.name')
+            ]);
+    }
+
+    /**
+     * @param Booking $booking
+     * @param array $paymentData
+     */
+    private function sendProviderNotifications(Booking $booking, array $paymentData)
+    {
+        # FIXME: Maybe we notify the provider only when the user has paid enough to confirm a service?
+        $booking->provider->user->notify([
+            'booking_id' => $booking->id,
+            'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}"
+        ]);
+        $this->send([
+            'email_address' => $booking->provider->user->business_email ?: $booking->user->email,
+            'subject'       => "Booking Confirmed",
+            'mailable'      => BookingPaidProvider::class,
+            'data'          => [
+                'booking_id'       => $booking->id,
+                'business_name'    => $booking->provider->service_provider_name,
+                'service_name'     => $booking->service->service_name,
+                'description'      => $booking->providerService->description,
+                'booking_time'     => $booking->booking_time,
+                'service_cost'     => $booking->amount,
+                'service_duration' => $booking->providerService->duration,
+                'amount_paid'      => $paymentData['amount'],
+                'payment_ref'      => $paymentData['ref'],
+                'balance'          => Arr::get($paymentData, 'balance', 0)
+            ]
+        ], "");
+        if ($booking->provider->business_phone)
+            $this->sms([
+                'recipients' => [$booking->provider->business_phone],
+                'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}" . config('app.name')
+            ]);
     }
 }

@@ -3,7 +3,6 @@
 namespace App\Events;
 
 use App\Booking;
-use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -13,8 +12,11 @@ use Illuminate\Queue\SerializesModels;
  */
 class BookingStatusChanged
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
+    /**
+     * @var Booking
+     */
     public $booking;
 
     /**
