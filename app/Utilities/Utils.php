@@ -83,7 +83,7 @@ class Utils
             // Process with intervention
             Log::info("File uploaded... Sending to Intervention", compact('file_path'));
             if ($type === 'image') {
-                $image = ImageAlias::make($file_path);
+                $image = ImageAlias::make(public_path('static/' . $type . '/' . $base_dir . '/' . $fullPath));
                 $image->fit(600, 360, function ($constraint) {
                     $constraint->upsize();
                 });
