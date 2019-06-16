@@ -87,7 +87,7 @@ class Utils
                 $image = ImageAlias::make($file_path);
                 $image->fit(600, 360, function ($constraint) {
                     $constraint->upsize();
-                });
+                })->save();
             }
             Log::info("Intervention done", compact('file_path'));
             return [
