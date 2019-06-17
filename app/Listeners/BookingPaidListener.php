@@ -78,7 +78,8 @@ class BookingPaidListener
     private function sendUserNotifications(Booking $booking, array $paymentData): void
     {
         Log::info("Preparing user notifications", compact('booking', 'paymentData'));
-        [$amount, $ref] = $paymentData;
+        $amount = Arr::get($paymentData, 'amount');
+        $ref = Arr::get($paymentData, 'ref');
         $booking->user->notify([
             'booking_id' => $booking->id,
             'message'    => "Payment received. {$amount}, reference {$ref}"
