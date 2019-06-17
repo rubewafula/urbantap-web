@@ -98,7 +98,6 @@ class PaymentsController extends Controller
             $booking = Booking::with([
                 'user',
                 'provider',
-                'service',
                 'providerService'
             ])->find($bill_ref_no);
             $cost = null;

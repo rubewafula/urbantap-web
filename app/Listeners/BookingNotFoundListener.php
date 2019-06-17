@@ -3,7 +3,6 @@
 namespace App\Listeners;
 
 use App\Events\BookingNotFoundEvent;
-use App\Mail\BookingWasPaid;
 use App\Notifications\BookingPaidNotification;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
@@ -40,7 +39,7 @@ class BookingNotFoundListener
         // Send sms or email
         $this->sms([
             'recipients' => [$user->phone_no],
-            'message'    => "Your payment of Kshs. {$paymentData['amount']} has been received. Visit " . config('app.name') . " to complete your booking."
+            'message'    => "Your payment of Kshs. {$paymentData['amount']} has been received. Visit " . config('app.url') . " to complete your booking."
         ]);
 
         // Send notification
