@@ -77,10 +77,15 @@ class BookingPaidListener
      */
     private function sendUserNotifications(Booking $booking, array $paymentData): void
     {
-        $booking->user->notify([
-            'booking_id' => $booking->id,
-            'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}"
-        ]);
+        Log::info("Preparing user notifications", compact('booking', 'paymentData'));
+        $amount = Arr::get($paymentData, 'amount');
+        $ref = Arr::get($paymentData, 'ref');
+        $booking->user->notify(
+            new BookingPaidNotification([
+                'booking_id' => $booking->id,
+                'message'    => "Payment received. {$amount}, reference {$ref}"
+            ])
+        );
         if ($booking->user->email)
             $this->send([
                 'email_address' => $booking->user->email,
@@ -94,8 +99,8 @@ class BookingPaidListener
                     'booking_time'      => $booking->booking_time,
                     'service_cost'      => $booking->amount,
                     'service_duration'  => $booking->providerService->duration,
-                    'amount_paid'       => $amount = $paymentData['amount'],
-                    'payment_ref'       => $paymentData['ref'],
+                    'amount_paid'       => $amount,
+                    'payment_ref'       => $ref,
                     'balance'           => Arr::get($paymentData, 'balance', 0),
                     'reserved'          => $this->isHalfAmount($paymentData),
                     'amount_to_booking' => $this->getHalfAmount($paymentData) - $amount
@@ -104,7 +109,7 @@ class BookingPaidListener
         else
             $this->sms([
                 'recipients' => [$booking->user->phone_no],
-                'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}" . config('app.name')
+                'message'    => "Payment of Ksh. {$amount} received for service {$booking->service->service_name}, reference {$ref}. Balance Ksh. {$booking->balance}. " . config('app.name')
             ]);
     }
 
@@ -115,10 +120,12 @@ class BookingPaidListener
     private function sendProviderNotifications(Booking $booking, array $paymentData)
     {
         # FIXME: Maybe we notify the provider only when the user has paid enough to confirm a service?
-        $booking->provider->user->notify([
-            'booking_id' => $booking->id,
-            'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}"
-        ]);
+        $booking->provider->user->notify(
+            new BookingPaidNotification([
+                'booking_id' => $booking->id,
+                'message'    => "Payment received for service {$booking->service->service_name}. Ksh.{$paymentData['amount']}."
+            ])
+        );
         $this->send([
             'email_address' => $booking->provider->user->business_email ?: $booking->user->email,
             'subject'       => "Booking Confirmed",
@@ -139,7 +146,7 @@ class BookingPaidListener
         if ($booking->provider->business_phone)
             $this->sms([
                 'recipients' => [$booking->provider->business_phone],
-                'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}" . config('app.name')
+                'message'    => "Payment of Ksh. {$paymentData['amount']} received for service {$booking->service->service_name}. " . config('app.name')
             ]);
     }
 }

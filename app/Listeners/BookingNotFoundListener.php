@@ -2,8 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\BookingWasPaidEvent;
-use App\Mail\BookingWasPaid;
+use App\Events\BookingNotFoundEvent;
 use App\Notifications\BookingPaidNotification;
 use App\Traits\SendEmailTrait;
 use App\Traits\SendSMSTrait;
@@ -12,7 +11,7 @@ use App\Traits\SendSMSTrait;
  * Class BookingWasPaidListener
  * @package App\Listeners
  */
-class BookingWasPaidListener
+class BookingNotFoundListener
 {
     use SendEmailTrait, SendSMSTrait;
 
@@ -29,28 +28,19 @@ class BookingWasPaidListener
     /**
      * Handle the event.
      *
-     * @param BookingWasPaidEvent $event
+     * @param BookingNotFoundEvent $event
      * @return void
      */
-    public function handle(BookingWasPaidEvent $event)
+    public function handle(BookingNotFoundEvent $event)
     {
         $user = $event->user;
         $paymentData = $event->data;
 
         // Send sms or email
-        if ($user->email)
-            $this->send([
-                'email_address' => $user->email,
-                'subject'       => "Payment Received",
-                'mailable'      => BookingWasPaid::class,
-                'data'          => $paymentData
-            ], "");
-        else
-            $this->sms([
-                'recipients' => [$user->phone_no],
-                'message'    => "Your payment has been received. Visit " . config('app.name') . " to complete your booking" .
-                    config('app.name')
-            ]);
+        $this->sms([
+            'recipients' => [$user->phone_no],
+            'message'    => "Your payment of Kshs. {$paymentData['amount']} has been received. Visit " . config('app.url') . " to complete your booking."
+        ]);
 
         // Send notification
         $user->notify(new BookingPaidNotification(

@@ -29,19 +29,7 @@ class Booking extends Model
     /**
      * @var array
      */
-    protected $fillable = [
-        "provider_service_id",
-        "service_provider_id",
-        "user_id",
-        "booking_time",
-        "booking_duration",
-        "expiry_time",
-        "status_id",
-        "booking_type",
-        "amount",
-        "created_at",
-        "location"
-    ];
+    protected $guarded = [];
 
     /**
      * @var array
