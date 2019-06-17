@@ -4,13 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Booking;
 use App\Events\BookingPaid;
-use App\Events\BookingWasPaidEvent;
+use App\Events\BookingNotFoundEvent;
 use App\ServiceProvider;
 use App\Status;
 use App\Transaction;
-use App\CustomerTransaction;
-use App\ProviderTransaction;
-use App\UrbantapTransaction;
 use App\User;
 use App\Utilities\DBStatus;
 use App\Utilities\HTTPCodes;
@@ -75,12 +72,12 @@ class PaymentsController extends Controller
      */
     public function MpesaPayment(Request $request)
     {
-
         $user_id = "";
         $email = null;
         $booking_balance = 0;
         $running_balance = 0;
         $provider_running_balance = 0;
+        $debit_transaction = null;
 
         Log::info("Callback URL from Inbox Consumer called [MPESA Payments] "
             . " ==> " . var_export($request->all(), 1));
@@ -116,54 +113,21 @@ class PaymentsController extends Controller
 
             //Run this in transaction :P
             try {
+
+                $trx_status = DBStatus::TRANSACTION_COMPLETE;
+
                 DB::beginTransaction();
-                DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
-					amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
-					VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
-					:mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,:trx_status)",
-                    [
-                        'message'          => "Mpesa deposit",
-                        'transaction_ref'  => $invoice_number,
-                        'transaction_time' => $transaction_time,
-                        'amount'           => $transaction_amount,
-                        'paybill_no'       => $business_code,
-                        'mpesa_code'       => $transaction_id,
-                        'bill_ref_no'      => $bill_ref_no,
-                        'account_no'       => $bill_ref_no,
-                        'msisdn'           => $msisdn,
-                        'names'            => $name,
-                        'trx_status'       => DBStatus::TRANSACTION_COMPLETE
-                    ]
-                );
+
                 $user = DB::select(
                     DB::raw("select u.id, if(ub.available_balance is null, 0, ub.available_balance) as balance, email, phone_no, "
-                        . " b.service_provider_id from users u inner join bookings b on u.id = b.user_id  "
+                        . " b.service_provider_id, b.amount, b.booking_time from users u inner join bookings b on u.id = b.user_id  "
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
-
-                $provider = null;
 
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
                     $email = $user[0]->email;
-                    if ($user[0]->phone_no !== $msisdn) {
-                        DB::table('users')->insert(
-                            [
-                                "first_name" => $name,
-                                "user_group" => 4,
-                                "phone_no"   => $msisdn,
-                                "email"      => $msisdn . "@urbantap.co.ke",
-                                "password"   => Hash::make($msisdn)
-                            ]
-                        );
-                    }
-
-                    $provider = DB::select(
-                        DB::raw("select * from user_balance ub "
-                            . " where ub.user_id = ?"), [$user[0]->service_provider_id]);
-
-                    $provider_running_balance = $provider[0]->balance;
 
                 } else {
                     // Log::error("Booking not found", $request->all());
@@ -177,17 +141,55 @@ class PaymentsController extends Controller
                         $user_id = $user[0]->id;
                     } else {
 
-                        $user_id = DB::table('users')->insertGetId(
+                        $trx_status = DBStatus::TRANSACTION_SUSPENDED;
+
+                        DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
+                            amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
+                            VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
+                            :mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,:trx_status)",
                             [
-                                "first_name" => $name,
-                                "user_group" => 4,
-                                "phone_no"   => $msisdn,
-                                "email"      => $msisdn . "@urbantap.co.ke",
-                                "password"   => Hash::make($msisdn)
+                                'message'          => "Mpesa deposit",
+                                'transaction_ref'  => $invoice_number,
+                                'transaction_time' => $transaction_time,
+                                'amount'           => $transaction_amount,
+                                'paybill_no'       => $business_code,
+                                'mpesa_code'       => $transaction_id,
+                                'bill_ref_no'      => $bill_ref_no,
+                                'account_no'       => $bill_ref_no,
+                                'msisdn'           => $msisdn,
+                                'names'            => $name,
+                                'trx_status'       => $trx_status
                             ]
                         );
+
+                        DB::commit();
+
+                        return Response::json([
+                            'status'  => 202,
+                            'success' => false,
+                            'message' => 'User Not Found'
+                        ], HTTPCodes::HTTP_ACCEPTED);
                     }
                 }
+
+                DB::insert("insert into mpesa_transactions (message,transaction_ref,transaction_time,
+                    amount,paybill_no,mpesa_code,bill_ref_no,account_no,msisdn,names,status_id) 
+                    VALUES(:message,:transaction_ref,:transaction_time,:amount,:paybill_no,
+                    :mpesa_code,:bill_ref_no,:account_no,:msisdn,:names,:trx_status)",
+                    [
+                        'message'          => "Mpesa deposit",
+                        'transaction_ref'  => $invoice_number,
+                        'transaction_time' => $transaction_time,
+                        'amount'           => $transaction_amount,
+                        'paybill_no'       => $business_code,
+                        'mpesa_code'       => $transaction_id,
+                        'bill_ref_no'      => $bill_ref_no,
+                        'account_no'       => $bill_ref_no,
+                        'msisdn'           => $msisdn,
+                        'names'            => $name,
+                        'trx_status'       => $trx_status
+                    ]
+                );
 
                 $running_balance = $running_balance + $transaction_amount;
 
@@ -201,21 +203,11 @@ class PaymentsController extends Controller
 
                 $transaction->save();
 
-                $customerTransaction = new CustomerTransaction();
-                $customerTransaction->user_id = $user_id;
-                $customerTransaction->transaction_type = "CREDIT";
-                $customerTransaction->reference = $transaction_id;
-                $customerTransaction->amount = $transaction_amount;
-                $customerTransaction->transaction_id = $transaction->id;
-                $customerTransaction->running_balance = $running_balance;
-                $customerTransaction->status_id = DBstatus::TRANSACTION_COMPLETE;
-
-                $customerTransaction->save();
-
                 DB::insert("insert into user_balance set user_id='" . $user_id . "', 
                         balance='" . $transaction_amount . "', available_balance='" . $transaction_amount . "',"
-                    . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
-                    . " update available_balance = available_balance + $transaction_amount "
+                    "',created=now() on duplicate key "
+                    . " update available_balance = available_balance + $transaction_amount, "
+                    . " balance = balance + $transaction_amount"
                 );
 
                 DB::commit();
@@ -230,19 +222,6 @@ class PaymentsController extends Controller
                 ], HTTPCodes::HTTP_INTERNAL_SERVER_ERROR);
             }
 
-            if (empty($user)) {
-
-                Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
-
-                $out = [
-                    'status'  => 202,
-                    'success' => false,
-                    'message' => 'Booking Not Found'
-                ];
-
-                return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
-            }
-
             try {
                 DB::beginTransaction();
 
@@ -250,70 +229,35 @@ class PaymentsController extends Controller
                 $booking_reference = "";
                 $booking_time = "";
 
-                $bookingRs = DB::select(
-                    DB::raw("select * from bookings where id='" . $bill_ref_no . "'")
+                $bookingRs = $user;
+
+                $booking_amount = $bookingRs[0]->amount;
+
+                $booking_time = $bookingRs[0]->booking_time;
+
+                $running_balance = $running_balance - $transaction_amount;
+
+                $transaction = new Transaction();
+                $transaction->user_id = $user_id;
+                $transaction->transaction_type = "DEBIT";
+                $transaction->reference = $transaction_id;
+                $transaction->amount = $transaction_amount;
+                $transaction->running_balance = $running_balance;
+                $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
+
+                $transaction->save();
+
+                $debit_transaction = $transaction;
+
+                DB::insert("insert into user_balance set user_id='" . $user_id . "',
+                     balance='" . $transaction_amount . "', available_balance='0',"
+                    . "',created=now() on duplicate key "
+                    . " update balance = balance - $transaction_amount, "
+                    . " available_balance = available_balance - $transaction_amount "
                 );
 
-                if (count($bookingRs) > 0) {
-
-                    $booking_amount = $bookingRs[0]->amount;
-                    $booking_balance = $booking_amount - $transaction_amount;
-                    $booking_time = $bookingRs[0]->booking_time;
-
-                    $running_balance = $running_balance - $transaction_amount;
-                    $provider_running_balance = $provider_running_balance + $transaction_amount;
-
-                    $transaction = new Transaction();
-                    $transaction->user_id = $user_id;
-                    $transaction->transaction_type = "DEBIT";
-                    $transaction->reference = $transaction_id;
-                    $transaction->amount = $transaction_amount;
-                    $transaction->running_balance = $running_balance;
-                    $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
-
-                    $transaction->save();
-
-                    $providerTransaction = new ProviderTransaction();
-                    $providerTransaction->user_id = $user_id;
-                    $providerTransaction->transaction_type = "CREDIT";
-                    $providerTransaction->reference = $transaction_id;
-                    $providerTransaction->amount = $transaction_amount;
-                    $providerTransaction->transaction_id = $transaction->id;
-                    $providerTransaction->running_balance = $provider_running_balance;
-                    $providerTransaction->status_id = DBstatus::TRANSACTION_COMPLETE;
-
-                    $providerTransaction->save();
-
-                    DB::insert("insert into user_balance set user_id='" . $bookingRs[0]->service_provider_id . "',
-                         balance='" . $transaction_amount . "', available_balance='0',"
-                        . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
-                        . " update balance = balance + $transaction_amount "
-                    );
-
-                    DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
-                        status_id='" . DBStatus::BOOKING_PAID . "',transaction_id = '" . $transaction->id . "',
-                        description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
-
-                    DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now()
-                     where id = '" . $bill_ref_no . "'");
-
-                    DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
-                        booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
-                        paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
-                        received_payment='" . $transaction_amount . "', balance='" . $booking_balance . "',
-                        status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
-
-                } else {
-
-                    Log::info("Booking called back by MPESA Number $bill_ref_no NOT FOUND");
-
-                    $out = [
-                        'status'  => 202,
-                        'success' => false,
-                        'message' => 'Booking Not Found'
-                    ];
-
-                }
+                DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now(),
+           balance = balance - $transaction_amount where id = '" . $bill_ref_no . "'");
 
                 DB::commit();
             } catch (\Exception $exception) {
@@ -334,20 +278,23 @@ class PaymentsController extends Controller
                 'service',
                 'providerService'
             ])->find($bill_ref_no);
+
             $data = [
                 'amount'          => $transaction_amount,
                 'ref'             => $transaction_id,
                 'booking_amount'  => $booking_amount,
                 'running_balance' => $running_balance,
                 'balance'         => $booking_balance,
+                'msisdn' => $msisdn,
+                'name' => $name
             ];
             if ($booking)
                 broadcast(
-                    new BookingPaid($booking, $data)
+                    new BookingPaid($booking, $data, $debit_transaction)
                 );
             else
                 broadcast(
-                    new BookingWasPaidEvent(new User(['id' => $user_id]), $data)
+                    new BookingNotFoundEvent(new User(['id' => $user_id]), $data)
                 );
 
             $out = [

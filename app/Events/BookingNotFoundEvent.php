@@ -11,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
  * Class BookingWasPaidEvent
  * @package App\Events
  */
-class BookingWasPaidEvent
+class BookingNotFoundEvent
 {
     use Dispatchable, SerializesModels;
 
