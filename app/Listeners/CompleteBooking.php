@@ -51,6 +51,7 @@ class CompleteBooking implements ShouldQueue
             $transaction->amount = $amount = $paymentData['debit_amount'];
             $transaction->running_balance = $providerRunningBalance + $amount;
             $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
+            $transaction->save();
 
             DB::insert("insert into user_balance set user_id= :user_id, balance= :balance, available_balance=0 ,created=now() on duplicate key update balance = balance + $amount", [
                 'user_id' => $booking->provider->user_id,
