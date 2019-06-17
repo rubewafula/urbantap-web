@@ -154,6 +154,7 @@ class PaymentsController extends Controller
                         'transaction_type' => 'CREDIT',
                         'reference'        => $transaction_id,
                         'amount'           => $transaction_amount,
+                        'description'      => 'MPESA DEPOSIT',
                         'running_balance'  => $userBalance->balance + $transaction_amount,
                         'status_id'        => DBStatus::TRANSACTION_COMPLETE
                     ],
@@ -167,6 +168,7 @@ class PaymentsController extends Controller
                             'user_id'          => $user_id,
                             'transaction_type' => 'DEBIT',
                             'reference'        => $transaction_id,
+                            'description'      => 'BOOKING PAYMENT',
                             'amount'           => $debitAmount = ($bookingBalance <= 0 ? $cost : $transaction_amount),
                             'running_balance'  => ($userBalance->balance + $transaction_amount) - $debitAmount,
                             'status_id'        => DBStatus::TRANSACTION_COMPLETE

@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class RawQuery{
 	const PAGE = 1;
-	const NUM_ROWS = 3;
+	const NUM_ROWS = 8;
 	const OFFSET = 0;
 	
 	public static function paginate($rawQuery, $page = null, $limit = null, $params=null) {
@@ -65,8 +65,8 @@ class RawQuery{
             $start = $page >= 3 ? $page-3 : 0;
             $end = $page+3 + ($start < 4 ? 3-$start: 0);
 	    foreach (range($start, $end) as $number) {
-		    if($number > 0 & $number*$limit <= $totalCount){
-		    	array_push($page_range, $number);
+		    if($number >= 0 & $number*$limit <= $totalCount){
+		    	array_push($page_range, $number+1);
 		    } 
 		}
 

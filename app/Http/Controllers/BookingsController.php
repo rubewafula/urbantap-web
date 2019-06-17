@@ -48,7 +48,7 @@ class BookingsController extends Controller
         }
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
-        $query = "select b.id, b.service_provider_id, b.user_id, "
+        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -121,7 +121,7 @@ class BookingsController extends Controller
         }
 
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
-        $query = "select b.id, b.service_provider_id, b.user_id, "
+        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -199,7 +199,7 @@ class BookingsController extends Controller
 
         $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
-        $query = "select b.id, b.service_provider_id, b.user_id, "
+        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -278,7 +278,7 @@ class BookingsController extends Controller
         $filter_col = $client == false ? " sp.user_id " : " u.id ";
 
         $query = "select b.created_at, b.id as booking_id, b.service_provider_id, "
-            . " b.user_id, u.first_name as client,"
+            . " b.user_id, u.first_name as client, b.amount, b.balance, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
             . " b.booking_type, b.location, sp.service_provider_name, "
@@ -454,7 +454,7 @@ class BookingsController extends Controller
                     'booking_time'        => $actual_booking_time,
                     'booking_duration'    => $request['booking_duration'],
                     'expiry_time'         => $request['expiry_time'],
-                    'status_id'           => DBStatus::TRANSACTION_PENDING,
+                    'status_id'           => DBStatus::BOOKING_NEW,
                     'booking_type'        => $request['booking_type'],
                     'location'            => $request['location'],
                     'amount'              => $actual_cost
