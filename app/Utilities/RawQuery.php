@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\DB;
 
 class RawQuery{
 	const PAGE = 1;
-	const NUM_ROWS = 3;
+	const NUM_ROWS = 8;
 	const OFFSET = 0;
 	
 	public static function paginate($rawQuery, $page = null, $limit = null, $params=null) {
