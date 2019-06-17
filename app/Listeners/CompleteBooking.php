@@ -37,9 +37,8 @@ class CompleteBooking implements ShouldQueue
     public function handle(BookingPaid $event)
     {
         DB::transaction(function () use ($event) {
-            $debitTransaction = $event->transaction;
             $booking = $event->booking;
-            $paymentData = Arr::only($event->data, ['name', 'msisdn']);
+            $paymentData = Arr::only($event->data, ['name', 'msisdn', 'ref', 'debit_amount']);
 
             $providerBalance = UserBalance::query()->where(['user_id' => $booking->provider->user_id])->first(['balance']);
             $providerRunningBalance = optional($providerBalance)->balance ?: 0;
@@ -47,15 +46,15 @@ class CompleteBooking implements ShouldQueue
             $transaction = new Transaction();
             $transaction->user_id = $booking->service_provider_id;
             $transaction->transaction_type = "CREDIT";
-            $transaction->reference = $debitTransaction->reference;
-            $transaction->amount = $amount = $debitTransaction->amount;
+            $transaction->reference = $paymentData['ref'];
+            $transaction->amount = $amount = $paymentData['debit_amount'];
             $transaction->running_balance = $providerRunningBalance + $amount;
             $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
 
-            DB::insert("insert into user_balance set user_id='" . $booking->service_provider_id . "',
-              balance='" . $amount . "', available_balance='0',"
-                . "',created=now() on duplicate key update balance = balance + $amount"
-            );
+            DB::insert("insert into user_balance set user_id= :user_id, balance= :balance, available_balance=0 ,created=now() on duplicate key update balance = balance + $amount", [
+                'user_id' => $booking->provider->user_id,
+                'balance' => $amount
+            ]);
 
             DB::insert("insert into booking_trails set booking_id='" . $booking->id . "', 
              status_id='" . ($booking->balance ? DBStatus::BOOKING_PARTIALLY_PAID : DBStatus::BOOKING_PAID) . "',transaction_id = '" . $transaction->id . "',

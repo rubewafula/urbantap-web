@@ -3,7 +3,6 @@
 namespace App\Events;
 
 use App\Booking;
-use App\Transaction;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -25,21 +24,14 @@ class BookingPaid
     public $data;
 
     /**
-     * @var Transaction
-     */
-    public $transaction;
-
-    /**
      * Create a new event instance.
      *
      * @param Booking $booking
      * @param array $data
-     * @param Transaction $transaction
      */
-    public function __construct(Booking $booking, array $data, Transaction $transaction)
+    public function __construct(Booking $booking, array $data)
     {
         $this->booking = $booking;
         $this->data = $data;
-        $this->transaction = $transaction;
     }
 }
