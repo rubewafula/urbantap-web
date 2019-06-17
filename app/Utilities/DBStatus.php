@@ -14,6 +14,7 @@ class DBStatus
     const TRANSACTION_COMPLETE          = 5;
     const TRANSACTION_CANCELLED         = 4;
     const TRANSACTION_REVERSED          = 6;
+    const TRANSACTION_SUSPENDED         = 31;
 
 
     /** Booking status **/
@@ -28,6 +29,7 @@ class DBStatus
 
     const BOOKING_POST_REJECTED         = 30;
     const BOOKING_PAID                  = 29;
+    const BOOKING_PARTIALLY_PAID        = 32;
 
     /** user status **/
     const USER_NEW                      = 15;
