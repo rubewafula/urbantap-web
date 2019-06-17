@@ -65,8 +65,8 @@ class RawQuery{
             $start = $page >= 3 ? $page-3 : 0;
             $end = $page+3 + ($start < 4 ? 3-$start: 0);
 	    foreach (range($start, $end) as $number) {
-		    if($number > 0 & $number*$limit <= $totalCount){
-		    	array_push($page_range, $number);
+		    if($number >= 0 & $number*$limit <= $totalCount){
+		    	array_push($page_range, $number+1);
 		    } 
 		}
 
