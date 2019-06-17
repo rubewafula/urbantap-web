@@ -184,12 +184,13 @@ class PaymentsController extends Controller
 
                 if ($bookingBalance < 0) {
                     $bookingBalance = abs($bookingBalance);
-                    DB::insert("insert into user_balance set user_id= :user_id, balance=:balance, available_balance= :balance,created=now() on duplicate key "
+                    DB::insert("insert into user_balance set user_id= :user_id, balance=:balance, available_balance= :available,created=now() on duplicate key "
                         . " update available_balance = available_balance + $bookingBalance, "
                         . " balance = balance + $bookingBalance",
                         [
                             'user_id' => $user_id,
-                            'balance' => $bookingBalance
+                            'balance' => $bookingBalance,
+                            'available' => $bookingBalance,
                         ]
                     );
                 }
