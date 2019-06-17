@@ -117,7 +117,7 @@ class PaymentsController extends Controller
                 $trx_status = DBStatus::TRANSACTION_COMPLETE;
 
                 DB::beginTransaction();
-                
+
                 $user = DB::select(
                     DB::raw("select u.id, if(ub.available_balance is null, 0, ub.available_balance) as balance, email, phone_no, "
                         . " b.service_provider_id, b.amount, b.booking_time from users u inner join bookings b on u.id = b.user_id  "
@@ -214,8 +214,8 @@ class PaymentsController extends Controller
                 DB::insert("insert into user_balance set user_id='" . $user_id . "', 
                         balance='" . $transaction_amount . "', available_balance='" . $transaction_amount . "',"
                     . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
-                    . " update available_balance = available_balance + $transaction_amount, " 
-                    ." balance = balance + $transaction_amount"
+                    . " update available_balance = available_balance + $transaction_amount, "
+                    . " balance = balance + $transaction_amount"
                 );
 
                 DB::commit();
@@ -258,39 +258,15 @@ class PaymentsController extends Controller
 
                 $debit_transaction = $transaction;
 
-                // $transaction = new Transaction();
-                // $transaction->user_id = $$bookingRs[0]->service_provider_id;
-                // $transaction->transaction_type = "CREDIT";
-                // $transaction->reference = $transaction_id;
-                // $transaction->amount = $transaction_amount;
-                // $transaction->running_balance = $provider_running_balance;
-                // $transaction->status_id = DBstatus::TRANSACTION_COMPLETE;
-
-                // DB::insert("insert into user_balance set user_id='" . $bookingRs[0]->service_provider_id . "',
-                //      balance='" . $transaction_amount . "', available_balance='0',"
-                //     . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
-                //     . " update balance = balance + $transaction_amount"
-                // );
-
                 DB::insert("insert into user_balance set user_id='" . $user_id . "',
                      balance='" . $transaction_amount . "', available_balance='0',"
                     . " transaction_id='" . $debit_transaction->id . "',created=now() on duplicate key "
                     . " update balance = balance - $transaction_amount, "
-                    ." available_balance = available_balance - $transaction_amount "
+                    . " available_balance = available_balance - $transaction_amount "
                 );
 
-                // DB::insert("insert into booking_trails set booking_id='" . $bill_ref_no . "', 
-                //     status_id='" . DBStatus::BOOKING_PAID . "',transaction_id = '".$transaction->id."',
-                //     description='MPESA TRANSACTION', originator='MPESA', created_at=now()");
-
-                // DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now(),
-                //   balance = balance - $transaction_amount where id = '" . $bill_ref_no . "'");
-
-                // DB::insert("insert into payments set reference='" . $transaction_id . "', date_received=now(),
-                //     booking_id='" . $bill_ref_no . "', payment_method='MPESA', paid_by_name='" . $name . "',
-                //     paid_by_msisdn='" . $msisdn . "', amount='" . $booking_amount . "', 
-                //     received_payment='" . $transaction_amount . "', balance='" . $booking_balance . "',
-                //     status_id='" . DBStatus::TRANSACTION_COMPLETE . "', created_at=now()");
+                DB::update("update bookings set status_id = '" . DBStatus::BOOKING_PAID . "', updated_at = now(),
+           balance = balance - $transaction_amount where id = '" . $bill_ref_no . "'");
 
                 DB::commit();
             } catch (\Exception $exception) {
@@ -318,11 +294,12 @@ class PaymentsController extends Controller
                 'booking_amount'  => $booking_amount,
                 'running_balance' => $running_balance,
                 'balance'         => $booking_balance,
-                'transaction'     => $debit_transaction
+                'msisdn' => $msisdn,
+                'name' => $name
             ];
             if ($booking)
                 broadcast(
-                    new BookingPaid($booking, $data)
+                    new BookingPaid($booking, $data, $debit_transaction)
                 );
             else
                 broadcast(

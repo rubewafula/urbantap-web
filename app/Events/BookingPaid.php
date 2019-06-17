@@ -24,6 +24,9 @@ class BookingPaid
      */
     public $data;
 
+    /**
+     * @var Transaction
+     */
     public $transaction;
 
     /**

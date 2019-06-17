@@ -18,8 +18,12 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\BookingCreated'       => [
             'App\Listeners\BookingCreatedListener',
         ],
+//        'App\Events\BookingPaymentReceived'          => [
+//            'App\Listeners\BookingPaymentReceivedListener',
+//        ],
         'App\Events\BookingPaid'          => [
             'App\Listeners\BookingPaidListener',
+            'App\Listeners\CompleteBooking',
         ],
         'App\Events\BookingNotFoundEvent' => [
             'App\Listeners\BookingNotFoundListener',
