@@ -144,7 +144,7 @@ class PaymentsController extends Controller
                     }
                 }
                 $user_id = $user_id ?: $booking->user_id;
-                $userBalance = UserBalance::where('user_id', $user_id)->firstOrNew();
+                $userBalance = UserBalance::firstOrNew(compact('user_id'));
 
                 MpesaTransaction::create(
                     array_merge($mpesaTransactionData, ['status_id' => DBStatus::TRANSACTION_COMPLETE, 'user_id' => $user_id])
