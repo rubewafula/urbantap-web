@@ -223,7 +223,7 @@ class PaymentsController extends Controller
                 );
             else
                 broadcast(
-                    new BookingNotFoundEvent(new User(['id' => $user_id]), $data)
+                    new BookingNotFoundEvent(new User(['id' => $user_id, 'phone_no' => $msisdn]), $data)
                 );
 
             $out = [
