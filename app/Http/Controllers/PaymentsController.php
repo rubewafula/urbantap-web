@@ -291,7 +291,7 @@ class PaymentsController extends Controller
         $responseArray = json_decode($curl_response, true);
         $status = 200;
         $success = true;
-        $message = "STK Request Success"
+        $message = "STK Request Success";
         $httpCode = HTTPCodes::HTTP_OK;
 
         if(array_key_exists("errorCode", $responseArray)){
