@@ -77,9 +77,11 @@ class BookingPaidListener
      */
     private function sendUserNotifications(Booking $booking, array $paymentData): void
     {
+        Log::info("Preparing user notifications", compact('booking', 'paymentData'));
+        [$amount, $ref] = $paymentData;
         $booking->user->notify([
             'booking_id' => $booking->id,
-            'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}"
+            'message'    => "Payment received. {$amount}, reference {$ref}"
         ]);
         if ($booking->user->email)
             $this->send([
@@ -94,8 +96,8 @@ class BookingPaidListener
                     'booking_time'      => $booking->booking_time,
                     'service_cost'      => $booking->amount,
                     'service_duration'  => $booking->providerService->duration,
-                    'amount_paid'       => $amount = $paymentData['amount'],
-                    'payment_ref'       => $paymentData['ref'],
+                    'amount_paid'       => $amount,
+                    'payment_ref'       => $ref,
                     'balance'           => Arr::get($paymentData, 'balance', 0),
                     'reserved'          => $this->isHalfAmount($paymentData),
                     'amount_to_booking' => $this->getHalfAmount($paymentData) - $amount
@@ -104,7 +106,7 @@ class BookingPaidListener
         else
             $this->sms([
                 'recipients' => [$booking->user->phone_no],
-                'message'    => "Payment received. {$paymentData['amount']}, reference {$paymentData['ref']}" . config('app.name')
+                'message'    => "Payment received. {$amount}, reference {$ref}" . config('app.name')
             ]);
     }
 
