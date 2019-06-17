@@ -213,7 +213,7 @@ class PaymentsController extends Controller
 
                 DB::insert("insert into user_balance set user_id='" . $user_id . "', 
                         balance='" . $transaction_amount . "', available_balance='" . $transaction_amount . "',"
-                    . " transaction_id='" . $transaction->id . "',created=now() on duplicate key "
+                    "',created=now() on duplicate key "
                     . " update available_balance = available_balance + $transaction_amount, "
                     . " balance = balance + $transaction_amount"
                 );
@@ -260,7 +260,7 @@ class PaymentsController extends Controller
 
                 DB::insert("insert into user_balance set user_id='" . $user_id . "',
                      balance='" . $transaction_amount . "', available_balance='0',"
-                    . " transaction_id='" . $debit_transaction->id . "',created=now() on duplicate key "
+                    . "',created=now() on duplicate key "
                     . " update balance = balance - $transaction_amount, "
                     . " available_balance = available_balance - $transaction_amount "
                 );
