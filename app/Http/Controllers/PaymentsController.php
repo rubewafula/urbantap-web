@@ -262,7 +262,6 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization:Bearer ' . $token)); //setting custom header
 
-
         $curl_post_data = array(
 
             'BusinessShortCode' => env("PAYBILL_NO"),
@@ -285,9 +284,31 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
 
         $curl_response = curl_exec($curl);
-        print_r($curl_response);
+        //print_r($curl_response);
 
-        echo $curl_response;
+        //echo $curl_response;
+
+        $responseArray = json_decode($curl_response, true);
+        $status = 200;
+        $success = true;
+        $message = "STK Request Success";
+        $httpCode = HTTPCodes::HTTP_OK;
+
+        if(array_key_exists("errorCode", $responseArray)){
+
+            $status = 400;
+            $success = false;
+            $message = $responseArray["errorMessage"];
+            $httpCode = HTTPCodes::HTTP_BAD_REQUEST;
+        }
+
+        $out = [
+                'status'  => $status,
+                'success' => $success,
+                'message' => $message
+            ];
+
+        return Response::json($out, $httpCode);
     }
 
 }
