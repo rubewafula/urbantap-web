@@ -49,7 +49,7 @@ abstract class Auth2Controller extends Controller implements Auth2
         Log::info("Facebook auth body", $request->toArray());
         $token = $this->getAccessToken($request);
         $profile = $this->getUserProfile(Arr::get($token, 'access_token'));
-        $user = User::query()->firstOrCreate(Arr::only($profile, ['email']), array_merge(
+        $user = User::query()->with(['serviceProvider'])->firstOrCreate(Arr::only($profile, ['email']), array_merge(
             Arr::except($profile, ['id', 'name']),
             [
                 'password' => ''
