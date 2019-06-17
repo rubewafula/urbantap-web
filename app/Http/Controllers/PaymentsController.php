@@ -75,7 +75,6 @@ class PaymentsController extends Controller
      */
     public function MpesaPayment(Request $request)
     {
-
         $user_id = "";
         $email = null;
         $booking_balance = 0;
