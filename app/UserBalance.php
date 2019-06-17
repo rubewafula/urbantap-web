@@ -14,4 +14,9 @@ class UserBalance extends Model
      * @var string
      */
     protected $table = "user_balance";
+
+    /**
+     * @var array
+     */
+    protected $guarded = [];
 }
