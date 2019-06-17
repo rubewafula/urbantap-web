@@ -80,10 +80,12 @@ class BookingPaidListener
         Log::info("Preparing user notifications", compact('booking', 'paymentData'));
         $amount = Arr::get($paymentData, 'amount');
         $ref = Arr::get($paymentData, 'ref');
-        $booking->user->notify([
-            'booking_id' => $booking->id,
-            'message'    => "Payment received. {$amount}, reference {$ref}"
-        ]);
+        $booking->user->notify(
+            new BookingPaidNotification([
+                'booking_id' => $booking->id,
+                'message'    => "Payment received. {$amount}, reference {$ref}"
+            ])
+        );
         if ($booking->user->email)
             $this->send([
                 'email_address' => $booking->user->email,
@@ -118,10 +120,12 @@ class BookingPaidListener
     private function sendProviderNotifications(Booking $booking, array $paymentData)
     {
         # FIXME: Maybe we notify the provider only when the user has paid enough to confirm a service?
-        $booking->provider->user->notify([
-            'booking_id' => $booking->id,
-            'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}"
-        ]);
+        $booking->provider->user->notify(
+            new BookingPaidNotification([
+                'booking_id' => $booking->id,
+                'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}"
+            ])
+        );
         $this->send([
             'email_address' => $booking->provider->user->business_email ?: $booking->user->email,
             'subject'       => "Booking Confirmed",
