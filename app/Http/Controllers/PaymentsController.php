@@ -132,11 +132,11 @@ class PaymentsController extends Controller
                     $running_balance = $user[0]->balance;
                     $email = $user[0]->email;
 
-                    $provider = DB::select(
-                        DB::raw("select * from user_balance ub "
-                            . " where ub.user_id = ?"), [$user[0]->service_provider_id]);
+                    // $provider = DB::select(
+                    //     DB::raw("select * from user_balance ub "
+                    //         . " where ub.user_id = ?"), [$user[0]->service_provider_id]);
 
-                    $provider_running_balance = $provider[0]->balance;
+                    // $provider_running_balance = $provider[0]->balance;
 
                 } else {
                     // Log::error("Booking not found", $request->all());
@@ -275,7 +275,7 @@ class PaymentsController extends Controller
 
                 DB::insert("insert into user_balance set user_id='" . $user_id . "',
                      balance='" . $transaction_amount . "', available_balance='0',"
-                    . " transaction_id='" . $debit_transaction_id . "',created=now() on duplicate key "
+                    . " transaction_id='" . $debit_transaction->id . "',created=now() on duplicate key "
                     . " update balance = balance - $transaction_amount, "
                     ." available_balance = available_balance - $transaction_amount "
                 );
@@ -367,7 +367,6 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_URL, $url);
         curl_setopt($curl, CURLOPT_HTTPHEADER, array('Content-Type:application/json', 'Authorization:Bearer ' . $token)); //setting custom header
 
-
         $curl_post_data = array(
 
             'BusinessShortCode' => env("PAYBILL_NO"),
@@ -390,9 +389,31 @@ class PaymentsController extends Controller
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data_string);
 
         $curl_response = curl_exec($curl);
-        print_r($curl_response);
+        //print_r($curl_response);
 
-        echo $curl_response;
+        //echo $curl_response;
+
+        $responseArray = json_decode($curl_response, true);
+        $status = 200;
+        $success = true;
+        $message = "STK Request Success"
+        $httpCode = HTTPCodes::HTTP_OK;
+
+        if(array_key_exists("errorCode", $responseArray)){
+
+            $status = 400;
+            $success = false;
+            $message = $responseArray["errorMessage"];
+            $httpCode = HTTPCodes::HTTP_BAD_REQUEST;
+        }
+
+        $out = [
+                'status'  => $status,
+                'success' => $success,
+                'message' => $message
+            ];
+
+        return Response::json($out, $httpCode);
     }
 
 }
