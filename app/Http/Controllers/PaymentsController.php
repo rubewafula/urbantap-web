@@ -205,7 +205,7 @@ class PaymentsController extends Controller
 
                 DB::insert("insert into user_balance set user_id='" . $user_id . "', 
                         balance='" . $transaction_amount . "', available_balance='" . $transaction_amount . "',"
-                    "',created=now() on duplicate key "
+                    . "',created=now() on duplicate key "
                     . " update available_balance = available_balance + $transaction_amount, "
                     . " balance = balance + $transaction_amount"
                 );
