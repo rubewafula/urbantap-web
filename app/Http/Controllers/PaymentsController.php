@@ -124,18 +124,10 @@ class PaymentsController extends Controller
                         . " left join user_balance ub on u.id =ub.user_id  "
                         . " where b.id = ?"), [$bill_ref_no]);
 
-                $provider = null;
-
                 if (!empty($user)) {
                     $user_id = $user[0]->id;
                     $running_balance = $user[0]->balance;
                     $email = $user[0]->email;
-
-                    $provider = DB::select(
-                        DB::raw("select * from user_balance ub "
-                            . " where ub.user_id = ?"), [$user[0]->service_provider_id]);
-
-                    $provider_running_balance = $provider[0]->balance;
 
                 } else {
                     // Log::error("Booking not found", $request->all());
@@ -244,7 +236,6 @@ class PaymentsController extends Controller
                 $booking_time = $bookingRs[0]->booking_time;
 
                 $running_balance = $running_balance - $transaction_amount;
-                $provider_running_balance = $provider_running_balance + $transaction_amount;
 
                 $transaction = new Transaction();
                 $transaction->user_id = $user_id;
