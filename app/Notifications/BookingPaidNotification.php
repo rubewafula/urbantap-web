@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Support\Arr;
 
 /**
  * Class BookingPaidNotification
@@ -45,11 +44,6 @@ class BookingPaidNotification extends BaseNotification
      */
     public function toArray($notifiable)
     {
-        return Arr::only($this->data, [
-            'status',
-            'booking_id',
-            'status_description',
-            'message'
-        ]);
+        return $this->data;
     }
 }
