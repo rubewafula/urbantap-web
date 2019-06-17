@@ -38,19 +38,10 @@ class BookingNotFoundListener
         $paymentData = $event->data;
 
         // Send sms or email
-        if ($user->email)
-            $this->send([
-                'email_address' => $user->email,
-                'subject'       => "Payment Received",
-                'mailable'      => BookingWasPaid::class,
-                'data'          => $paymentData
-            ], "");
-        else
-            $this->sms([
-                'recipients' => [$user->phone_no],
-                'message'    => "Your payment has been received. Visit " . config('app.name') . " to complete your booking" .
-                    config('app.name')
-            ]);
+        $this->sms([
+            'recipients' => [$user->phone_no],
+            'message'    => "Your payment of Kshs. {$paymentData['amount']} has been received. Visit " . config('app.name') . " to complete your booking."
+        ]);
 
         // Send notification
         $user->notify(new BookingPaidNotification(
