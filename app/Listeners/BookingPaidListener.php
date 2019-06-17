@@ -109,7 +109,7 @@ class BookingPaidListener
         else
             $this->sms([
                 'recipients' => [$booking->user->phone_no],
-                'message'    => "Payment of Ksh. {$amount} received for service {$booking->service->service_name}, reference {$ref}. Balance Ksh. {$booking->balance}. " . config('app.name')
+                'message'    => "Payment of Ksh. {$amount} received for service {$booking->service->service_name}, reference {$ref}. Balance Ksh. {$booking->balance}. " . config('app.url')
             ]);
     }
 
@@ -146,7 +146,7 @@ class BookingPaidListener
         if ($booking->provider->business_phone)
             $this->sms([
                 'recipients' => [$booking->provider->business_phone],
-                'message'    => "Payment of Ksh. {$paymentData['amount']} received for service {$booking->service->service_name}. " . config('app.name')
+                'message'    => "Payment of Ksh. {$paymentData['amount']} received for service {$booking->service->service_name}. " . config('app.url')
             ]);
     }
 }
