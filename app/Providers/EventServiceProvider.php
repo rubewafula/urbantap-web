@@ -21,13 +21,13 @@ class EventServiceProvider extends ServiceProvider
         'App\Events\BookingPaid'          => [
             'App\Listeners\BookingPaidListener',
         ],
-        'App\Events\BookingWasPaidEvent'          => [
-            'App\Listeners\BookingWasPaidListener',
+        'App\Events\BookingNotFoundEvent' => [
+            'App\Listeners\BookingNotFoundListener',
         ],
-        'App\Events\UserRegistered'          => [
+        'App\Events\UserRegistered'       => [
             'App\Listeners\UserRegisteredListener',
         ],
-         'App\Events\PasswordResetEvent'          => [
+        'App\Events\PasswordResetEvent'   => [
             'App\Listeners\PasswordResetListener',
         ],
     ];

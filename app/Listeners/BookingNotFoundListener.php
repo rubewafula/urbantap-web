@@ -2,7 +2,7 @@
 
 namespace App\Listeners;
 
-use App\Events\BookingWasPaidEvent;
+use App\Events\BookingNotFoundEvent;
 use App\Mail\BookingWasPaid;
 use App\Notifications\BookingPaidNotification;
 use App\Traits\SendEmailTrait;
@@ -12,7 +12,7 @@ use App\Traits\SendSMSTrait;
  * Class BookingWasPaidListener
  * @package App\Listeners
  */
-class BookingWasPaidListener
+class BookingNotFoundListener
 {
     use SendEmailTrait, SendSMSTrait;
 
@@ -29,10 +29,10 @@ class BookingWasPaidListener
     /**
      * Handle the event.
      *
-     * @param BookingWasPaidEvent $event
+     * @param BookingNotFoundEvent $event
      * @return void
      */
-    public function handle(BookingWasPaidEvent $event)
+    public function handle(BookingNotFoundEvent $event)
     {
         $user = $event->user;
         $paymentData = $event->data;

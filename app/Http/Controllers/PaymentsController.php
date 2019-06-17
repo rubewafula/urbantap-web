@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Booking;
 use App\Events\BookingPaid;
-use App\Events\BookingWasPaidEvent;
+use App\Events\BookingNotFoundEvent;
 use App\ServiceProvider;
 use App\Status;
 use App\Transaction;
@@ -274,7 +274,7 @@ class PaymentsController extends Controller
 
                 DB::insert("insert into user_balance set user_id='" . $user_id . "',
                      balance='" . $transaction_amount . "', available_balance='0',"
-                    . " transaction_id='" . $debit_transaction_id . "',created=now() on duplicate key "
+                    . " transaction_id='" . $debit_transaction->id . "',created=now() on duplicate key "
                     . " update balance = balance - $transaction_amount, "
                     ." available_balance = available_balance - $transaction_amount "
                 );
@@ -326,7 +326,7 @@ class PaymentsController extends Controller
                 );
             else
                 broadcast(
-                    new BookingWasPaidEvent(new User(['id' => $user_id]), $data)
+                    new BookingNotFoundEvent(new User(['id' => $user_id]), $data)
                 );
 
             $out = [
