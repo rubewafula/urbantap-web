@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Events\BookingPaid;
+use App\Transaction;
 use App\UserBalance;
 use App\Utilities\DBStatus;
 use Illuminate\Contracts\Queue\ShouldQueue;

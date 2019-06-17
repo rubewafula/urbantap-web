@@ -123,7 +123,7 @@ class BookingPaidListener
         $booking->provider->user->notify(
             new BookingPaidNotification([
                 'booking_id' => $booking->id,
-                'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}"
+                'message'    => "Payment received for service {$booking->service->service_name}. Ksh.{$paymentData['amount']}."
             ])
         );
         $this->send([
@@ -146,7 +146,7 @@ class BookingPaidListener
         if ($booking->provider->business_phone)
             $this->sms([
                 'recipients' => [$booking->provider->business_phone],
-                'message'    => "Payment received for service {$booking->service->service_name}. {$paymentData['amount']}" . config('app.name')
+                'message'    => "Payment of Ksh. {$paymentData['amount']} received for service {$booking->service->service_name}." . config('app.name')
             ]);
     }
 }
