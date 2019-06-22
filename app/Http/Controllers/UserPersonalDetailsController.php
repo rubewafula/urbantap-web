@@ -1,17 +1,17 @@
 <?php
 
 /**
-*Evance 
-*CRUD 
+ *Evance 
+ *CRUD 
 
-**/
+ **/
 
 namespace App\Http\Controllers;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Response; 
 use Illuminate\Support\Facades\Log;
-use Illuminate\Http\Request;	
+use Illuminate\Http\Request;    
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
 use App\Utilities\RawQuery;
@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\URL;
 class UserPersonalDetailsController extends Controller{
 
 
-	 /**
+    /**
      * Display the specified service providers.
      * curl -i -XGET -H "content-type:application/json" 
      * http://127.0.0.1:8000/api/user-personal-details/all
@@ -32,56 +32,35 @@ class UserPersonalDetailsController extends Controller{
      *
      * @return JSON 
      */
- 
-    public function get($user_id=null, Request $request)
+
+    public function get(Request $request)
     {
-        $req= $request->all();
-        $page = 1; 
-        $limit =null;
-        //die(print_r($req, 1));
-        if(array_key_exists('page', $req)){
-             $page = is_numeric($request['page']) ? $request['page'] : 1;
-        }
-        if(array_key_exists('limit', $req)){
-             $limit = is_numeric($request['limit']) ? $request['limit'] : null;
-        }
-       
-    	$validator = Validator::make(['id'=>$user_id],
-    		['user_id'=>'integer|exists:users,id|nullable']
-        );
-    	if($validator ->fails()){
-    		$out =[
-                'sucess'=> false, 
-               'message'=> $validator->messages()
+        $user = $request->user();
+        $user_id = $user->id;
 
-            ];
-
-            return Response::json($out,HTTPCodes::HTTP_PRECONDITION_FAILED);
-    	}
         $profile_url =  Utils::PROFILE_URL;
 
-        $filter= '';
-        if(!is_null($user_id)){
-            $filter = " and u.id = '" .$user_id . "' ";
-        }
-
-        $rawQuery = "SELECT d.id_number, d.date_of_birth, d.gender,  d.passport_photo, "
-            . " d.home_location, work_phone_no, "
+        $rawQuery = "SELECT d.id_number, d.date_of_birth, d.gender, "
+            . " d.home_location, work_phone_no, ub.balance, ub.available_balance, ub.bonus_balance, "
             . " concat(if(u.first_name is null, '', u.first_name), '', " 
             . " if(u.last_name is null, '', u.last_name)) as name, u.phone_no, u.email, "
             . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail "
-            . " FROM  user_personal_details  d inner join users u on u.id = d.user_id "
-            . " where 1=1  " . $filter ;
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as passport_photo, "
+            . " (select count(*) from bookings where user_id=u.id) as total_bookings "
+            . " FROM  users u left join user_personal_details d on u.id = d.user_id "
+            . " left join user_balance ub on ub.user_id=u.id"
+            . " where u.id = :uid " ;
 
-        $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
+        $results = RawQuery::query($rawQuery, ['uid'=>$user_id]);
+
+        $ud = array_get($results, 0, new \stdClass);
 
         //dd(HTTPCodes);
         Log::info('Extracted user personal details : '.var_export($results, 1));
         if(empty($results)){
-        	return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
+            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
         }
-        return Response::json($results, HTTPCodes::HTTP_OK);
+        return Response::json($ud, HTTPCodes::HTTP_OK);
 
     }
 
@@ -94,67 +73,78 @@ class UserPersonalDetailsController extends Controller{
      *  @param  Illuminate\Http\Request $request
      *  @return JSON
      *
-    ***/
+     ***/
     public function create(Request $request)
     {
 
         $profile_url =  Utils::PROFILE_URL;
+        $user = $request->user();
 
-    	$validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:users,id|inique:user_personal_details,user_id',
-            'id_number' => 'nullable|integer|unique:user_personal_details',
-            'date_of_birth' => 'nullable|date|date_format:Y-m-d',
-            'gender' =>'in:Male, Female, Un-disclosed|nullable',
-            'passport_photo' =>'string',
-            'home_location' =>'string|nullable',
-            'work_phone_no' =>'string|nullable'
-		]);
+        $validator = Validator::make($request->all(),[
+                'id_number'       => 'nullable|integer|unique:user_personal_details',
+                'date_of_birth'   => 'nullable|date|date_format:Y-m-d',
+                'gender'          => 'in:Male,Female,Un-disclosed|nullable',
+                'passport_photo'  => 'string',
+                'home_location'   => 'string|nullable',
+                'work_phone_no'   => 'string|nullable'
+        ]);
 
-		if ($validator->fails()) {
-			$out = [
-		        'success' => false,
-		        'message' => $validator->messages()
-		    ];
-			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-		}else{
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }else{
             $stored = $this->store($request);
-            if($stored !== false){
-
-            	DB::insert("insert ignore into user_personal_details (user_id, id_number, "
-                    . " date_of_birth, gender, passport_photo, home_location, "
-                    . " created_at, updated_at)  "
-                    . " values (:user_id, :id_number,  :date_of_birth, :gender, "
-                    . " :passport_photo, :home_location, now(),  now())  ", 
+            $user_id = $user->id;
+            Log::info("Save file on profile update ", compact('stored'));
+            if($stored !== FALSE ){
+                Log::info("Stored != False proceeding");
+                DB::insert("insert ignore into user_personal_details (user_id, id_number, "
+                        . " date_of_birth, gender, passport_photo, home_location, "
+                        . " created_at, updated_at)  "
+                        . " values (:user_id, :id_number,  :date_of_birth, :gender, "
+                        . " :passport_photo, :home_location, now(),  now())  ", 
                         [
-                            'user_id'=> $request->get('user_id'),
-                            'id_number'=>$request->get('id_number'),
-                            'date_of_birth'=>$request->get('date_of_birth'),
-                            'gender'=>$request->get('gender'),
-                            'home_location'=>$request->get('home_location'),
-                            'passport_photo'=>json_encode($stored) 
+                        'user_id'=> $user_id,
+                        'id_number'=>$request->get('id_number'),
+                        'date_of_birth'=>$request->get('date_of_birth'),
+                        'gender'=>$request->get('gender'),
+                        'home_location'=>$request->get('home_location'),
+                        'passport_photo'=>json_encode($stored) 
                         ]
-            	    );
+                        );
                 $id = DB::getPdo()->lastInsertId();
-                if($id == 0 ){
-                    $update = ['passport_photo' => json_encode($stored)];
+                Log::info("Found insert OK with ID $id");
+                if(!$id){
+                    $update = [];
+
+                    if($stored){ $update['passport_photo'] = json_encode($stored); }
+                    if($request->get('id_number')){ $update['id_number'] = $request->get('id_number'); }
+                    if($request->get('date_of_birth')){ $update['date_of_birth'] = $request->get('date_of_birth'); }
+                    if($request->get('gender')){ $update['gender'] = $request->get('gender'); }
+                    if($request->get('home_location')){ $update['home_location'] = $request->get('home_location'); }
+                    Log::info("Loaded update ", $update);
+
                     DB::table('user_personal_details')
-                        ->where('user_id', $request->get('user_id'))
+                        ->where('user_id', $user_id)
                         ->update($update); 
                 }
-    	    	$out = [
-    		        'success' => true,
-    		        'id'=>$id,
-                        'cover_photo' => $profile_url .'/'. $stored['media_url'],
-    		        'message' => 'Service provider Created'
-    		    ];
+                $out = [
+                    'success' => true,
+                    'id'=>$id,
+                    'cover_photo' => $profile_url .'/'. $stored['media_url'],
+                    'message' => 'Personal details updated'
+                ];
 
-        		return Response::json($out, HTTPCodes::HTTP_CREATED);
+                    return Response::json($out, HTTPCodes::HTTP_CREATED);
             }else{
                 return Response::json(
-                    ['success'=>false, 'message'=>'Failed to upload file'],
-                     HTTPCodes::HTTP_UNPROCESSABLE_ENTITY);
+                        ['success'=>false, 'message'=>'Failed to upload file'],
+                        HTTPCodes::HTTP_UNPROCESSABLE_ENTITY);
             }
-    	}
+        }
     }
 
 
@@ -164,9 +154,10 @@ class UserPersonalDetailsController extends Controller{
     public function transactions(Request $request){
 
         $validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:users,id',
-            'page' => 'integer|nullable'
+                'page' => 'integer|nullable'
         ]);
+        $user = $request->user();
+        $user_id= $user->id;
 
         if ($validator->fails()) {
             $out = [
@@ -177,9 +168,9 @@ class UserPersonalDetailsController extends Controller{
         }
 
         $transactions =  RawQuery::paginate( "select created_at, reference, "
-            . " description, if(transaction_type='CREDIT', amount,-amount) as amount, "
-            . " running_balance  from transactions where user_id =:uid ",
-            $page=$request->page, $limit=null , $params=['uid' => $request->user_id]);
+                . " description, if(transaction_type='CREDIT', amount,-amount) as amount, "
+                . " running_balance  from transactions where user_id =:uid ",
+                $page=$request->page, $limit=null , $params=['uid' => $user_id]);
 
         return Response::json($transactions, HTTPCodes::HTTP_OK);
 
@@ -194,29 +185,28 @@ class UserPersonalDetailsController extends Controller{
      *  @param  Illuminate\Http\Request $request
      *  @return JSON
      *
-    ***/
+     ***/
     public function update(Request $request)
     {
-    	
-        $profile_url =  Utils::PROFILE_URL;
 
-    	$validator = Validator::make($request->all(),[
-            'user_id' => 'required|exists:user_personal_details,user_id',
-            'id_number' => 'integer|unique:user_personal_details|nullable',
-            'date_of_birth' => 'date|date_format:Y-m-d|nullable',
-            'gender' =>'in:Male, Female, Un-disclosed|nullable',
-            'passport_photo' =>'string|nullable',
-            'home_location' =>'string|nullable',
-            'work_phone_no' =>'string|nullable'
+        $profile_url =  Utils::PROFILE_URL;
+        $user = $request->user();
+        $validator = Validator::make($request->all(),[
+                'id_number' => 'integer|unique:user_personal_details|nullable',
+                'date_of_birth' => 'date|date_format:Y-m-d|nullable',
+                'gender' =>'in:Male, Female, Un-disclosed|nullable',
+                'passport_photo' =>'string|nullable',
+                'home_location' =>'string|nullable',
+                'work_phone_no' =>'string|nullable'
         ]);
 
-		if ($validator->fails()) {
-			$out = [
-		        'success' => false,
-		        'message' => $validator->messages()
-		    ];
-			return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
-		}else{
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }else{
 
             $update = [];
             if(!empty($request->get('id_number')) ){
@@ -225,10 +215,10 @@ class UserPersonalDetailsController extends Controller{
             if(!empty($request->get('date_of_birth')) ){
                 $update['date_of_birth']  =$request->get('date_of_birth') ;
             }
-             if(!empty($request->get('gender')) ){
+            if(!empty($request->get('gender')) ){
                 $update['gender']  =$request->get('gender') ;
             }
-            
+
             if(!empty($request->get('home_location')) ){
                 $update['home_location']  =$request->get('home_location') ;
             }
@@ -240,20 +230,19 @@ class UserPersonalDetailsController extends Controller{
 
             if($stored !== false)
                 $update['passport_photo'] = json_encode($stored);
-           
 
-	    	DB::table('user_personal_details')
-                ->where('user_id', $request->get('user_id'))
+
+            DB::table('user_personal_details')
+                ->where('user_id', $user_id)
                 ->update($update);
 
-	    	$out = [
-		        'success' => true,
-		        'user_id'=>$request->get('user_id'),
-		        'message' => 'Service Provider updated OK'
-		    ];
+            $out = [
+                'success' => true,
+                'message' => 'Service Provider updated OK'
+            ];
 
-    		return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
-    	}
+            return Response::json($out, HTTPCodes::HTTP_ACCEPTED);
+        }
     }
 
     /**

@@ -17,13 +17,13 @@ class Utils
 
     /** image append urls **/
     #TODO: This would work well from .env then utils
-    const IMAGE_URL = 'https://urbantap.co.ke:9173/storage/static/image/avatar/';
-    const SERVICE_PROVIDERS_URL = 'https://urbantap.co.ke:9173/storage/static/image/service-providers/';
-    const ICONS_URL = 'https://urbantap.co.ke:9173/storage/static/image/icons/';
-    const PROFILE_URL = 'https://urbantap.co.ke:9173/storage/static/image/profiles/';
-    const PROVIDER_SERVICES_URL = 'https://urbantap.co.ke:9173/storage/static/image/provider-services/';
-    const PROVIDER_PORTFOLIOS_URL = 'https://urbantap.co.ke:9173/storage/static/image/portfolios/';
-    const SERVICE_IMAGE_URL = 'https://urbantap.co.ke:9173/storage/static/image/services/';
+    const IMAGE_URL = 'https://urbantap.co.ke:9173/storage/static/image/avatar';
+    const SERVICE_PROVIDERS_URL = 'https://urbantap.co.ke:9173/storage/static/image/service-providers';
+    const ICONS_URL = 'https://urbantap.co.ke:9173/storage/static/image/icons';
+    const PROFILE_URL = 'https://urbantap.co.ke:9173/storage/static/image/profiles';
+    const PROVIDER_SERVICES_URL = 'https://urbantap.co.ke:9173/storage/static/image/provider-services';
+    const PROVIDER_PORTFOLIOS_URL = 'https://urbantap.co.ke:9173/storage/static/image/portfolios';
+    const SERVICE_IMAGE_URL = 'https://urbantap.co.ke:9173/storage/static/image/services';
 
 
     static function getType($ext)
@@ -55,7 +55,7 @@ class Utils
         $file = $request->file($file_name);
         if (is_null($file)) {
             /** No file uploaded accept and proceeed **/
-            return FALSE;
+            return NULL;
         }
         $max_size = (int)ini_get('upload_max_filesize') * 1000;
         $all_ext = implode(',', Utils::allExtensions());

@@ -264,24 +264,24 @@ class ServiceProvidersController extends Controller
 
         $results['portfolios'] = $pflios;
 
-
-        $reviews_sql = "SELECT date_format(r.created_at,'%d %M %Y') created_at,"
+        
+        $reviews_sql = "SELECT r.created_at, "
             . " r.provider_service_id, r.rating, r.review, "
             . " r.status_id, concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as reviewer, "
             . " u.email, s.service_name, "
-            . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " concat( '$profile_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail "
             . " FROM  reviews r  inner join users u on u.id=r.user_id "
             . " inner join user_personal_details d on u.id = d.user_id "
             . " inner join provider_services ps on ps.id = r.provider_service_id "
             . " inner join services s on s.id = ps.service_id where "
             . " r.service_provider_id = '" . $service_provider_id . "' "
-            . " order by r.id desc limit 5";
+            . " order by r.id desc";
 
         //die($reviews_sql);
 
-        $results['reviews'] = RawQuery::query($reviews_sql);
+        $results['reviews'] = RawQuery::paginate($reviews_sql, $page = 1, $limit = 3);
 
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : ' . var_export($results, 1));

@@ -80,7 +80,7 @@ class HomePageController extends Controller
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
             . " from service_providers sp left  join user_personal_details  d using(user_id)  "
-            . " order by sp.created_at desc, overall_likes desc limit 4 " ;
+            . " order by sp.created_at desc, overall_likes desc limit 10 " ;
 
         //echo print_r($params, 1);
         $provider_data =  RawQuery::query( $provideQ);

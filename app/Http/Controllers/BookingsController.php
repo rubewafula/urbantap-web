@@ -46,9 +46,10 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
-        $sp_providers_url = URL::to('/storage/static/image/service-providers/');
 
-        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
+        $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
+
+        $query = "select b.created_at, b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -120,8 +121,9 @@ class BookingsController extends Controller
             $page = 1;
         }
 
-        $sp_providers_url = URL::to('/storage/static/image/service-providers/');
-        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
+        $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
+
+        $query = "select b.created_at, b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as client, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
@@ -183,7 +185,7 @@ class BookingsController extends Controller
      * curl -i -XGET -H "content-type:application/json"
      * 'http://127.0.0.1:8000/api/bookings/details/3'
      **/
-    public function getBookingDetails($id)
+    public function getBookingDetails($id, Request $request)
     {
 
         $validator = Validator::make(['id' => $id],
@@ -196,51 +198,57 @@ class BookingsController extends Controller
             ];
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
+        
+        $user = $request->user();
 
-        $sp_providers_url = URL::to('/storage/static/image/service-providers/');
+        $image_url = Utils::IMAGE_URL;
+        $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
+        $icon_url = Utils::ICONS_URL;
+        $profile_url = Utils::PROFILE_URL;
+        $p_services_url = Utils::PROVIDER_PORTFOLIOS_URL;
+        $service_image_url = Utils::SERVICE_IMAGE_URL;
 
-        $query = "select b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
+        $query = "select b.created_at, b.id, b.service_provider_id, b.user_id, b.amount, b.balance, "
             . " concat(if(u.first_name is null, '', u.first_name), ' ', "
-            . " if(u.last_name is null, '', u.last_name)) as client, "
+            . " if(u.last_name is null, '', u.last_name)) as client,  r.rating, "
+            . " r.created_at as review_date, r.review, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
-            . " b.booking_duration, b.expiry_time, s.status_code, "
+            . " b.booking_duration, b.expiry_time, s.status_code, b.status_id as status_id, "
             . " b.booking_type, b.location, sp.service_provider_name, "
-            . " sp.business_description, sp.business_phone, "
+            . " sp.business_description, sp.business_phone, ps.id as provider_service_id, "
             . " s.description as status_description, ps.description as "
             . " provider_service_description, ps.cost, ps.duration, "
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " from bookings b inner join statuses s on "
             . " b.status_id = s.id inner join service_providers sp "
-            . " on sp.id=b.service_provider_id "
-            . " inner join provider_services ps on "
+            . " on sp.id=b.service_provider_id inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
-            . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id where b.id = '$id'";
+            . " on ss.id=ps.service_id inner join users u on u.id = b.user_id "
+            . " left join reviews r on r.user_id = u.id and b.id = r.booking_id "
+            . " where b.id = :bid and (u.id = :uid or sp.user_id = :suid)";
 
 
-        $results = RawQuery::paginate($query);
+        $results = RawQuery::query($query, ['bid'=>$id, 'uid'=>$user->id, 'suid'=>$user->id]);
+        if(empty($results)){
+            $out = [
+                'success' => false,
+                'message' => ['booking_id' => 'Could not find booking']
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
 
         $booking_trail_sql = "select bt.created_at, bt.description, s.description "
             . " as status, s.status_code as status_code from "
             . " booking_trails bt inner join statuses s on s.id = bt.status_id "
             . " where bt.booking_id = '$id' order by bt.created_at desc";
 
-        $booking_trails = RawQuery::paginate($booking_trail_sql);
+        $booking_trails = RawQuery::query($booking_trail_sql);
 
-        $payment_sql = " select p.id, p.reference, p.date_received, p.payment_method, "
-            . " p.paid_by_name, p.paid_by_msisdn as msisdn, p.amount, p.received_payment, "
-            . " p.balance, p.status_id, p.created_at, s.description as status, "
-            . " s.status_code from payments p inner join "
-            . " statuses s on p.status_id = s.id where p.booking_id = '$id' "
-            . " order by p.created_at desc ";
-
-        $payments = RawQuery::paginate($payment_sql);
-
+        $booking = array_get($results,0, new \stdClass);
         $out = array(
-            'booking'        => empty($results) ? [] : $results['result'][0],
-            'booking_trails' => empty($booking_trails) ? [] : $booking_trails['result'],
-            'payments'       => empty($payments) ? [] : $payments['result']
+            'booking'        => $booking,
+            'booking_trails' => $booking_trails,
 
         );
         return Response::json($out, HTTPCodes::HTTP_OK);
@@ -276,21 +284,28 @@ class BookingsController extends Controller
         }
         
         $filter_col = $client == false ? " sp.user_id " : " u.id ";
+        
+        $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
 
-        $query = "select b.created_at, b.id as booking_id, b.service_provider_id, "
+        $query = "select ps.id as provider_service_id, b.created_at,  "
+            . " b.id as booking_id, b.service_provider_id, r.rating, "
+            . " r.created_at as review_date, r.review, "
             . " b.user_id, u.first_name as client, b.amount, b.balance, "
             . " u.email,u.phone_no,  ss.service_name,  b.booking_time, "
             . " b.booking_duration, b.expiry_time, s.status_code, s.id as status_id, "
             . " b.booking_type, b.location, sp.service_provider_name, "
             . " s.description as status_description, ps.description as "
-            . " provider_service_description, ps.cost, ps.duration "
+            . " provider_service_description, ps.cost, ps.duration, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " from bookings b inner join statuses s on "
             . " b.status_id = s.id inner join service_providers sp "
             . " on sp.id=b.service_provider_id "
             . " inner join provider_services ps on "
             . " ps.id = b.provider_service_id inner join services ss "
             . " on ss.id=ps.service_id inner join users u on "
-            . " u.id = b.user_id  where  $filter_col = '" . $user_id . "' order by b.id desc";
+            . " u.id = b.user_id left join reviews r on r.user_id = u.id and b.id = r.booking_id "
+            . " where  $filter_col = '" . $user_id . "' order by b.id desc";
 
 
         $results = RawQuery::paginate($query, $page = $page);

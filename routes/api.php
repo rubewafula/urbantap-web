@@ -177,11 +177,11 @@ Route::group([
     'middleware' => 'auth:api'
 ], function () {
     Route::get('all', 'UserPersonalDetailsController@get');
-    Route::get('get/{id}', 'UserPersonalDetailsController@get');
 
     Route::group([
         'middleware' => 'auth:api'
         ], function () {
+        Route::get('get', 'UserPersonalDetailsController@get');
         Route::get('transactions', 'UserPersonalDetailsController@transactions');
         Route::post('create', 'UserPersonalDetailsController@create');
         Route::post('update', 'UserPersonalDetailsController@update');
@@ -222,10 +222,10 @@ Route::group([
     'prefix' => 'service-providers/reviews'
 ], function () {
     Route::get('all', 'ServiceProviderReviewsController@get');
-    Route::get('get/{id}', 'ServiceProviderReviewsController@get');
     Route::group([
         'middleware' => 'auth:api'
         ], function () {
+        Route::get('get', 'ServiceProviderReviewsController@getUserReviews');
         Route::post('create', 'ServiceProviderReviewsController@create');
         Route::delete('del', 'ServiceProviderReviewsController@delete');
      });
