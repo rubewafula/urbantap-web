@@ -134,8 +134,8 @@ Route::group([
     'prefix' => 'provider-services'
 ], function () {
     Route::get('all', 'ProviderServicesController@get');
-    Route::get('service/{id}', 'ProviderServicesController@provider_service_detail');
     Route::post('all', 'ProviderServicesController@get');
+    Route::get('service/{id}', 'ProviderServicesController@provider_service_detail');
     Route::get('get/{id}', 'ProviderServicesController@get');
 
      Route::group([

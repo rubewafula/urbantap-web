@@ -117,7 +117,8 @@ class ProviderServicesController extends Controller
         $validator = Validator::make($request->all(),[
             'service' => 'nullable|string',
             'service_time' =>'nullable|date_format:Y-m-d H:i',
-            'location' =>'nullable|string'
+            'location' =>'nullable|string',
+            'category_id' => 'nullable|exists:categories,id'
         ]);
 
         if ($validator->fails()) {
@@ -128,37 +129,45 @@ class ProviderServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         
-        $request->service  = $request->service ?: "";
-        $request->service_time = $request->service_time ?: "";
-        $request->location = $request->location ?: "" ;
-
-        $filter = $service_filter = '';
-        if(!is_null($id)){
-            $filter = " and sp.id = '" .$id . "' ";
-        }else {
-            $service_filter = " and s.service_name like  :service ";
-            $filter  = " and (work_location like :location or work_location_city like :location2) group by sp.id ";
-        }
-
         $image_url          = Utils::IMAGE_URL;
         $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
         $icon_url           = Utils::ICONS_URL;
         $profile_url        = Utils::PROFILE_URL;
         $p_services_url     = Utils::PROVIDER_PORTFOLIOS_URL;
-        $service_image_url  =  Utils::SERVICE_IMAGE_URL;
-        
-         $service_params = [];
-         if($service_filter){
-             $service_params = [ 'service'=>'%'.$request->service ?: "" .'%',];
-         }
-         $date_params = ['service_date'=>$request->service_time ?: "" ,
-          'service_date2'=>$request->service_time ?: "" ,];
+        $service_image_url  = Utils::SERVICE_IMAGE_URL;
 
-         $location_params =[
-             'location'=>'%'.$request->location ?: "" .'%',
-             'location2'=>'%'.$request->location ?: "" .'%'
-         ];
+        $request->service  = $request->service ?: "";
+        $request->service_time = $request->service_time ?: "";
+        $request->location = $request->location ?: "" ;
+        $request->category_id = $request->category_id ?: "" ;
 
+        $filter = $service_filter = '';
+        $service_params = [];
+        if($request->service){
+            $service_params = [ 'service'=>'%'.$request->service ?: "" .'%',];
+            $service_filter = " and s.service_name like  :service ";
+        }
+        #$date_params = ['service_date'=>$request->service_time ?: "" ,
+        #  'service_date2'=>$request->service_time ?: "" ,];
+        $data_params = [];
+        if($request->location){
+            $data_params['location']  = '%'.$request->location ?: "" .'%';
+            $data_params['location2'] = '%'.$request->location ?: "" .'%';
+        }
+
+        if($request->category_id){$data_params['category'] = $request->category_id;}
+
+        if(!is_null($id)){
+            $filter = " and sp.id = '" .$id . "' ";
+        } else {
+            if($request->location){
+                $filter  = " and (work_location like :location or work_location_city like :location2)";
+            }
+            if($request->category_id){
+               $filter = " and c.id=:category ". $filter;
+            }
+        }
+        $data_params = empty($data_params) ? null : $data_params;
 
         $provideQ = "select sp.id as service_provider_id, sp.id as id, "
             . " sp.type, sp.service_provider_name, "
@@ -172,12 +181,18 @@ class ProviderServicesController extends Controller
             . " d.home_location, d.gender, work_phone_no, sp.business_description,  "
             . " date_format(sp.created_at, '%b, %Y') as since, total_requests, "  
             . " (select count(*) from reviews where service_provider_id = sp.id) as reviews "
-            . " from service_providers sp left  join user_personal_details  d using(user_id)  "
-            . " where 1=1 ". $filter ;
+            . " from service_providers sp inner join provider_services ps on "
+            . " ps.service_provider_id = sp.id inner join services ss on ps.service_id = ss.id "
+            . " inner join categories c on ss.category_id = c.id "
+            . " left  join user_personal_details  d using(user_id)  "
+            . " where 1=1 ". $filter . " group by sp.id" ;
 
         //echo print_r($params, 1);
-        $provider_data =  RawQuery::paginate( $provideQ, $page = null, $limit = null, 
-            $params=$location_params);
+        $page = $request->page ?: 1;
+        $limit = $request->limit?:null;
+
+        $provider_data =  RawQuery::paginate( $provideQ, $page = $page, $limit = $limit, 
+            $params=$data_params);
 
         $results = [];
         foreach ($provider_data['result'] as $key => $provider) {
@@ -200,10 +215,10 @@ class ProviderServicesController extends Controller
 
         Log::info('Extracted statuses results : ' . var_export($results, 1));
 
-        if(empty($results)){
-            return Response::json([], HTTPCodes::HTTP_OK );
+        if(!empty($results)){
+            $provider_data['result'] = $results;
         }
-        return Response::json($results, HTTPCodes::HTTP_OK);
+        return Response::json($provider_data, HTTPCodes::HTTP_OK);
 
     }
 
