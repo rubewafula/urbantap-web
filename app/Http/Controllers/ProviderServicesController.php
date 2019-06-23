@@ -116,7 +116,7 @@ class ProviderServicesController extends Controller
 
         $validator = Validator::make($request->all(),[
             'service' => 'nullable|string',
-            'service_time' =>'nullable|date_format:Y-m-d H:i',
+            'service_time' =>'nullable|date_format:Y-m-d',
             'location' =>'nullable|string',
             'category_id' => 'nullable|exists:categories,id'
         ]);
@@ -144,8 +144,8 @@ class ProviderServicesController extends Controller
         $filter = $service_filter = '';
         $service_params = [];
         if($request->service){
-            $service_params = [ 'service'=>'%'.$request->service ?: "" .'%',];
-            $service_filter = " and s.service_name like  :service ";
+            $service_params = [ 'service'=>'%'.$request->service . '%',];
+            $service_filter = " and ss.service_name like  :service ";
         }
         #$date_params = ['service_date'=>$request->service_time ?: "" ,
         #  'service_date2'=>$request->service_time ?: "" ,];
@@ -167,6 +167,8 @@ class ProviderServicesController extends Controller
                $filter = " and c.id=:category ". $filter;
             }
         }
+        $filter .= $service_filter;
+        $data_params = array_merge($data_params, $service_params);
         $data_params = empty($data_params) ? null : $data_params;
 
         $provideQ = "select sp.id as service_provider_id, sp.id as id, "
@@ -197,12 +199,12 @@ class ProviderServicesController extends Controller
         $results = [];
         foreach ($provider_data['result'] as $key => $provider) {
 
-            $serviceQ = "select ps.id as provider_service_id, s.id as service_id, "
-                . " s.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
+            $serviceQ = "select ps.id as provider_service_id, ss.id as service_id, "
+                . " ss.service_name, ps.cost as service_cost, ps.description, ps.duration, ps.created_at,"
                 . " concat( '$service_image_url' , '/', if(ps.media_url is null, '2.jpg', "
                 . " JSON_UNQUOTE(json_extract(ps.media_url, '$.media_url')))) as service_photo, "
-                . " ps.updated_at from provider_services ps inner join services s "
-                . " on s.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
+                . " ps.updated_at from provider_services ps inner join services ss "
+                . " on ss.id = ps.service_id  where  ps.service_provider_id = :spid ". $service_filter ;
 
             Log::info("Provider data form service fetch " . $provider->service_provider_id);
             $service_params['spid'] = $provider->service_provider_id;

@@ -24,7 +24,7 @@ class RawQuery{
             $cols = preg_replace('/(asc|desc)/i', '', array_get($matches, 4, '*'));
             $cols = "distinct $cols";
         }else{
-            $regex = "/(select)(.*)( from .*)$";
+            $regex = "/(select)(.*)( from .*)$/";
             preg_match($regex,  $rawQuery, $matches);
             $cols = '*';
         }

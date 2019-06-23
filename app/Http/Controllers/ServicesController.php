@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;    
 use App\Utilities\HTTPCodes;
 use App\Utilities\DBStatus;
+use App\Utilities\RawQuery;
 use Illuminate\Support\Facades\Validator;
 
 class ServicesController extends Controller
@@ -24,11 +25,16 @@ class ServicesController extends Controller
      */
  
 
-    public function get($category_id=null)
+    public function get($category_id=null, Request $request)
     {
-        
-        $validator = Validator::make(['category_id'=>$category_id],[
+        if(is_null($category_id)){
+            $category_id = $request->category_id;
+        }
+        $service_name = $request->get('query');
+
+        $validator = Validator::make(['category_id'=>$category_id, 'service_name'=>$service_name],[
             'category_id' => 'integer|exists:categories,id|nullable',
+            'service_name' => 'string|min:3|max:45|nullable'
         ]);
         if ($validator->fails()) {
             $out = [
@@ -38,16 +44,29 @@ class ServicesController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
         $filter = '';
+        $params = ['status' => DBStatus::SERVICE_ACTIVE];
+
         if(!is_null($category_id)){
-            $filter = " and category_id = '" .$category_id . "' ";
+            $filter .= " and category_id = :category_id ";
+            $params['category_id'] = $category_id;
+        }
+        if($service_name){
+            $filter .= $category_id 
+                ?  " and service_name like :sname " 
+                : " and (service_name like :sname or c.category_name like :cname ) ";
+            $params['sname'] = '%' . $service_name . '%';
+            if(!$category_id) 
+                $params['cname'] = '%' . $service_name . '%';
         }
 
-        $query = "SELECT s.id, s.category_id, c.category_name, s.service_name FROM services s inner join categories c on c.id = s.category_id where s.status_id not in (" . DBStatus::TRANSACTION_DELETED . ") " . $filter . " limit 100";
+        $query = "SELECT s.id, s.category_id, c.category_name, s.service_name "
+            . " FROM services s inner join categories c on c.id = s.category_id "
+            . " where s.status_id = :status" 
+            . $filter . " limit 100";
+
         Log::info('Query : ' . $query);
 
-        $results = DB::select( 
-            DB::raw($query) 
-        );
+        $results = RawQuery::query($query, $params);
         //dd(HTTPCodes);
         Log::info('Extracted service services results : ' . var_export($results, 1));
 
