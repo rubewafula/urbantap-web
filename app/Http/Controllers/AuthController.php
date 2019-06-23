@@ -10,6 +10,8 @@ use App\ServiceProvider;
 use App\User;
 use App\UserPersonalDetail;
 use App\Utilities\DBStatus;
+use App\Utilities\Utils;
+use App\Utilities\RawQuery;
 use App\Utilities\HTTPCodes;
 use Carbon\Carbon;
 use Exception;
@@ -395,7 +397,31 @@ class AuthController extends Controller
     }
 
 
+    public function getServiceProviderDetails($user_id){
 
+        $sp_providers_url   = Utils::SERVICE_PROVIDERS_URL;
+        $profile_url        = Utils::PROFILE_URL;
+
+        $rawQuery = "SELECT sp.id,  "
+            . " (select count(*) from reviews where service_provider_id=sp.id) as reviews, "
+            . " sp.service_provider_name as business_name,  sp.business_description,"
+            . "  sp.work_location as location_name, sp.work_lat, sp.work_lng, "
+            . " sp.overall_rating, sp.overall_likes, sp.overall_dislikes, sp.created_at, "
+            . " sp.updated_at,  d.id_number, d.date_of_birth, d.gender, d.passport_photo, "
+            . " d.home_location, business_phone, business_email, key_words as keywords, "
+            . " address_data as address_data, facebook as facebook_page, twitter, "
+            . " instagram, total_requests, date_format(sp.created_at, '%b, %Y') as since, "
+            . " concat('$profile_url' , '/', (if(d.passport_photo is null, 'avatar-bg-1.png', "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url') ))) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
+            . " FROM  service_providers sp left join "
+            . " user_personal_details  d using(user_id) where sp.user_id = :uid";
+
+        return array_get(RawQuery::query($rawQuery, ['uid' => $user_id]), 0, null);
+  
+    
+    }
 
 
     /**
@@ -447,7 +473,7 @@ class AuthController extends Controller
         }
 
         $user = Auth::user();
-        $user->load('serviceProvider');
+        $user->service_provider = $this->getServiceProviderDetails($user->id);
 
         $tokenResult = $user->createToken('Personal Access Token');
         $token = $tokenResult->token;

@@ -226,6 +226,7 @@ Route::group([
         'middleware' => 'auth:api'
         ], function () {
         Route::get('get', 'ServiceProviderReviewsController@getUserReviews');
+        Route::get('provider', 'ServiceProviderReviewsController@getProviderReviews');
         Route::post('create', 'ServiceProviderReviewsController@create');
         Route::delete('del', 'ServiceProviderReviewsController@delete');
      });

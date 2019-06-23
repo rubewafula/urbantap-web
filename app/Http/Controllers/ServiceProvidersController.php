@@ -381,13 +381,9 @@ class ServiceProvidersController extends Controller
      * @return JSON
      */
 
-    public function get($user_id = null, Request $request)
+    public function get($service_provider_id=null, Request $request)
     {
         $req = $request->all();
-        $page = 1;
-        $limit = null;
-        $sort = null;
-
 
         $image_url = Utils::IMAGE_URL;
         $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
@@ -397,21 +393,13 @@ class ServiceProvidersController extends Controller
 
 
         $sort_by = " order by sp.overall_likes desc, sp.overall_rating desc ";
-        //die(print_r($req, 1));
-        if (array_key_exists('page', $req)) {
-            $page = is_numeric($request['page']) ? $request['page'] : 1;
-        }
-        if (array_key_exists('limit', $req)) {
-            $limit = is_numeric($request['limit']) ? $request['limit'] : null;
-        }
 
-        if (array_key_exists('sort', $req)) {
-            $sort = $request['sort'];
-        }
-
-        $validator = Validator::make(['id' => $user_id, 'sort' => $sort],
-            ['user_id' => 'integer|exists:users,id|nullable',
-             'sort'    => 'in:since,overall_likes, overall_ratings,total_requests|nullable']
+        $validator = Validator::make($request->all(),
+            [
+             'service_provider_id' => 'integer|exists:service_providers,id|nullable',
+             'page' => 'nullable|integer',
+             'limit' => 'nullable|integer',
+            ]
         );
         if ($validator->fails()) {
             $out = [
@@ -423,13 +411,12 @@ class ServiceProvidersController extends Controller
             return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
         }
 
-        $filter = '';
-        if (!is_null($user_id)) {
-            $filter = " and sp.user_id = '" . $user_id . "' ";
-        }
+        $page = $request->page;
+        $limit = $request->limit;
 
-        if (!is_null($sort)) {
-            $sort_by = " order by $sort desc ";
+        $filter = '';
+        if (!is_null($service_provider_id)) {
+            $filter = " and sp.id = :spid ";
         }
 
 
@@ -450,13 +437,14 @@ class ServiceProvidersController extends Controller
             . " user_personal_details  d using(user_id) where 1=1 " . $filter . " " . $sort_by;
 
         //die($rawQuery);
-        $results = RawQuery::paginate($rawQuery, $page = $page, $limit = $limit);
-
+        if(is_null($service_provider_id)){
+            $results = RawQuery::paginate($rawQuery, $page = $page, $limit = $limit);
+        }else{
+            $results = array_get(RawQuery::query($rawQuery, ['spid' => $service_provider_id]), 0, new \stdClass);
+        }
         //dd(HTTPCodes);
         Log::info('Extracted service service_providers results : ' . var_export($results, 1));
-        if (empty($results)) {
-            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT);
-        }
+
         return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
@@ -632,6 +620,33 @@ class ServiceProvidersController extends Controller
         }
     }
 
+
+    public function like(){
+        
+        $user = $request->user();
+        $user_id = $user->id;
+        $validator = Validator::make($request->all(), [
+            'service_provider_id' => 'required|exists:service_providers,id']);
+
+        if ($validator->fails()) {
+            $out = [
+                'success' => false,
+                'message' => $validator->messages()
+            ];
+            return Response::json($out, HTTPCodes::HTTP_PRECONDITION_FAILED);
+        }
+        $sp = ServiceProviders::where(['id' => $request->service_provider_id])->first();
+        $sp->overrall_like = $sp->overrall_like + 1;
+        $sp->save();
+        $out = [
+                'success' => true,
+                'user_id' => $user->id,
+                'message' => 'Service Provider liked'
+            ];
+        return Response::json($out, HTTPCodes::HTTP_OK);
+
+    }
+
     /**
      *  curl -i -XPUT -H "content-type:application/json"
      * --data '{"id":1, "provider_name":"Golden Ladies Salon",
@@ -644,7 +659,6 @@ class ServiceProvidersController extends Controller
     public function update(Request $request)
     {
 
-        $request->replace($request->all());
         $user = $request->user();
         $validator = Validator::make($request->all(), [
             'business_name'        => 'unique:service_providers,service_provider_name',
@@ -825,14 +839,20 @@ class ServiceProvidersController extends Controller
             . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
             . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo, "
             . " d.home_location, work_phone_no, sp.business_description  from service_providers sp  inner  join "
-            . " user_personal_details  d using(user_id)  inner join operating_hours op on sp.id = op.service_provider_id inner join provider_services ps on ps.service_provider_id = sp.id inner join services s on s.id = ps.service_id where sp.status_id=1 and op.service_day = date_format(:service_date, '%W') and time(:service_date2) between time_from and time_to and s.service_name like  :service and (work_location like :location or work_location_city like :location2)",
+            . " user_personal_details  d using(user_id)  inner join operating_hours "
+            . " op on sp.id = op.service_provider_id inner join provider_services ps " 
+            . " on ps.service_provider_id = sp.id inner join services s on "
+            . " s.id = ps.service_id where sp.status_id=1 and op.service_day = " 
+            . " date_format(:service_date, '%W') and time(:service_date2) between "
+            . " time_from and time_to and s.service_name like  :service and "
+            . " (work_location like :location or work_location_city like :location2)",
             $page = null, $limit = null, $params = [
-            'service_date'  => $request->service_time,
-            'service_date2' => $request->service_time,
-            'service'       => '%' . $request->service . '%',
-            'location'      => '%' . $request->location . '%',
-            'location2'     => '%' . $request->location . '%'
-        ]);
+                'service_date'  => $request->service_time,
+                'service_date2' => $request->service_time,
+                'service'       => '%' . $request->service . '%',
+                'location'      => '%' . $request->location . '%',
+                'location2'     => '%' . $request->location . '%'
+            ]);
 
         return Response::json($service_providers, HTTPCodes::HTTP_OK);
 

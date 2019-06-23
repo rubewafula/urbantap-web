@@ -19,18 +19,20 @@ class RawQuery{
        
         #TODO: Replace this with a fucking good single regex;
         if(preg_match('/group\s+by/', $rawQuery)){
-            $regex = "/(select)(.*)(from.*)\s+?group\s+by(.*)$/";
+            $regex = "/(select)(.*)(from.*)\s+?group\s+by(.*)$/i";
             preg_match($regex,  $rawQuery, $matches);
             $cols = preg_replace('/(asc|desc)/i', '', array_get($matches, 4, '*'));
             $cols = "distinct $cols";
         }else{
-            $regex = "/(select)(.*)( from .*)$/";
+            $regex = "/(select)(.*)(from .*)$/i";
             preg_match($regex,  $rawQuery, $matches);
             $cols = '*';
         }
         $from = array_get($matches, 3);
         $countQuery = "select count($cols) as c $from  ";
 
+        #echo $rawQuery ;
+        #die;
         #DB::enableQueryLog();
 
         if(!is_null($params)){
