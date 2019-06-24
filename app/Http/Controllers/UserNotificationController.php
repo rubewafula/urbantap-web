@@ -18,7 +18,12 @@ class UserNotificationController extends Controller
      */
     public function index(Request $request)
     {
-        return $request->user()->notifications()->latest()->paginate();
+        $user = $request->user();
+        $resp = $user->notifications()->latest()->paginate();
+        $resp->meta([
+            'unread' => $user->unreadNotifications()->count()
+        ]);
+        return $resp;
     }
 
     /**
