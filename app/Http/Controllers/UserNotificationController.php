@@ -31,6 +31,6 @@ class UserNotificationController extends Controller
      */
     public function update(Request $request)
     {
-        $request->user()->unreadNotifications()->updated(['read_at' => new Carbon()]);
+        $request->user()->unreadNotifications()->update(['read_at' => new Carbon()]);
     }
 }

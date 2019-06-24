@@ -425,7 +425,7 @@ class BookingsController extends Controller
 
         if ($booking_allowed) {
             $booking_cost_sql = "select coalesce(ps.cost, sc.base_cost) as cost from service_costs sc left join provider_services ps "
-                . " on ps.service_id =sc.service_id  where ps.service_id =:ps_id";
+                . " on ps.service_id =sc.service_id  where ps.id =:ps_id";
 
             $cresult = RawQuery::query($booking_cost_sql, ['ps_id' => $request['service_id']]);
 
