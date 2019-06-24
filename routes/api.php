@@ -217,6 +217,16 @@ Route::group([
      });
 });
 
+Route::group([
+    'prefix' => 'users/reviews'
+], function () {
+    Route::group([
+        'middleware' => 'auth:api'
+        ], function () {
+        Route::get('get', 'ServiceProviderReviewsController@getUserReviews');
+     });
+});
+
 
 Route::group([
     'prefix' => 'service-providers/reviews'
@@ -225,7 +235,6 @@ Route::group([
     Route::group([
         'middleware' => 'auth:api'
         ], function () {
-        Route::get('get', 'ServiceProviderReviewsController@getUserReviews');
         Route::get('provider', 'ServiceProviderReviewsController@getProviderReviews');
         Route::post('create', 'ServiceProviderReviewsController@create');
         Route::delete('del', 'ServiceProviderReviewsController@delete');

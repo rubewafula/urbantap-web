@@ -33,26 +33,25 @@ class ServiceProviderReviewsController extends Controller{
     {
         $user = $request->user();
         $user_id = $user->id;
-        $page = 1; 
-        $limit =null;
-        if(array_key_exists('page', $req)){
-            $page = is_numeric($request['page']) ? $request['page'] : 1;
-        }
-        if(array_key_exists('limit', $req)){
-            $limit = is_numeric($request['limit']) ? $request['limit'] : null;
-        }
-        $image_url = Utils::PROFILE_URL;
+        $page = $request->page;
+        $limit = $request->limit;
 
-        $rawQuery = "SELECT r.created_at, "
-            . " r.provider_service_id, r.rating, r.review, "
+        $image_url = Utils::PROFILE_URL;
+        $sp_providers_url = Utils::SERVICE_PROVIDERS_URL;
+
+        $rawQuery = "SELECT r.created_at, ps.description as service_description, "
+            . " r.provider_service_id, r.rating, r.review, sp.service_provider_name, "
             . " r.status_id, concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as reviewer, "
-            . " u.email, s.service_name, "
+            . " u.email, s.service_name, sp.id as service_provider_id, u.id as user_id, "
             . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
-            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail "
+            . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail, "
+            . " concat( '$sp_providers_url' , '/', if(sp.cover_photo is null, 'img-03.jpg', "
+            . " JSON_UNQUOTE(json_extract(sp.cover_photo, '$.media_url')))) as cover_photo "
             . " FROM  reviews r  inner join users u on u.id=r.user_id "
             . " inner join user_personal_details d on u.id = d.user_id "
             . " inner join provider_services ps on ps.id = r.provider_service_id "
+            . " inner join service_providers sp on sp.id = ps.service_provider_id "
             . " inner join services s on s.id = ps.service_id where "
             . " u.id = '" . $user_id . "' "
             . " order by r.id desc";
@@ -60,9 +59,6 @@ class ServiceProviderReviewsController extends Controller{
         $results = RawQuery::paginate($rawQuery, $page=$page, $limit=$limit);
 
         Log::info('Extracted user review review details : '.var_export($results, 1));
-        if(empty($results)){
-            return Response::json($results, HTTPCodes::HTTP_NO_CONTENT );
-        }
         return Response::json($results, HTTPCodes::HTTP_OK);
 
     }
@@ -114,12 +110,13 @@ class ServiceProviderReviewsController extends Controller{
             . " r.provider_service_id, r.rating, r.review, "
             . " r.status_id, concat(if(u.first_name is null, '', u.first_name), ' ', "
             . " if(u.last_name is null, '', u.last_name)) as reviewer, "
-            . " u.email, s.service_name, "
+            . " u.email, s.service_name, sp.id as service_provider_id, u.id as user_id, "
             . " concat( '$image_url' ,'/', if(d.passport_photo is null, 'avatar-bg-1.png', "
             . " JSON_UNQUOTE(json_extract(d.passport_photo, '$.media_url'))) ) as thumbnail "
             . " FROM  reviews r  inner join users u on u.id=r.user_id "
             . " inner join user_personal_details d on u.id = d.user_id "
             . " inner join provider_services ps on ps.id = r.provider_service_id "
+            . " inner join service_providers sp on sp.id = ps.service_provider_id "
             . " inner join services s on s.id = ps.service_id where "
             . " 1= 1  " . $filter 
             . " order by r.id desc";
