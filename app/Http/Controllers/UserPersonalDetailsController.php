@@ -1,4 +1,4 @@
-<?php
+ <?php
 
 /**
  *Evance 
@@ -231,10 +231,10 @@ class UserPersonalDetailsController extends Controller{
             if($stored !== false)
                 $update['passport_photo'] = json_encode($stored);
 
-
-            DB::table('user_personal_details')
-                ->where('user_id', $user_id)
-                ->update($update);
+            DB::update('update user_personal_details set id_number = ?, date_of_birth = ?, gender = ?, home_location = ?, work_phone_no = ?  where user_id = ?', [$request->get('id_number'), $request->get('date_of_birth'), $request->get('gender'), $request->get('home_location'), $request->get('work_phone_no'), $user_id]);
+            // DB::table('user_personal_details')
+            //     ->where('user_id', $user_id)
+            //     ->update($update);
 
             $out = [
                 'success' => true,
