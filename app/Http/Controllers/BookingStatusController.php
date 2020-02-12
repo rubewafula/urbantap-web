@@ -63,7 +63,7 @@ class BookingStatusController extends BaseBookingController
         $status = $request->status;
         $user_id = $request->user_id;
 
-        $affected = DB::update('update bookings set status = :status where booking_id = :booking_id', ['status'=>$status, 'booking_id' => $booking_id]);
+        $affected = DB::update('update bookings set status = :status where id = :booking_id', ['status'=>$status, 'booking_id' => $booking_id]);
 
         if($affected){
             return [
