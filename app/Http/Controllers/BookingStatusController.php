@@ -56,4 +56,24 @@ class BookingStatusController extends BaseBookingController
             ]
         ];
     }
+
+    public function cancel_booking(Request $request){
+        $booking_id = $request->booking_id;
+        $status = $request->status;
+        $user_id = $request->user_id;
+
+        $affected = DB::update('update bookings set status = :status where booking_id = :booking_id', ['status'=>$status, 'booking_id' => $booking_id]);
+
+        if($affected){
+            return [
+                'success' => true,
+                'message' => "Booking cancelled successfully"
+            ];
+        }else{
+            return [
+                'success' => false,
+                'message' => "Booking cancellation failed"
+            ];
+        }
+    }
 }

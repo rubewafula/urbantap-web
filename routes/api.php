@@ -261,6 +261,7 @@ Route::group([
     // Update booking status
     Route::patch('accept', 'BookingStatusController@update');
     Route::patch('reject', 'BookingStatusController@update');
+    Route::post('cancel', 'BookingStatusController@cancel_booking');
 
 });
 
