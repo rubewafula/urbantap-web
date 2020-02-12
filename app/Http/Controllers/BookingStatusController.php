@@ -8,6 +8,7 @@ use App\Http\Requests\BookingStatusRequest;
 use App\Status;
 use App\Utilities\DBStatus;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Http\Request;
 
 /**
  * Class BookingStatusController
