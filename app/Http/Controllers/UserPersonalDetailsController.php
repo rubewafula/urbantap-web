@@ -186,7 +186,7 @@ class UserPersonalDetailsController extends Controller{
         $user = $request->user();
         $user_id = $user->id;
         $validator = Validator::make($request->all(),[
-                'id_number' => 'integer|unique:user_personal_details|nullable',
+                'id_number' => 'integer|nullable',
                 'date_of_birth' => 'date|date_format:Y-m-d|nullable',
                 'gender' =>'in:Male, Female, Un-disclosed|nullable',
                 'passport_photo' =>'string|nullable',
